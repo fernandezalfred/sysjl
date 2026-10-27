@@ -27,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email },
           include: { vehicle: true },
         });
-        if (!user) return null;
+        if (!user || !user.isActive) return null;
 
         const isValid = await verifyPassword(password, user.passwordHash);
         if (!isValid) return null;

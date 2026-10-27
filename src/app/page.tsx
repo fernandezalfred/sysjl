@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { getLandingPageData } from "@/lib/landing-data";
@@ -36,6 +37,11 @@ async function LandingContent() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-foreground/70">{session?.user?.name}</span>
+          {session?.user?.role === "ADMIN" ? (
+            <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
+              Manage users
+            </Link>
+          ) : null}
           <SignOutButton />
         </div>
       </header>

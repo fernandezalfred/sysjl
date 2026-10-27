@@ -1,14 +1,20 @@
 import { auth } from "@/auth";
 
 const PUBLIC_PATHS = ["/login"];
+const ADMIN_PATH_PREFIX = "/admin";
 
 export const proxy = auth((req) => {
-  const isPublicPath = PUBLIC_PATHS.some((path) => req.nextUrl.pathname.startsWith(path));
+  const { pathname } = req.nextUrl;
+  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
   if (!req.auth && !isPublicPath) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    loginUrl.searchParams.set("callbackUrl", pathname);
     return Response.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith(ADMIN_PATH_PREFIX) && req.auth?.user.role !== "ADMIN") {
+    return Response.redirect(new URL("/", req.nextUrl.origin));
   }
 });
 
