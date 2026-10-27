@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { auth } from "@/auth";
 import { getLandingPageData } from "@/lib/landing-data";
 import { SummaryCards } from "@/components/landing/SummaryCards";
 import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export default function Home() {
   return (
@@ -17,19 +19,25 @@ export default function Home() {
 
 async function LandingContent() {
   await connection();
-  const data = await getLandingPageData();
+  const [data, session] = await Promise.all([getLandingPageData(), auth()]);
 
   return (
     <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Daily Sales & Stock</h1>
-        <p className="text-sm text-foreground/60">
-          Updated{" "}
-          {new Date(data.generatedAt).toLocaleString("es-BO", {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })}
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Daily Sales & Stock</h1>
+          <p className="text-sm text-foreground/60">
+            Updated{" "}
+            {new Date(data.generatedAt).toLocaleString("es-BO", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-foreground/70">{session?.user?.name}</span>
+          <SignOutButton />
+        </div>
       </header>
 
       <SummaryCards
