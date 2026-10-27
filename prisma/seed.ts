@@ -40,6 +40,22 @@ async function main() {
     },
   });
 
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  await prisma.dailyWorkRecord.upsert({
+    where: { userId_date: { userId: vehicleUser.id, date: today } },
+    update: {},
+    create: {
+      userId: vehicleUser.id,
+      date: today,
+      quesoTaken: 80,
+      quesoRemaining: 12,
+      yogurtTaken: 60,
+      yogurtRemaining: 5,
+    },
+  });
+
   console.log("Seeded users (password for both: %s):", SEED_PASSWORD);
   console.log(`  Admin:        ${admin.email}`);
   console.log(`  Vehicle user: ${vehicleUser.email}`);

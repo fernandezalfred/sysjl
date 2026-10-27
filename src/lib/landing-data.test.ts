@@ -1,6 +1,41 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: { dailyWorkRecord: { findMany: vi.fn() } },
+}));
+
+vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+
 import { buildDailyRecords, buildProductTotals, buildUserTotals, getLandingPageData } from "@/lib/landing-data";
 import type { SaleRecord } from "@/types/landing";
+
+const MOCK_WORK_RECORDS = [
+  {
+    id: "wr1",
+    date: new Date("2026-10-27T00:00:00.000Z"),
+    userId: "u1",
+    quesoTaken: 80,
+    quesoRemaining: 12,
+    yogurtTaken: 60,
+    yogurtRemaining: 5,
+    user: { name: "Carla Mamani", vehicle: { id: "v1", name: "Vehicle 1" } },
+  },
+  {
+    id: "wr2",
+    date: new Date("2026-10-27T00:00:00.000Z"),
+    userId: "u2",
+    quesoTaken: 70,
+    quesoRemaining: 20,
+    yogurtTaken: 50,
+    yogurtRemaining: 18,
+    user: { name: "Jorge Quispe", vehicle: { id: "v2", name: "Vehicle 2" } },
+  },
+];
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  prismaMock.dailyWorkRecord.findMany.mockResolvedValue(MOCK_WORK_RECORDS);
+});
 
 const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   id: "r1",

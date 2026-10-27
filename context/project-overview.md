@@ -120,5 +120,3 @@ Maintain an inventory movement history that records:
 - Responsible user.
 - Date and time.
 - Related work record or transaction, when applicable.
-
-<!-- RECOVERY GAP: the original file continued for roughly 394 more lines (sections 6 onward — likely covering daily work records/sales, reports, revenue rules for milk/mote, and project structure) that were never shown in this conversation, so they could not be reconstructed. Please restore the rest of this file from an editor undo history or backup if available. -->

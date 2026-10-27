@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { CURRENT_UNIT_PRICE, PRODUCT_LABELS } from "@/lib/pricing";
 import type {
   DailyRecordRow,
@@ -10,19 +11,6 @@ import type {
 } from "@/types/landing";
 
 const PRODUCT_CODES: ProductCode[] = ["QUESO", "YOGURT"];
-
-// Mock dataset shaped like the future Prisma models (DailyWorkRecord x Product).
-// Swap getLandingPageData's body for real Prisma queries once the schema lands.
-const MOCK_RECORDS: Omit<SaleRecord, "unitPrice">[] = [
-  { id: "1", date: "2026-10-27", userId: "u1", userName: "Carla Mamani", vehicleId: "v1", vehicleName: "Vehicle 1", product: "QUESO", quantityTaken: 80, quantityRemaining: 12 },
-  { id: "2", date: "2026-10-27", userId: "u1", userName: "Carla Mamani", vehicleId: "v1", vehicleName: "Vehicle 1", product: "YOGURT", quantityTaken: 60, quantityRemaining: 5 },
-  { id: "3", date: "2026-10-27", userId: "u2", userName: "Jorge Quispe", vehicleId: "v2", vehicleName: "Vehicle 2", product: "QUESO", quantityTaken: 70, quantityRemaining: 20 },
-  { id: "4", date: "2026-10-27", userId: "u2", userName: "Jorge Quispe", vehicleId: "v2", vehicleName: "Vehicle 2", product: "YOGURT", quantityTaken: 50, quantityRemaining: 18 },
-  { id: "5", date: "2026-10-26", userId: "u3", userName: "Elena Rojas", vehicleId: "v3", vehicleName: "Vehicle 3", product: "QUESO", quantityTaken: 65, quantityRemaining: 4 },
-  { id: "6", date: "2026-10-26", userId: "u3", userName: "Elena Rojas", vehicleId: "v3", vehicleName: "Vehicle 3", product: "YOGURT", quantityTaken: 45, quantityRemaining: 9 },
-  { id: "7", date: "2026-10-26", userId: "u1", userName: "Carla Mamani", vehicleId: "v1", vehicleName: "Vehicle 1", product: "QUESO", quantityTaken: 75, quantityRemaining: 10 },
-  { id: "8", date: "2026-10-26", userId: "u1", userName: "Carla Mamani", vehicleId: "v1", vehicleName: "Vehicle 1", product: "YOGURT", quantityTaken: 55, quantityRemaining: 7 },
-];
 
 export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
   const userMap = new Map<string, UserTotal>();
@@ -114,10 +102,38 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
 }
 
 export async function getLandingPageData(): Promise<LandingPageData> {
-  const records: SaleRecord[] = MOCK_RECORDS.map((r) => ({
-    ...r,
-    unitPrice: CURRENT_UNIT_PRICE[r.product],
-  }));
+  const workRecords = await prisma.dailyWorkRecord.findMany({
+    include: { user: { include: { vehicle: true } } },
+  });
+
+  const records: SaleRecord[] = workRecords.flatMap((r) => {
+    const base = {
+      date: r.date.toISOString().slice(0, 10),
+      userId: r.userId,
+      userName: r.user.name,
+      vehicleId: r.user.vehicle?.id ?? "",
+      vehicleName: r.user.vehicle?.name ?? "No vehicle",
+    };
+
+    return [
+      {
+        ...base,
+        id: `${r.id}-QUESO`,
+        product: "QUESO" as const,
+        unitPrice: CURRENT_UNIT_PRICE.QUESO,
+        quantityTaken: r.quesoTaken,
+        quantityRemaining: r.quesoRemaining,
+      },
+      {
+        ...base,
+        id: `${r.id}-YOGURT`,
+        product: "YOGURT" as const,
+        unitPrice: CURRENT_UNIT_PRICE.YOGURT,
+        quantityTaken: r.yogurtTaken,
+        quantityRemaining: r.yogurtRemaining,
+      },
+    ];
+  });
 
   const productTotals = buildProductTotals(records);
   const userTotals = buildUserTotals(records);
