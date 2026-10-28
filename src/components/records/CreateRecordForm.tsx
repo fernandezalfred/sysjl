@@ -23,9 +23,11 @@ function SubmitButton() {
 interface CreateRecordFormProps {
   onSaved: () => void;
   onCancel: () => void;
+  isAdmin: boolean;
+  vehicleUsers: { id: string; name: string }[];
 }
 
-export function CreateRecordForm({ onSaved, onCancel }: CreateRecordFormProps) {
+export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers }: CreateRecordFormProps) {
   const [state, formAction] = useActionState(createDailyWorkRecord, initialState);
 
   useEffect(() => {
@@ -34,6 +36,30 @@ export function CreateRecordForm({ onSaved, onCancel }: CreateRecordFormProps) {
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
+      {isAdmin ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="record-user" className="text-xs font-medium text-foreground/60">
+            User
+          </label>
+          <select
+            id="record-user"
+            name="userId"
+            required
+            defaultValue=""
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          >
+            <option value="" disabled>
+              Select a user
+            </option>
+            {vehicleUsers.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
       <RecordFormFields />
 
       {state.error ? (

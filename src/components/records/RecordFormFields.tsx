@@ -2,9 +2,10 @@ interface RecordFormFieldsProps {
   defaultValues?: {
     date: string;
     quesoTaken: number;
-    quesoRemaining: number;
+    quesoSold: number;
     yogurtTaken: number;
-    yogurtRemaining: number;
+    yogurtSold: number;
+    totalSold: number;
   };
 }
 
@@ -44,16 +45,16 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="queso-remaining" className={labelClass}>
-          Queso remaining
+        <label htmlFor="queso-sold" className={labelClass}>
+          Queso sold
         </label>
         <input
-          id="queso-remaining"
-          name="quesoRemaining"
+          id="queso-sold"
+          name="quesoSold"
           type="number"
           min={0}
           required
-          defaultValue={defaultValues?.quesoRemaining}
+          defaultValue={defaultValues?.quesoSold}
           className={inputClass}
         />
       </div>
@@ -74,16 +75,31 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="yogurt-remaining" className={labelClass}>
-          Yogurt remaining
+        <label htmlFor="yogurt-sold" className={labelClass}>
+          Yogurt sold
         </label>
         <input
-          id="yogurt-remaining"
-          name="yogurtRemaining"
+          id="yogurt-sold"
+          name="yogurtSold"
           type="number"
           min={0}
           required
-          defaultValue={defaultValues?.yogurtRemaining}
+          defaultValue={defaultValues?.yogurtSold}
+          className={inputClass}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1 sm:col-span-2">
+        <label htmlFor="total-sold" className={labelClass}>
+          Total sold
+        </label>
+        <input
+          id="total-sold"
+          name="totalSold"
+          type="number"
+          min={0}
+          required
+          defaultValue={defaultValues?.totalSold}
           className={inputClass}
         />
       </div>

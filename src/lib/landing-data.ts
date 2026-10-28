@@ -62,8 +62,10 @@ export function buildProductTotals(records: SaleRecord[]): ProductTotal[] {
 
 const EMPTY_BREAKDOWN: ProductBreakdown = { taken: 0, remaining: 0, sold: 0, revenue: 0, remainingValue: 0 };
 
+type PartialDailyRecordRow = Omit<DailyRecordRow, "milkMoteRevenue" | "totalRevenue">;
+
 export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
-  const rowMap = new Map<string, DailyRecordRow>();
+  const rowMap = new Map<string, PartialDailyRecordRow>();
 
   for (const record of records) {
     const key = `${record.date}|${record.userId}`;
@@ -76,29 +78,43 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
       remainingValue: record.quantityRemaining * record.unitPrice,
     };
     const field = record.product === "QUESO" ? "queso" : "yogurt";
-    const rowValue = breakdown.revenue + breakdown.remainingValue;
 
     const existing = rowMap.get(key);
     if (existing) {
       existing[field] = breakdown;
-      existing.totalRevenue += rowValue;
       continue;
     }
 
     rowMap.set(key, {
       id: key,
+      workRecordId: record.workRecordId,
+      totalSold: record.totalSold,
+      createdAt: record.createdAt,
       date: record.date,
       userId: record.userId,
       userName: record.userName,
       queso: field === "queso" ? breakdown : EMPTY_BREAKDOWN,
       yogurt: field === "yogurt" ? breakdown : EMPTY_BREAKDOWN,
-      totalRevenue: rowValue,
     });
   }
 
-  return Array.from(rowMap.values()).sort((a, b) =>
-    a.date === b.date ? a.userName.localeCompare(b.userName) : a.date < b.date ? 1 : -1,
-  );
+  const rows: DailyRecordRow[] = Array.from(rowMap.values()).map((row) => {
+    // Milk + Mote have no dedicated taken/sold inputs; their combined revenue is
+    // the remainder of the user-entered totalSold after Queso's and Yogurt's
+    // own quantity-based revenue is accounted for.
+    const milkMoteRevenue = row.totalSold - row.queso.revenue - row.yogurt.revenue;
+    const totalRevenue =
+      row.queso.revenue +
+      row.queso.remainingValue +
+      row.yogurt.revenue +
+      row.yogurt.remainingValue +
+      milkMoteRevenue;
+
+    return { ...row, milkMoteRevenue, totalRevenue };
+  });
+
+  // Newest-created record first, so a record just added always lands on line one.
+  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getLandingPageData(): Promise<LandingPageData> {
@@ -113,12 +129,15 @@ export async function getLandingPageData(): Promise<LandingPageData> {
       userName: r.user.name,
       vehicleId: r.user.vehicle?.id ?? "",
       vehicleName: r.user.vehicle?.name ?? "No vehicle",
+      totalSold: r.totalSold,
+      createdAt: r.createdAt.toISOString(),
     };
 
     return [
       {
         ...base,
         id: `${r.id}-QUESO`,
+        workRecordId: r.id,
         product: "QUESO" as const,
         unitPrice: CURRENT_UNIT_PRICE.QUESO,
         quantityTaken: r.quesoTaken,
@@ -127,6 +146,7 @@ export async function getLandingPageData(): Promise<LandingPageData> {
       {
         ...base,
         id: `${r.id}-YOGURT`,
+        workRecordId: r.id,
         product: "YOGURT" as const,
         unitPrice: CURRENT_UNIT_PRICE.YOGURT,
         quantityTaken: r.yogurtTaken,

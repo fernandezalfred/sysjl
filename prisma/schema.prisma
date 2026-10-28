@@ -50,6 +50,10 @@ model DailyWorkRecord {
   quesoRemaining  Int
   yogurtTaken     Int
   yogurtRemaining Int
+  // Day's grand-total Bs revenue across all 4 products, user-entered. Independent
+  // of quesoSold/yogurtSold; not cross-checked against their sum.
+  // Default only guards legacy/pre-field documents from breaking reads.
+  totalSold       Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

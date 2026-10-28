@@ -1,16 +1,35 @@
-# Current Feature
+# Current Feature: Sale Records CRUD Moved into Home Page
 
 ## Status
 
-
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Remove the standalone `/records` page, its `MyRecordsSection` component, and the "My records" header link added in the previous feature.
+- Move record creation/editing directly into the landing page's existing "Sale Records" section (`src/components/landing/SaleRecordsSection.tsx`): a "New record" button and, on each row that belongs to the signed-in user, an "Edit" button, both opening the same `<dialog>` modal used previously.
+- A user can still only create/edit their own records — edit is only offered on rows where `row.userId` matches the signed-in user's id; ownership is still re-checked server-side in the Server Actions regardless of what the UI shows.
+- In the modal, replace the "remaining" input with a "sold" input per product (Queso sold, Yogurt sold). The user now enters quantity taken and quantity sold; quantity remaining is computed and stored as `taken - sold` (schema is unchanged — `quesoRemaining`/`yogurtRemaining` stay the stored columns, only the data-entry direction flips).
+- Carry the real `DailyWorkRecord` id through the landing page's data (`SaleRecord`/`DailyRecordRow` types gain a `workRecordId` field) so the edit modal can target the correct record — the aggregated row's synthetic `id` (`date|userId`) isn't a real database id.
+- Center the `<dialog>` modal (Tailwind's preflight resets `margin` to 0 on every element, which silently broke the native `margin: auto` centering `<dialog>` relies on when opened with `showModal()`).
+- Add a user-entered "Total sold" input to the modal: a `totalSold` column on `DailyWorkRecord`, stored exactly as entered — no cross-check against Queso sold + Yogurt sold, since it represents a different figure (corrected after initially validating it as a must-match sum, per the user: "it has to allowed any amount because this is different").
+- `totalSold` is the day's grand-total Bs revenue across all 4 products (Queso, Yogurt, Milk, Mote combined), entered by the user. Queso and Yogurt keep their normal quantity-based revenue (`sold × unitPrice`) — this was briefly changed to make Queso's revenue equal `totalSold` directly, then reverted per the user's correction.
+- Added a new "Milk & Mote" column/figure on the Sale Records row: `milkMoteRevenue = totalSold - quesoRevenue - yogurtRevenue` (`DailyRecordRow.milkMoteRevenue` in `src/types/landing.ts`, computed in `buildDailyRecords` in `src/lib/landing-data.ts`). Milk/Mote have no dedicated taken/sold inputs, so this is the remainder after accounting for Queso's and Yogurt's own quantity-based revenue. Folded into the row's `totalRevenue` and into `TotalRevenueCell`'s "sold" sum in `SaleRecordsSection.tsx`. Not folded into `buildProductTotals`/`buildUserTotals`/grand totals (SummaryCards, UserTotalsSection) — scoped to the Sale Records table only, per the request.
+- When an admin opens "New record", add a required "User" select (listing vehicle users) so the admin picks who the record is for. A non-admin never sees this — their own session id is always used, and the server never trusts a client-supplied `userId` for a non-admin regardless of what the UI sends.
+- Add delete, also through the same modal: a "Delete" button inside the Edit form (`deleteDailyWorkRecord` in `src/actions/daily-work-records.ts`), with the same ownership check as update (only the owning user can delete their own record), a confirmation prompt before deleting, and closing the modal on success.
+- Admins can edit/delete any record, not just their own — admins never own a row themselves (they only pick a vehicle user when creating), so the original "only show Edit on rows you own" rule meant admins saw no Edit button at all. Fixed: `updateDailyWorkRecord`/`deleteDailyWorkRecord` allow the action when the session role is `ADMIN`, regardless of who owns the record; the UI shows "Edit" on every row when `isAdmin` is true.
+- Sort the Sale Records list by creation recency (newest-created row first), not by the record's own `date` field — a record just added always lands on line one, even if an admin backfills an older date. Carried a new `createdAt` field through `SaleRecord`/`DailyRecordRow` for this.
+- Full regression pass: build, lint, `npm test`, and a live check against the real dev database.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Confirmed with the user: replace "remaining" with "sold" as the input (not both, not a single combined field) — remaining becomes a derived/stored value instead of an entered one.
+- Confirmed with the user: "Total sold" is user-entered (not auto-computed/read-only) and persisted, but is NOT validated against Queso sold + Yogurt sold — it's an independent figure that can legitimately differ (initial validate-and-store decision was corrected by the user after implementation).
+- `totalSold` is `Int @default(0)` rather than strictly required, specifically so legacy/pre-field documents don't break reads (`P2032`) — all new writes still go through the create/update validation regardless.
+- Found and removed a pre-existing `DailyWorkRecord` document owned by the admin account (date 2026-10-24, Queso 141/20, Yogurt 24/5) with no known origin — flagged to the user and deleted per their explicit confirmation, not assumed.
+- This reworks the just-completed "Sale Records (Daily Work Records) via Modal" feature (see History) — same server actions and modal form components are reused/adjusted in place, not rebuilt from scratch.
+- Reuse `src/components/records/CreateRecordForm.tsx`, `EditRecordForm.tsx`, `RecordFormFields.tsx` as-is (just rename the sold/remaining field), embedding them in `SaleRecordsSection` instead of the deleted `MyRecordsSection`.
+- `src/actions/daily-work-records.ts` keeps its name/shape; only the schema fields and the stored-value computation change.
 
 ## History
 

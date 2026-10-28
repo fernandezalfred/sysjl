@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
 import { SummaryCards } from "@/components/landing/SummaryCards";
 import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
@@ -20,7 +21,15 @@ export default function Home() {
 
 async function LandingContent() {
   await connection();
-  const [data, session] = await Promise.all([getLandingPageData(), auth()]);
+  const [data, session, vehicleUsers] = await Promise.all([
+    getLandingPageData(),
+    auth(),
+    prisma.user.findMany({
+      where: { role: "VEHICLE_USER", isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -37,9 +46,6 @@ async function LandingContent() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-foreground/70">{session?.user?.name}</span>
-          <Link href="/records" className="text-sm text-foreground/60 underline hover:text-foreground">
-            My records
-          </Link>
           {session?.user?.role === "ADMIN" ? (
             <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
               Manage users
@@ -58,7 +64,12 @@ async function LandingContent() {
 
       <UserTotalsSection userTotals={data.userTotals} />
 
-      <SaleRecordsSection dailyRecords={data.dailyRecords} />
+      <SaleRecordsSection
+        dailyRecords={data.dailyRecords}
+        currentUserId={session?.user?.id ?? null}
+        isAdmin={session?.user?.role === "ADMIN"}
+        vehicleUsers={vehicleUsers}
+      />
     </div>
   );
 }

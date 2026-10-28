@@ -28,3 +28,10 @@ body {
 dialog::backdrop {
   background: rgb(0 0 0 / 0.5);
 }
+
+/* Tailwind's preflight resets margin to 0 on every element, which breaks
+   the native UA centering (`margin: auto` within `inset: 0`) that
+   `<dialog>` relies on when opened with showModal(). Restore it. */
+dialog:modal {
+  margin: auto;
+}
