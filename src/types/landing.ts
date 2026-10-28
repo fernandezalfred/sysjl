@@ -2,6 +2,9 @@ export type ProductCode = "QUESO" | "YOGURT";
 
 export interface SaleRecord {
   id: string;
+  workRecordId: string;
+  totalSold: number;
+  createdAt: string;
   date: string;
   userId: string;
   userName: string;
@@ -40,11 +43,15 @@ export interface ProductBreakdown {
 
 export interface DailyRecordRow {
   id: string;
+  workRecordId: string;
+  totalSold: number;
+  createdAt: string;
   date: string;
   userId: string;
   userName: string;
   queso: ProductBreakdown;
   yogurt: ProductBreakdown;
+  milkMoteRevenue: number;
   totalRevenue: number;
 }
 

@@ -18,6 +18,8 @@ const MOCK_WORK_RECORDS = [
     quesoRemaining: 12,
     yogurtTaken: 60,
     yogurtRemaining: 5,
+    totalSold: 123,
+    createdAt: new Date("2026-10-27T08:00:00.000Z"),
     user: { name: "Carla Mamani", vehicle: { id: "v1", name: "Vehicle 1" } },
   },
   {
@@ -28,6 +30,8 @@ const MOCK_WORK_RECORDS = [
     quesoRemaining: 20,
     yogurtTaken: 50,
     yogurtRemaining: 18,
+    totalSold: 82,
+    createdAt: new Date("2026-10-27T09:00:00.000Z"),
     user: { name: "Jorge Quispe", vehicle: { id: "v2", name: "Vehicle 2" } },
   },
 ];
@@ -39,6 +43,9 @@ beforeEach(() => {
 
 const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   id: "r1",
+  workRecordId: "wr1",
+  totalSold: 8,
+  createdAt: "2026-10-27T10:00:00.000Z",
   date: "2026-10-27",
   userId: "u1",
   userName: "Test User",
@@ -119,8 +126,8 @@ describe("buildUserTotals", () => {
 describe("buildDailyRecords", () => {
   it("merges a user's same-day Queso and Yogurt records into one row with combined revenue", () => {
     const records = [
-      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "Carla", product: "QUESO", unitPrice: 9, quantityTaken: 80, quantityRemaining: 12 }),
-      record({ id: "r2", date: "2026-10-27", userId: "u1", userName: "Carla", product: "YOGURT", unitPrice: 33, quantityTaken: 60, quantityRemaining: 5 }),
+      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "Carla", product: "QUESO", unitPrice: 9, quantityTaken: 80, quantityRemaining: 12, totalSold: 3000 }),
+      record({ id: "r2", date: "2026-10-27", userId: "u1", userName: "Carla", product: "YOGURT", unitPrice: 33, quantityTaken: 60, quantityRemaining: 5, totalSold: 3000 }),
     ];
 
     const rows = buildDailyRecords(records);
@@ -129,8 +136,10 @@ describe("buildDailyRecords", () => {
     const [row] = rows;
     expect(row.queso).toEqual({ taken: 80, remaining: 12, sold: 68, revenue: 612, remainingValue: 108 });
     expect(row.yogurt).toEqual({ taken: 60, remaining: 5, sold: 55, revenue: 1815, remainingValue: 165 });
-    // totalRevenue combines sold revenue and leftover (unsold) stock value for both products
-    expect(row.totalRevenue).toBe(612 + 108 + 1815 + 165);
+    // Milk + Mote have no dedicated inputs: their revenue is totalSold minus Queso's and Yogurt's own revenue
+    expect(row.milkMoteRevenue).toBe(3000 - 612 - 1815); // 573
+    // totalRevenue combines sold revenue (incl. Milk + Mote) and leftover (unsold) stock value
+    expect(row.totalRevenue).toBe(612 + 108 + 1815 + 165 + 573);
   });
 
   it("keeps a missing product as a zeroed breakdown instead of merging across users or days", () => {
@@ -143,6 +152,30 @@ describe("buildDailyRecords", () => {
 
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.yogurt.taken === 0 || r.queso.taken === 0)).toBe(true);
+  });
+
+  it("puts the most recently created row first, even if its date is older", () => {
+    const records = [
+      record({
+        id: "r1",
+        userId: "u1",
+        userName: "Carla",
+        date: "2026-10-27",
+        createdAt: "2026-10-27T08:00:00.000Z",
+      }),
+      record({
+        id: "r2",
+        userId: "u2",
+        userName: "Jorge",
+        date: "2026-10-20",
+        createdAt: "2026-10-27T09:00:00.000Z",
+      }),
+    ];
+
+    const rows = buildDailyRecords(records);
+
+    expect(rows[0].userId).toBe("u2");
+    expect(rows[1].userId).toBe("u1");
   });
 });
 

@@ -45,7 +45,7 @@ async function main() {
 
   await prisma.dailyWorkRecord.upsert({
     where: { userId_date: { userId: vehicleUser.id, date: today } },
-    update: {},
+    update: { totalSold: 123 },
     create: {
       userId: vehicleUser.id,
       date: today,
@@ -53,6 +53,7 @@ async function main() {
       quesoRemaining: 12,
       yogurtTaken: 60,
       yogurtRemaining: 5,
+      totalSold: 123,
     },
   });
 

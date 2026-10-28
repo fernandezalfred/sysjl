@@ -15,21 +15,48 @@ const quantitiesSchema = z
   .object({
     date: z.string().min(1, "Date is required."),
     quesoTaken: z.coerce.number().int().min(0, "Queso taken must be 0 or more."),
-    quesoRemaining: z.coerce.number().int().min(0, "Queso remaining must be 0 or more."),
+    quesoSold: z.coerce.number().int().min(0, "Queso sold must be 0 or more."),
     yogurtTaken: z.coerce.number().int().min(0, "Yogurt taken must be 0 or more."),
-    yogurtRemaining: z.coerce.number().int().min(0, "Yogurt remaining must be 0 or more."),
+    yogurtSold: z.coerce.number().int().min(0, "Yogurt sold must be 0 or more."),
+    totalSold: z.coerce.number().int().min(0, "Total sold must be 0 or more."),
   })
-  .refine((v) => v.quesoRemaining <= v.quesoTaken, {
-    message: "Queso remaining cannot exceed Queso taken.",
-    path: ["quesoRemaining"],
+  .refine((v) => v.quesoSold <= v.quesoTaken, {
+    message: "Queso sold cannot exceed Queso taken.",
+    path: ["quesoSold"],
   })
-  .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
-    message: "Yogurt remaining cannot exceed Yogurt taken.",
-    path: ["yogurtRemaining"],
+  .refine((v) => v.yogurtSold <= v.yogurtTaken, {
+    message: "Yogurt sold cannot exceed Yogurt taken.",
+    path: ["yogurtSold"],
   });
 
 function parseRecordDate(raw: string): Date {
   return new Date(`${raw}T00:00:00.000Z`);
+}
+
+type TargetUserResult = { userId: string } | { error: string };
+
+async function resolveTargetUserId(
+  session: Awaited<ReturnType<typeof requireUserSession>>,
+  formData: FormData,
+): Promise<TargetUserResult> {
+  if (session.user.role !== "ADMIN") {
+    return { userId: session.user.id };
+  }
+
+  const raw = formData.get("userId");
+  if (typeof raw !== "string" || raw.length === 0) {
+    return { error: "Select a user." };
+  }
+
+  const target = await prisma.user.findUnique({ where: { id: raw } });
+  if (!target) {
+    return { error: "User not found." };
+  }
+  if (target.role !== "VEHICLE_USER") {
+    return { error: "Selected user is not a vehicle user." };
+  }
+
+  return { userId: target.id };
 }
 
 export async function createDailyWorkRecord(
@@ -42,15 +69,21 @@ export async function createDailyWorkRecord(
     const parsed = quantitiesSchema.safeParse({
       date: formData.get("date"),
       quesoTaken: formData.get("quesoTaken"),
-      quesoRemaining: formData.get("quesoRemaining"),
+      quesoSold: formData.get("quesoSold"),
       yogurtTaken: formData.get("yogurtTaken"),
-      yogurtRemaining: formData.get("yogurtRemaining"),
+      yogurtSold: formData.get("yogurtSold"),
+      totalSold: formData.get("totalSold"),
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
     }
 
-    const userId = session.user.id;
+    const targetUser = await resolveTargetUserId(session, formData);
+    if ("error" in targetUser) {
+      return { success: false, error: targetUser.error };
+    }
+
+    const userId = targetUser.userId;
     const date = parseRecordDate(parsed.data.date);
 
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { userId_date: { userId, date } } });
@@ -63,13 +96,13 @@ export async function createDailyWorkRecord(
         userId,
         date,
         quesoTaken: parsed.data.quesoTaken,
-        quesoRemaining: parsed.data.quesoRemaining,
+        quesoRemaining: parsed.data.quesoTaken - parsed.data.quesoSold,
         yogurtTaken: parsed.data.yogurtTaken,
-        yogurtRemaining: parsed.data.yogurtRemaining,
+        yogurtRemaining: parsed.data.yogurtTaken - parsed.data.yogurtSold,
+        totalSold: parsed.data.totalSold,
       },
     });
 
-    revalidatePath("/records");
     revalidatePath("/");
     return { success: true };
   } catch (error) {
@@ -93,20 +126,22 @@ export async function updateDailyWorkRecord(
       recordId: formData.get("recordId"),
       date: formData.get("date"),
       quesoTaken: formData.get("quesoTaken"),
-      quesoRemaining: formData.get("quesoRemaining"),
+      quesoSold: formData.get("quesoSold"),
       yogurtTaken: formData.get("yogurtTaken"),
-      yogurtRemaining: formData.get("yogurtRemaining"),
+      yogurtSold: formData.get("yogurtSold"),
+      totalSold: formData.get("totalSold"),
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
     }
 
-    const userId = session.user.id;
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: parsed.data.recordId } });
-    if (!existing || existing.userId !== userId) {
+    const isOwner = existing?.userId === session.user.id;
+    if (!existing || (!isOwner && session.user.role !== "ADMIN")) {
       return { success: false, error: "Record not found." };
     }
 
+    const userId = existing.userId;
     const date = parseRecordDate(parsed.data.date);
     const dateChanged = date.getTime() !== existing.date.getTime();
     if (dateChanged) {
@@ -121,13 +156,35 @@ export async function updateDailyWorkRecord(
       data: {
         date,
         quesoTaken: parsed.data.quesoTaken,
-        quesoRemaining: parsed.data.quesoRemaining,
+        quesoRemaining: parsed.data.quesoTaken - parsed.data.quesoSold,
         yogurtTaken: parsed.data.yogurtTaken,
-        yogurtRemaining: parsed.data.yogurtRemaining,
+        yogurtRemaining: parsed.data.yogurtTaken - parsed.data.yogurtSold,
+        totalSold: parsed.data.totalSold,
       },
     });
 
-    revalidatePath("/records");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    if (error instanceof NotAuthorizedError) {
+      return { success: false, error: error.message };
+    }
+    throw error;
+  }
+}
+
+export async function deleteDailyWorkRecord(recordId: string): Promise<RecordActionState> {
+  try {
+    const session = await requireUserSession();
+
+    const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: recordId } });
+    const isOwner = existing?.userId === session.user.id;
+    if (!existing || (!isOwner && session.user.role !== "ADMIN")) {
+      return { success: false, error: "Record not found." };
+    }
+
+    await prisma.dailyWorkRecord.delete({ where: { id: existing.id } });
+
     revalidatePath("/");
     return { success: true };
   } catch (error) {
