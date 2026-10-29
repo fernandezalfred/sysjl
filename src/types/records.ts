@@ -2,8 +2,8 @@ export interface DailyWorkRecordRow {
   id: string;
   date: string;
   quesoTaken: number;
-  quesoSold: number;
+  quesoRemaining: number;
   yogurtTaken: number;
-  yogurtSold: number;
+  yogurtRemaining: number;
   totalSold: number;
 }

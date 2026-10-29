@@ -1,8 +1,38 @@
+import { formatShortDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/pricing";
 import type { UserTotal } from "@/types/landing";
 
 interface UserTotalsSectionProps {
   userTotals: UserTotal[];
+}
+
+// Matches Sale Records' "sold" revenue: Queso + Yogurt + Milk & Mote, excluding
+// the value of unsold ("left") product.
+function soldRevenueOf(u: UserTotal): number {
+  return u.quesoRevenue + u.yogurtRevenue + u.milkMoteRevenue;
+}
+
+// Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
+// ("left") value and the full total (sold + left) as secondary text.
+function TotalRevenueCell({ u }: { u: UserTotal }) {
+  const soldRevenue = soldRevenueOf(u);
+  const remainingValue = u.totalRevenue - soldRevenue;
+
+  return (
+    <>
+      <div className="font-medium">
+        {formatCurrency(soldRevenue)} sold
+        {u.isDailyWinner && (
+          <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
+            Winner{u.winnerMargin !== null && ` (+${formatCurrency(u.winnerMargin)})`}
+          </span>
+        )}
+      </div>
+      <div className="text-xs text-foreground/60">
+        {formatCurrency(remainingValue)} left, value {formatCurrency(u.totalRevenue)}
+      </div>
+    </>
+  );
 }
 
 export function UserTotalsSection({ userTotals }: UserTotalsSectionProps) {
@@ -16,21 +46,31 @@ export function UserTotalsSection({ userTotals }: UserTotalsSectionProps) {
         <table className="w-full text-sm">
           <thead className="bg-foreground/[0.03] text-left text-foreground/60">
             <tr>
+              <th className="px-4 py-2 font-medium">Day</th>
               <th className="px-4 py-2 font-medium">User</th>
               <th className="px-4 py-2 font-medium">Queso</th>
               <th className="px-4 py-2 font-medium">Yogurt</th>
-              <th className="px-4 py-2 font-medium">Total sold</th>
-              <th className="px-4 py-2 font-medium">Revenue</th>
+              <th className="px-4 py-2 font-medium">Milk & Mote</th>
+              <th className="px-4 py-2 font-medium">Total revenue</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">
             {userTotals.map((u) => (
-              <tr key={u.userId}>
+              <tr key={`${u.date}-${u.userId}`}>
+                <td className="px-4 py-2">{formatShortDate(u.date)}</td>
                 <td className="px-4 py-2 font-medium">{u.userName}</td>
-                <td className="px-4 py-2">{u.quantitySoldByProduct.QUESO}</td>
-                <td className="px-4 py-2">{u.quantitySoldByProduct.YOGURT}</td>
-                <td className="px-4 py-2">{u.totalQuantitySold}</td>
-                <td className="px-4 py-2">{formatCurrency(u.totalRevenue)}</td>
+                <td className="px-4 py-2">{formatCurrency(u.quesoRevenue)}</td>
+                <td className="px-4 py-2">{formatCurrency(u.yogurtRevenue)}</td>
+                <td className="px-4 py-2">{formatCurrency(u.milkMoteRevenue)}</td>
+                <td
+                  className={
+                    u.isDailyWinner
+                      ? "rounded-md bg-green-50 px-4 py-2 dark:bg-green-950/40"
+                      : "px-4 py-2"
+                  }
+                >
+                  <TotalRevenueCell u={u} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -39,15 +79,34 @@ export function UserTotalsSection({ userTotals }: UserTotalsSectionProps) {
 
       <ul className="flex flex-col gap-2 md:hidden">
         {userTotals.map((u) => (
-          <li key={u.userId} className="rounded-lg border border-foreground/10 p-3">
+          <li key={`${u.date}-${u.userId}`} className="rounded-lg border border-foreground/10 p-3">
             <div className="flex items-baseline justify-between">
               <span className="font-medium">{u.userName}</span>
-              <span className="text-sm text-foreground/70">{formatCurrency(u.totalRevenue)}</span>
+              <span className="text-xs text-foreground/60">{formatShortDate(u.date)}</span>
             </div>
-            <div className="mt-1 flex gap-4 text-sm text-foreground/70">
-              <span>Queso: {u.quantitySoldByProduct.QUESO}</span>
-              <span>Yogurt: {u.quantitySoldByProduct.YOGURT}</span>
-              <span>Total: {u.totalQuantitySold}</span>
+            <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-foreground/60">Queso</p>
+                <div className="font-medium">{formatCurrency(u.quesoRevenue)}</div>
+              </div>
+              <div>
+                <p className="text-xs text-foreground/60">Yogurt</p>
+                <div className="font-medium">{formatCurrency(u.yogurtRevenue)}</div>
+              </div>
+              <div>
+                <p className="text-xs text-foreground/60">Milk & Mote</p>
+                <div className="font-medium">{formatCurrency(u.milkMoteRevenue)}</div>
+              </div>
+            </div>
+            <div className="mt-2 border-t border-foreground/10 pt-2 text-sm">
+              <div
+                className={
+                  u.isDailyWinner ? "rounded-md bg-green-50 px-2 py-1 dark:bg-green-950/40" : undefined
+                }
+              >
+                <p className="text-xs text-foreground/60">Total Revenue</p>
+                <TotalRevenueCell u={u} />
+              </div>
             </div>
           </li>
         ))}

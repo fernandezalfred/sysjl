@@ -11,22 +11,26 @@ export interface RecordActionState {
   error?: string;
 }
 
-const quantitiesSchema = z
-  .object({
-    date: z.string().min(1, "Date is required."),
-    quesoTaken: z.coerce.number().int().min(0, "Queso taken must be 0 or more."),
-    quesoSold: z.coerce.number().int().min(0, "Queso sold must be 0 or more."),
-    yogurtTaken: z.coerce.number().int().min(0, "Yogurt taken must be 0 or more."),
-    yogurtSold: z.coerce.number().int().min(0, "Yogurt sold must be 0 or more."),
-    totalSold: z.coerce.number().int().min(0, "Total sold must be 0 or more."),
+const baseQuantities = z.object({
+  quesoTaken: z.coerce.number().int().min(0, "Queso taken must be 0 or more."),
+  quesoRemaining: z.coerce.number().int().min(0, "Queso left must be 0 or more."),
+  yogurtTaken: z.coerce.number().int().min(0, "Yogurt taken must be 0 or more."),
+  yogurtRemaining: z.coerce.number().int().min(0, "Yogurt left must be 0 or more."),
+  totalSold: z.coerce.number().int().min(0, "Total sold must be 0 or more."),
+});
+
+// Date is only ever accepted on create (stamped client-side via the JS Date API, not
+// typed by the user). Edits never carry a date, so the record's original date is
+// never touched by updateDailyWorkRecord.
+const createSchema = baseQuantities
+  .extend({ date: z.string().min(1, "Date is required.") })
+  .refine((v) => v.quesoRemaining <= v.quesoTaken, {
+    message: "Queso left cannot exceed Queso taken.",
+    path: ["quesoRemaining"],
   })
-  .refine((v) => v.quesoSold <= v.quesoTaken, {
-    message: "Queso sold cannot exceed Queso taken.",
-    path: ["quesoSold"],
-  })
-  .refine((v) => v.yogurtSold <= v.yogurtTaken, {
-    message: "Yogurt sold cannot exceed Yogurt taken.",
-    path: ["yogurtSold"],
+  .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
+    message: "Yogurt left cannot exceed Yogurt taken.",
+    path: ["yogurtRemaining"],
   });
 
 function parseRecordDate(raw: string): Date {
@@ -66,12 +70,12 @@ export async function createDailyWorkRecord(
   try {
     const session = await requireUserSession();
 
-    const parsed = quantitiesSchema.safeParse({
+    const parsed = createSchema.safeParse({
       date: formData.get("date"),
       quesoTaken: formData.get("quesoTaken"),
-      quesoSold: formData.get("quesoSold"),
+      quesoRemaining: formData.get("quesoRemaining"),
       yogurtTaken: formData.get("yogurtTaken"),
-      yogurtSold: formData.get("yogurtSold"),
+      yogurtRemaining: formData.get("yogurtRemaining"),
       totalSold: formData.get("totalSold"),
     });
     if (!parsed.success) {
@@ -96,9 +100,9 @@ export async function createDailyWorkRecord(
         userId,
         date,
         quesoTaken: parsed.data.quesoTaken,
-        quesoRemaining: parsed.data.quesoTaken - parsed.data.quesoSold,
+        quesoRemaining: parsed.data.quesoRemaining,
         yogurtTaken: parsed.data.yogurtTaken,
-        yogurtRemaining: parsed.data.yogurtTaken - parsed.data.yogurtSold,
+        yogurtRemaining: parsed.data.yogurtRemaining,
         totalSold: parsed.data.totalSold,
       },
     });
@@ -113,7 +117,16 @@ export async function createDailyWorkRecord(
   }
 }
 
-const updateSchema = quantitiesSchema.and(z.object({ recordId: z.string().min(1) }));
+const updateSchema = baseQuantities
+  .extend({ recordId: z.string().min(1) })
+  .refine((v) => v.quesoRemaining <= v.quesoTaken, {
+    message: "Queso left cannot exceed Queso taken.",
+    path: ["quesoRemaining"],
+  })
+  .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
+    message: "Yogurt left cannot exceed Yogurt taken.",
+    path: ["yogurtRemaining"],
+  });
 
 export async function updateDailyWorkRecord(
   _prevState: RecordActionState,
@@ -124,11 +137,10 @@ export async function updateDailyWorkRecord(
 
     const parsed = updateSchema.safeParse({
       recordId: formData.get("recordId"),
-      date: formData.get("date"),
       quesoTaken: formData.get("quesoTaken"),
-      quesoSold: formData.get("quesoSold"),
+      quesoRemaining: formData.get("quesoRemaining"),
       yogurtTaken: formData.get("yogurtTaken"),
-      yogurtSold: formData.get("yogurtSold"),
+      yogurtRemaining: formData.get("yogurtRemaining"),
       totalSold: formData.get("totalSold"),
     });
     if (!parsed.success) {
@@ -141,24 +153,14 @@ export async function updateDailyWorkRecord(
       return { success: false, error: "Record not found." };
     }
 
-    const userId = existing.userId;
-    const date = parseRecordDate(parsed.data.date);
-    const dateChanged = date.getTime() !== existing.date.getTime();
-    if (dateChanged) {
-      const conflict = await prisma.dailyWorkRecord.findUnique({ where: { userId_date: { userId, date } } });
-      if (conflict) {
-        return { success: false, error: "You already have a record for this date." };
-      }
-    }
-
+    // The record's date is never editable: an edit always keeps the original date.
     await prisma.dailyWorkRecord.update({
       where: { id: existing.id },
       data: {
-        date,
         quesoTaken: parsed.data.quesoTaken,
-        quesoRemaining: parsed.data.quesoTaken - parsed.data.quesoSold,
+        quesoRemaining: parsed.data.quesoRemaining,
         yogurtTaken: parsed.data.yogurtTaken,
-        yogurtRemaining: parsed.data.yogurtTaken - parsed.data.yogurtSold,
+        yogurtRemaining: parsed.data.yogurtRemaining,
         totalSold: parsed.data.totalSold,
       },
     });

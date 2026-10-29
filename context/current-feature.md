@@ -1,16 +1,37 @@
-# Current Feature
+# Current Feature: Daily Winner Highlight (Highest Total Revenue per Day)
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- For each date present in the Sale Records table, determine which row(s) have the highest `totalRevenue` that day (sold revenue, incl. Milk & Mote, **plus** the Bs value of unsold/"left" Queso and Yogurt stock). See Notes: this was changed to `totalSold` mid-implementation and then changed back.
+- Ties go to all tied rows — if two or more records share the day's max `totalRevenue`, mark all of them.
+- Mark the winning row(s)' Total Revenue cell with a green highlight, in both the desktop `<table>` and mobile card layouts, in the Sale Records section.
+- Apply this across every day in the data (not just today) — each date gets its own independent winner determination.
+- A day with only **one** record has no winner at all — nothing to compare it against, so it is not highlighted and shows no margin. (Reversed from the original goal, which trivially marked a lone record as the winner; see Notes.)
+- Show the winning margin — the gap between the winner's `totalRevenue` and the next-best `totalRevenue` that day — next to the "Winner" label; omitted when there's no competitor that day (single record, or a tie at the top).
+- Totals by User section (`UserTotalsSection.tsx`) reworked to match, beyond the original Sale-Records-only scope:
+  - One row per user **per day** (not an all-time aggregate per user), with a Day column, sorted by day descending.
+  - Queso and Yogurt columns show Bs revenue (not quantity sold).
+  - Added a Milk & Mote column.
+  - Total Revenue cell mirrors Sale Records' two-line display (bold "X sold", small "Y left, value Z").
+  - Same winner highlight + margin badge as Sale Records, driven by the same shared `isDailyWinner`/`winnerMargin` fields, so "winner" means the same thing in both tables.
+- No schema or Server Action changes — everything is derived in `buildDailyRecords`/`buildUserTotals` (`src/lib/landing-data.ts`) from existing fields.
+- Record create/edit modal (`RecordFormFields.tsx`, `daily-work-records.ts`), reworked beyond this feature's original scope:
+  - Inputs ask for Queso/Yogurt **left** (`quesoRemaining`/`yogurtRemaining`) again, not "sold" — reverting the "Sale Records CRUD Moved into Home Page" change recorded in History. Stored as entered; no longer derived as `taken - sold`.
+  - Date is no longer a user-typed field. A new record is stamped with the browser's local today (`todayDateString()` in `src/lib/dates.ts`, deliberately not UTC); editing shows the record's existing date read-only and the server ignores any `date` sent with an edit — `updateDailyWorkRecord` always keeps the record's original date.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- **Winner metric went back and forth during implementation — `totalRevenue` is final.** Originally "winner" was highest `totalRevenue` (sold + unsold/"left" stock value), and a lone record for a day trivially won. A report described this as wrong (expected margin 105, got 270) and it was changed to compare `totalSold` instead. Re-checking against real 2026-10-28 data (Raul: totalSold 2930, totalRevenue 3524; Daniel: totalSold 2825, totalRevenue 3254) showed the 105/270 figures were actually `totalSold`/`totalRevenue` margins for the *same* two records, and the intended rule was confirmed to be `totalRevenue` (margin 270) after all — so the comparison was reverted back to `totalRevenue`. The single-record rule from the same bug-fix round stuck independently: a day still needs **two or more** records before anyone is marked a winner, regardless of which figure is compared.
+- The real-dev-data example previously recorded here (2026-10-27, Raul vs. Daniel) predates this back-and-forth; the 2026-10-28 Raul/Daniel figures above are the currently-verified example.
+- `isDailyWinner` and `winnerMargin` live on `DailyRecordRow` (`src/types/landing.ts`), computed once in `buildDailyRecords`. `buildUserTotals` now derives its rows from `buildDailyRecords()` (instead of aggregating `SaleRecord[]` independently) so both sections always agree on who won and by how much.
+- Highlight only the Total Revenue cell (not the whole row), in both `SaleRecordsSection.tsx` and `UserTotalsSection.tsx` layouts (desktop table `<td>` and mobile card's Total Revenue block).
+- Follow the codebase's existing dark-mode-aware color convention for status colors (e.g. the red delete/error treatment uses `text-red-600 dark:text-red-400`) — use an equivalent green pairing.
+- Not yet done: browser verification of the highlight colors, the Totals-by-User rework, and the record-form changes (left-quantity inputs, read-only auto date). Only `npm test` (58/58) and `npm run build` have been run so far.
+- Minor dedup opportunity (not required): `TotalRevenueCell` (sold/left/value two-line display) is now duplicated almost verbatim between `SaleRecordsSection.tsx` and `UserTotalsSection.tsx`.
 
 ## History
 

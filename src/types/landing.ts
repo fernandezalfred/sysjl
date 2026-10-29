@@ -26,11 +26,15 @@ export interface ProductTotal {
 }
 
 export interface UserTotal {
+  date: string;
   userId: string;
   userName: string;
-  quantitySoldByProduct: Record<ProductCode, number>;
-  totalQuantitySold: number;
+  quesoRevenue: number;
+  yogurtRevenue: number;
+  milkMoteRevenue: number;
   totalRevenue: number;
+  isDailyWinner: boolean;
+  winnerMargin: number | null;
 }
 
 export interface ProductBreakdown {
@@ -53,6 +57,8 @@ export interface DailyRecordRow {
   yogurt: ProductBreakdown;
   milkMoteRevenue: number;
   totalRevenue: number;
+  isDailyWinner: boolean;
+  winnerMargin: number | null;
 }
 
 export interface LandingPageData {

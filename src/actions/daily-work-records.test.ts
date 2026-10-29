@@ -38,9 +38,9 @@ function formData(fields: Record<string, string>) {
 const VALID_FIELDS = {
   date: "2026-10-27",
   quesoTaken: "80",
-  quesoSold: "68",
+  quesoRemaining: "12",
   yogurtTaken: "60",
-  yogurtSold: "55",
+  yogurtRemaining: "5",
   totalSold: "123",
 };
 
@@ -56,11 +56,11 @@ describe("createDailyWorkRecord", () => {
     expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
   });
 
-  it("rejects sold greater than taken", async () => {
+  it("rejects remaining greater than taken", async () => {
     authMock.mockResolvedValue(SESSION);
     const result = await createDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, quesoSold: "999" }),
+      formData({ ...VALID_FIELDS, quesoRemaining: "999" }),
     );
     expect(result.success).toBe(false);
     expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
@@ -104,6 +104,21 @@ describe("createDailyWorkRecord", () => {
       },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
+  });
+
+  it("stores Queso/Yogurt left exactly as entered, without deriving it from taken", async () => {
+    authMock.mockResolvedValue(SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
+    const result = await createDailyWorkRecord(
+      { success: false },
+      formData({ ...VALID_FIELDS, quesoTaken: "80", quesoRemaining: "30", yogurtTaken: "60", yogurtRemaining: "20" }),
+    );
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ quesoRemaining: 30, yogurtRemaining: 20 }),
+      }),
+    );
   });
 
   it("ignores a client-supplied userId for a non-admin and always uses the session user", async () => {
@@ -193,7 +208,7 @@ describe("updateDailyWorkRecord", () => {
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
   });
 
-  it("updates the record when the date is unchanged", async () => {
+  it("updates the record's quantities, keeping its original date", async () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
       id: "r1",
       userId: "user-1",
@@ -207,7 +222,6 @@ describe("updateDailyWorkRecord", () => {
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
       where: { id: "r1" },
       data: {
-        date: new Date("2026-10-27T00:00:00.000Z"),
         quesoTaken: 80,
         quesoRemaining: 12,
         yogurtTaken: 60,
@@ -217,15 +231,33 @@ describe("updateDailyWorkRecord", () => {
     });
   });
 
-  it("rejects moving to a date that already has a record", async () => {
-    prismaMock.dailyWorkRecord.findUnique
-      .mockResolvedValueOnce({ id: "r1", userId: "user-1", date: new Date("2026-10-26T00:00:00.000Z") })
-      .mockResolvedValueOnce({ id: "r2" });
+  it("ignores a client-supplied date on update entirely", async () => {
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
+      id: "r1",
+      userId: "user-1",
+      date: new Date("2026-10-27T00:00:00.000Z"),
+    });
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1" }),
+      formData({ ...VALID_FIELDS, recordId: "r1", date: "2099-01-01" }),
     );
-    expect(result).toEqual({ success: false, error: "You already have a record for this date." });
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.not.objectContaining({ date: expect.anything() }) }),
+    );
+  });
+
+  it("rejects remaining greater than taken on update", async () => {
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
+      id: "r1",
+      userId: "user-1",
+      date: new Date("2026-10-27T00:00:00.000Z"),
+    });
+    const result = await updateDailyWorkRecord(
+      { success: false },
+      formData({ ...VALID_FIELDS, recordId: "r1", yogurtRemaining: "999" }),
+    );
+    expect(result.success).toBe(false);
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
   });
 

@@ -30,14 +30,23 @@ function ProductCell({ breakdown }: { breakdown: ProductBreakdown }) {
 }
 
 function TotalRevenueCell({ row }: { row: DailyRecordRow }) {
-  const soldRevenue = row.queso.revenue + row.yogurt.revenue + row.milkMoteRevenue;
+  const soldRevenue =
+    row.queso.revenue + row.yogurt.revenue + row.milkMoteRevenue;
   const remainingValue = row.queso.remainingValue + row.yogurt.remainingValue;
 
   return (
     <>
-      <div className="font-medium">{formatCurrency(soldRevenue)} sold</div>
+      <div className="font-medium">
+        {formatCurrency(soldRevenue)} sold
+        {row.isDailyWinner && (
+          <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
+            Winner{row.winnerMargin !== null && ` (+${formatCurrency(row.winnerMargin)})`}
+          </span>
+        )}
+      </div>
       <div className="text-xs text-foreground/60">
-        {formatCurrency(remainingValue)} left, value {formatCurrency(row.totalRevenue)}
+        {formatCurrency(remainingValue)} left, value{" "}
+        {formatCurrency(row.totalRevenue)}
       </div>
     </>
   );
@@ -48,9 +57,9 @@ function toEditableRecord(row: DailyRecordRow): DailyWorkRecordRow {
     id: row.workRecordId,
     date: row.date,
     quesoTaken: row.queso.taken,
-    quesoSold: row.queso.sold,
+    quesoRemaining: row.queso.remaining,
     yogurtTaken: row.yogurt.taken,
-    yogurtSold: row.yogurt.sold,
+    yogurtRemaining: row.yogurt.remaining,
     totalSold: row.totalSold,
   };
 }
@@ -122,8 +131,16 @@ export function SaleRecordsSection({
                 <td className="px-4 py-2">
                   <ProductCell breakdown={row.yogurt} />
                 </td>
-                <td className="px-4 py-2 font-medium">{formatCurrency(row.milkMoteRevenue)}</td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 font-medium">
+                  {formatCurrency(row.milkMoteRevenue)}
+                </td>
+                <td
+                  className={
+                    row.isDailyWinner
+                      ? "rounded-md bg-green-50 px-4 py-2 dark:bg-green-950/40"
+                      : "px-4 py-2"
+                  }
+                >
                   <TotalRevenueCell row={row} />
                 </td>
                 <td className="px-4 py-2 text-right">
@@ -166,11 +183,19 @@ export function SaleRecordsSection({
               </div>
               <div>
                 <p className="text-xs text-foreground/60">Milk & Mote</p>
-                <div className="font-medium">{formatCurrency(row.milkMoteRevenue)}</div>
+                <div className="font-medium">
+                  {formatCurrency(row.milkMoteRevenue)}
+                </div>
               </div>
             </div>
             <div className="mt-2 flex items-end justify-between border-t border-foreground/10 pt-2 text-sm">
-              <div>
+              <div
+                className={
+                  row.isDailyWinner
+                    ? "rounded-md bg-green-50 px-2 py-1 dark:bg-green-950/40"
+                    : undefined
+                }
+              >
                 <p className="text-xs text-foreground/60">Total Revenue</p>
                 <TotalRevenueCell row={row} />
               </div>
@@ -204,7 +229,12 @@ export function SaleRecordsSection({
             vehicleUsers={vehicleUsers}
           />
         ) : (
-          <EditRecordForm key={mode.record.id} record={mode.record} onSaved={close} onCancel={close} />
+          <EditRecordForm
+            key={mode.record.id}
+            record={mode.record}
+            onSaved={close}
+            onCancel={close}
+          />
         )}
       </dialog>
     </section>

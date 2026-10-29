@@ -13,30 +13,23 @@ import type {
 const PRODUCT_CODES: ProductCode[] = ["QUESO", "YOGURT"];
 
 export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
-  const userMap = new Map<string, UserTotal>();
+  // One row per user per day, reusing buildDailyRecords' totalRevenue (which already
+  // includes Milk & Mote and unsold Queso/Yogurt value) and its isDailyWinner flag,
+  // so "winner" means the same thing here as it does in the Sale Records table.
+  const rows: UserTotal[] = buildDailyRecords(records).map((row) => ({
+    date: row.date,
+    userId: row.userId,
+    userName: row.userName,
+    quesoRevenue: row.queso.revenue,
+    yogurtRevenue: row.yogurt.revenue,
+    milkMoteRevenue: row.milkMoteRevenue,
+    totalRevenue: row.totalRevenue,
+    isDailyWinner: row.isDailyWinner,
+    winnerMargin: row.winnerMargin,
+  }));
 
-  for (const record of records) {
-    const sold = record.quantityTaken - record.quantityRemaining;
-    const revenue = sold * record.unitPrice;
-    const existing = userMap.get(record.userId);
-
-    if (existing) {
-      existing.quantitySoldByProduct[record.product] += sold;
-      existing.totalQuantitySold += sold;
-      existing.totalRevenue += revenue;
-      continue;
-    }
-
-    userMap.set(record.userId, {
-      userId: record.userId,
-      userName: record.userName,
-      quantitySoldByProduct: { QUESO: 0, YOGURT: 0, [record.product]: sold },
-      totalQuantitySold: sold,
-      totalRevenue: revenue,
-    });
-  }
-
-  return Array.from(userMap.values()).sort((a, b) => b.totalRevenue - a.totalRevenue);
+  // Most recent day first; same-day ties keep buildDailyRecords' own ordering.
+  return rows.sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export function buildProductTotals(records: SaleRecord[]): ProductTotal[] {
@@ -62,7 +55,10 @@ export function buildProductTotals(records: SaleRecord[]): ProductTotal[] {
 
 const EMPTY_BREAKDOWN: ProductBreakdown = { taken: 0, remaining: 0, sold: 0, revenue: 0, remainingValue: 0 };
 
-type PartialDailyRecordRow = Omit<DailyRecordRow, "milkMoteRevenue" | "totalRevenue">;
+type PartialDailyRecordRow = Omit<
+  DailyRecordRow,
+  "milkMoteRevenue" | "totalRevenue" | "isDailyWinner" | "winnerMargin"
+>;
 
 export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
   const rowMap = new Map<string, PartialDailyRecordRow>();
@@ -98,7 +94,7 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
     });
   }
 
-  const rows: DailyRecordRow[] = Array.from(rowMap.values()).map((row) => {
+  const withRevenue = Array.from(rowMap.values()).map((row) => {
     // Milk + Mote have no dedicated taken/sold inputs; their combined revenue is
     // the remainder of the user-entered totalSold after Queso's and Yogurt's
     // own quantity-based revenue is accounted for.
@@ -111,6 +107,46 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
       milkMoteRevenue;
 
     return { ...row, milkMoteRevenue, totalRevenue };
+  });
+
+  // The day's winner is whoever has the highest totalRevenue ("value": sold revenue
+  // plus the Bs value of unsold/"left" Queso and Yogurt stock). Ties share the win.
+  // Determined per date, independently of other days.
+  const countByDate = new Map<string, number>();
+  const maxRevenueByDate = new Map<string, number>();
+  for (const row of withRevenue) {
+    countByDate.set(row.date, (countByDate.get(row.date) ?? 0) + 1);
+    const currentMax = maxRevenueByDate.get(row.date);
+    if (currentMax === undefined || row.totalRevenue > currentMax) {
+      maxRevenueByDate.set(row.date, row.totalRevenue);
+    }
+  }
+
+  // How much the winner won by: the gap between the day's highest totalRevenue and
+  // the best non-winning totalRevenue that same day. null when there is no competitor
+  // to compare against (a single record that day, or every record tied for the win).
+  const runnerUpRevenueByDate = new Map<string, number>();
+  for (const row of withRevenue) {
+    const max = maxRevenueByDate.get(row.date)!;
+    if (row.totalRevenue < max) {
+      const currentRunnerUp = runnerUpRevenueByDate.get(row.date);
+      if (currentRunnerUp === undefined || row.totalRevenue > currentRunnerUp) {
+        runnerUpRevenueByDate.set(row.date, row.totalRevenue);
+      }
+    }
+  }
+
+  const rows: DailyRecordRow[] = withRevenue.map((row) => {
+    // A day needs at least two records to have a winner at all — nothing to compare
+    // a lone record against, so it is not marked a winner.
+    const hasCompetitor = countByDate.get(row.date)! > 1;
+    const max = maxRevenueByDate.get(row.date)!;
+    const runnerUp = runnerUpRevenueByDate.get(row.date);
+    return {
+      ...row,
+      isDailyWinner: hasCompetitor && row.totalRevenue === max,
+      winnerMargin: runnerUp === undefined ? null : max - runnerUp,
+    };
   });
 
   // Newest-created record first, so a record just added always lands on line one.
