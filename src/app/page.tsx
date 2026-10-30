@@ -62,7 +62,12 @@ async function LandingContent() {
         grandTotalRemainingValue={data.grandTotalRemainingValue}
       />
 
-      <UserTotalsSection userTotals={data.userTotals} />
+      <UserTotalsSection
+        userTotals={data.userTotals}
+        dailyRecords={data.dailyRecords}
+        currentUserId={session?.user?.id ?? null}
+        isAdmin={session?.user?.role === "ADMIN"}
+      />
 
       <SaleRecordsSection
         dailyRecords={data.dailyRecords}
