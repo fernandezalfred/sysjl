@@ -19,6 +19,8 @@ const MOCK_WORK_RECORDS = [
     yogurtTaken: 60,
     yogurtRemaining: 5,
     totalSold: 123,
+    quesoSalePrice: 9,
+    yogurtSalePrice: 33,
     createdAt: new Date("2026-10-27T08:00:00.000Z"),
     user: { name: "Carla Mamani", vehicle: { id: "v1", name: "Vehicle 1" } },
   },
@@ -31,6 +33,8 @@ const MOCK_WORK_RECORDS = [
     yogurtTaken: 50,
     yogurtRemaining: 18,
     totalSold: 82,
+    quesoSalePrice: 9,
+    yogurtSalePrice: 33,
     createdAt: new Date("2026-10-27T09:00:00.000Z"),
     user: { name: "Jorge Quispe", vehicle: { id: "v2", name: "Vehicle 2" } },
   },
@@ -86,6 +90,21 @@ describe("buildProductTotals", () => {
     expect(yogurt.quantitySold).toBe(0);
     expect(yogurt.revenue).toBe(0);
     expect(yogurt.quantityRemaining).toBe(0);
+  });
+
+  it("uses each record's own unitPrice instead of today's current price, so an old record keeps its original revenue after a price change", () => {
+    const records = [
+      // Sold before a price change, at the old price of 9/unit.
+      record({ id: "r1", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0 }),
+      // Sold after the admin raised the price to 12/unit.
+      record({ id: "r2", product: "QUESO", unitPrice: 12, quantityTaken: 10, quantityRemaining: 0 }),
+    ];
+
+    const totals = buildProductTotals(records);
+    const queso = totals.find((t) => t.product === "QUESO")!;
+
+    // 10 * 9 + 10 * 12 = 210, not 20 * 12 = 240 (today's price applied to everything).
+    expect(queso.revenue).toBe(210);
   });
 });
 
@@ -298,5 +317,17 @@ describe("getLandingPageData", () => {
 
     const sumOfUserRevenue = data.userTotals.reduce((sum, u) => sum + u.quesoRevenue + u.yogurtRevenue, 0);
     expect(sumOfUserRevenue).toBe(data.grandTotalRevenue);
+  });
+
+  it("uses each record's own snapshotted sale price, not a hardcoded constant", async () => {
+    prismaMock.dailyWorkRecord.findMany.mockResolvedValue([
+      { ...MOCK_WORK_RECORDS[0], quesoSalePrice: 15, yogurtSalePrice: 40 },
+    ]);
+
+    const data = await getLandingPageData();
+    const row = data.dailyRecords.find((r) => r.userId === "u1")!;
+
+    expect(row.queso.revenue).toBe((80 - 12) * 15);
+    expect(row.yogurt.revenue).toBe((60 - 5) * 40);
   });
 });

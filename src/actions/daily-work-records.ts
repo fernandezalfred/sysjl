@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserSession } from "@/lib/require-session";
 import { NotAuthorizedError } from "@/lib/require-admin";
+import { getCurrentSalePrices } from "@/lib/product-prices";
 
 export interface RecordActionState {
   success: boolean;
@@ -95,6 +96,10 @@ export async function createDailyWorkRecord(
       return { success: false, error: "You already have a record for this date." };
     }
 
+    // Sale price is snapshotted here, once, from whatever the admin has it set to
+    // right now — a later price change never rewrites this record's revenue.
+    const salePrices = await getCurrentSalePrices();
+
     await prisma.dailyWorkRecord.create({
       data: {
         userId,
@@ -104,6 +109,8 @@ export async function createDailyWorkRecord(
         yogurtTaken: parsed.data.yogurtTaken,
         yogurtRemaining: parsed.data.yogurtRemaining,
         totalSold: parsed.data.totalSold,
+        quesoSalePrice: salePrices.QUESO,
+        yogurtSalePrice: salePrices.YOGURT,
       },
     });
 

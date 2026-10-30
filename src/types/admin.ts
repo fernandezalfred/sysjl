@@ -15,3 +15,12 @@ export interface AdminVehicleOption {
   name: string;
   assignedUserId: string | null;
 }
+
+export interface ProductPriceHistoryRow {
+  id: string;
+  product: "QUESO" | "YOGURT";
+  purchasePrice: number;
+  salePrice: number;
+  setByName: string;
+  createdAt: string;
+}

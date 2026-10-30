@@ -47,9 +47,14 @@ async function LandingContent() {
         <div className="flex items-center gap-3">
           <span className="text-sm text-foreground/70">{session?.user?.name}</span>
           {session?.user?.role === "ADMIN" ? (
-            <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
-              Manage users
-            </Link>
+            <>
+              <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
+                Manage users
+              </Link>
+              <Link href="/admin/products" className="text-sm text-foreground/60 underline hover:text-foreground">
+                Product prices
+              </Link>
+            </>
           ) : null}
           <SignOutButton />
         </div>

@@ -17,17 +17,23 @@ enum Role {
   VEHICLE_USER
 }
 
+enum Product {
+  QUESO
+  YOGURT
+}
+
 model User {
-  id           String            @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  email        String            @unique
-  passwordHash String
-  role         Role              @default(VEHICLE_USER)
-  isActive     Boolean           @default(true)
-  vehicle      Vehicle?
-  workRecords  DailyWorkRecord[]
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String            @unique
+  passwordHash  String
+  role          Role              @default(VEHICLE_USER)
+  isActive      Boolean           @default(true)
+  vehicle       Vehicle?
+  workRecords   DailyWorkRecord[]
+  productPrices ProductPrice[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 }
 
 model Vehicle {
@@ -54,8 +60,26 @@ model DailyWorkRecord {
   // of quesoSold/yogurtSold; not cross-checked against their sum.
   // Default only guards legacy/pre-field documents from breaking reads.
   totalSold       Int      @default(0)
+  // Sale price per unit (Bs), snapshotted from the current ProductPrice at creation
+  // time and never touched again, even on edit — so a later admin price change never
+  // rewrites a past record's revenue. Defaults only guard legacy/pre-field documents.
+  quesoSalePrice  Float    @default(9)
+  yogurtSalePrice Float    @default(33)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@unique([userId, date])
+}
+
+// Append-only price history: never updated in place, so the admin and timestamp
+// behind every past price are kept. The current price for a product is its most
+// recent row (highest createdAt).
+model ProductPrice {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  product       Product
+  purchasePrice Float
+  salePrice     Float
+  setById       String   @db.ObjectId
+  setBy         User     @relation(fields: [setById], references: [id])
+  createdAt     DateTime @default(now())
 }

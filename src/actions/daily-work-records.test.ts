@@ -12,6 +12,9 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
     user: {
       findUnique: vi.fn(),
     },
+    productPrice: {
+      findFirst: vi.fn(),
+    },
   },
   revalidatePathMock: vi.fn(),
 }));
@@ -46,6 +49,9 @@ const VALID_FIELDS = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // No admin-set price yet by default: createDailyWorkRecord falls back to the
+  // legacy defaults (Queso 9, Yogurt 33). Individual tests override this.
+  prismaMock.productPrice.findFirst.mockResolvedValue(null);
 });
 
 describe("createDailyWorkRecord", () => {
@@ -101,9 +107,43 @@ describe("createDailyWorkRecord", () => {
         yogurtTaken: 60,
         yogurtRemaining: 5,
         totalSold: 123,
+        quesoSalePrice: 9,
+        yogurtSalePrice: 33,
       },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
+  });
+
+  it("falls back to the legacy default sale prices when the admin hasn't set one yet", async () => {
+    authMock.mockResolvedValue(SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
+    prismaMock.productPrice.findFirst.mockResolvedValue(null);
+    const result = await createDailyWorkRecord({ success: false }, formData(VALID_FIELDS));
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ quesoSalePrice: 9, yogurtSalePrice: 33 }),
+      }),
+    );
+  });
+
+  it("snapshots the admin's current sale price onto the record at creation time", async () => {
+    authMock.mockResolvedValue(SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
+    prismaMock.productPrice.findFirst.mockImplementation(({ where }: { where: { product: string } }) =>
+      Promise.resolve(
+        where.product === "QUESO"
+          ? { purchasePrice: 8, salePrice: 10, createdAt: new Date(), setBy: { name: "Admin" } }
+          : { purchasePrice: 28, salePrice: 36, createdAt: new Date(), setBy: { name: "Admin" } },
+      ),
+    );
+    const result = await createDailyWorkRecord({ success: false }, formData(VALID_FIELDS));
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ quesoSalePrice: 10, yogurtSalePrice: 36 }),
+      }),
+    );
   });
 
   it("stores Queso/Yogurt left exactly as entered, without deriving it from taken", async () => {

@@ -5,8 +5,8 @@ export const PRODUCT_LABELS: Record<ProductCode, string> = {
   YOGURT: "Yogurt",
 };
 
-// Admin-configurable in the full system; these are the current values from
-// context/project-overview.md §4 until cost/price management is implemented.
+// Fallback sale price used only when the admin hasn't set a price for a product yet
+// (see src/lib/product-prices.ts) — the starting values from context/project-overview.md §4.
 export const CURRENT_UNIT_PRICE: Record<ProductCode, number> = {
   QUESO: 9,
   YOGURT: 33,

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { CURRENT_UNIT_PRICE, PRODUCT_LABELS } from "@/lib/pricing";
+import { PRODUCT_LABELS } from "@/lib/pricing";
 import type {
   DailyRecordRow,
   LandingPageData,
@@ -32,6 +32,9 @@ export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
   return rows.sort((a, b) => b.date.localeCompare(a.date));
 }
 
+// Revenue and remaining value are summed per record using each record's own
+// unitPrice (snapshotted at the time it was created), not today's current price —
+// so a later admin price change never rewrites a past record's figures here.
 export function buildProductTotals(records: SaleRecord[]): ProductTotal[] {
   return PRODUCT_CODES.map((product) => {
     const productRecords = records.filter((r) => r.product === product);
@@ -40,15 +43,19 @@ export function buildProductTotals(records: SaleRecord[]): ProductTotal[] {
       0,
     );
     const quantityRemaining = productRecords.reduce((sum, r) => sum + r.quantityRemaining, 0);
-    const unitPrice = CURRENT_UNIT_PRICE[product];
+    const revenue = productRecords.reduce(
+      (sum, r) => sum + (r.quantityTaken - r.quantityRemaining) * r.unitPrice,
+      0,
+    );
+    const remainingValue = productRecords.reduce((sum, r) => sum + r.quantityRemaining * r.unitPrice, 0);
 
     return {
       product,
       label: PRODUCT_LABELS[product],
       quantitySold,
-      revenue: quantitySold * unitPrice,
+      revenue,
       quantityRemaining,
-      remainingValue: quantityRemaining * unitPrice,
+      remainingValue,
     };
   });
 }
@@ -175,7 +182,8 @@ export async function getLandingPageData(): Promise<LandingPageData> {
         id: `${r.id}-QUESO`,
         workRecordId: r.id,
         product: "QUESO" as const,
-        unitPrice: CURRENT_UNIT_PRICE.QUESO,
+        // The price snapshotted on this record at creation time, not today's price.
+        unitPrice: r.quesoSalePrice,
         quantityTaken: r.quesoTaken,
         quantityRemaining: r.quesoRemaining,
       },
@@ -184,7 +192,7 @@ export async function getLandingPageData(): Promise<LandingPageData> {
         id: `${r.id}-YOGURT`,
         workRecordId: r.id,
         product: "YOGURT" as const,
-        unitPrice: CURRENT_UNIT_PRICE.YOGURT,
+        unitPrice: r.yogurtSalePrice,
         quantityTaken: r.yogurtTaken,
         quantityRemaining: r.yogurtRemaining,
       },
