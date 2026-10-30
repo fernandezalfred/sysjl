@@ -1,18 +1,24 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
-import { SummaryCards } from "@/components/landing/SummaryCards";
+import { getT } from "@/lib/i18n/server";
+import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
-import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
-import { SignOutButton } from "@/components/auth/SignOutButton";
+import { AdminQuickSettings } from "@/components/landing/AdminQuickSettings";
+import { TopSellerBanner } from "@/components/landing/TopSellerBanner";
+import { DriverRecruitmentBanner } from "@/components/landing/DriverRecruitmentBanner";
+import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
+import { Footer } from "@/components/layout/Footer";
+import { CreateRecordButton } from "@/components/records/CreateRecordButton";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function Home() {
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <Suspense fallback={<LandingSkeleton />}>
+      <Suspense fallback={<LandingSkeleton t={defaultT} />}>
         <LandingContent />
       </Suspense>
     </div>
@@ -21,7 +27,7 @@ export default function Home() {
 
 async function LandingContent() {
   await connection();
-  const [data, session, vehicleUsers] = await Promise.all([
+  const [data, session, vehicleUsers, { t, locale }] = await Promise.all([
     getLandingPageData(),
     auth(),
     prisma.user.findMany({
@@ -29,61 +35,77 @@ async function LandingContent() {
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    getT(),
   ]);
+
+  const isAdmin = session?.user?.role === "ADMIN";
+  const isSignedIn = Boolean(session?.user?.id);
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Daily Sales & Stock</h1>
-          <p className="text-sm text-foreground/60">
-            Updated{" "}
-            {new Date(data.generatedAt).toLocaleString("es-BO", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}
+      <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
+        <AppHeader
+          title="Daily Sales & Stock"
+          generatedAt={data.generatedAt}
+          userName={session?.user?.name}
+          isAdmin={isAdmin}
+          isSignedIn={isSignedIn}
+          activePage="home"
+          t={t}
+        />
+        {isSignedIn ? (
+          <p className="mt-3 text-sm text-foreground/60">
+            {t("landing.welcomeBack", { name: session?.user?.name ?? "" })}
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-foreground/70">{session?.user?.name}</span>
-          {session?.user?.role === "ADMIN" ? (
-            <>
-              <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
-                Manage users
-              </Link>
-              <Link href="/admin/products" className="text-sm text-foreground/60 underline hover:text-foreground">
-                Product prices
-              </Link>
-            </>
-          ) : null}
-          <SignOutButton />
-        </div>
-      </header>
+        ) : (
+          <p className="mt-3 text-sm text-foreground/60">{t("landing.guestTagline")}</p>
+        )}
+      </div>
 
-      <SummaryCards
-        productTotals={data.productTotals}
-        grandTotalQuantitySold={data.grandTotalQuantitySold}
-        grandTotalRevenue={data.grandTotalRevenue}
-        grandTotalRemainingValue={data.grandTotalRemainingValue}
-      />
+      {!isSignedIn ? <DriverRecruitmentBanner t={t} /> : null}
+
+      <TopSellerBanner userTotals={data.userTotals} t={t} />
+
+      {isAdmin ? <AdminQuickSettings t={t} /> : null}
+
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+          {t("landing.totalsByUser")}
+        </h2>
+        {isSignedIn ? (
+          <CreateRecordButton isAdmin={isAdmin} vehicleUsers={vehicleUsers} locale={locale} />
+        ) : null}
+      </div>
 
       <UserTotalsSection
         userTotals={data.userTotals}
         dailyRecords={data.dailyRecords}
         currentUserId={session?.user?.id ?? null}
-        isAdmin={session?.user?.role === "ADMIN"}
+        isAdmin={isAdmin}
+        hideHeading
+        locale={locale}
       />
 
-      <SaleRecordsSection
-        dailyRecords={data.dailyRecords}
-        currentUserId={session?.user?.id ?? null}
-        isAdmin={session?.user?.role === "ADMIN"}
-        vehicleUsers={vehicleUsers}
-      />
+      <Footer t={t} />
     </div>
   );
 }
 
-function LandingSkeleton() {
-  return <div className="animate-pulse text-sm text-foreground/50">Loading daily sales…</div>;
+function LandingSkeleton({ t }: { t: TranslateFn }) {
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
+        <AppHeaderSkeleton />
+        <Skeleton className="mt-3 h-4 w-40" />
+      </div>
+
+      <Skeleton className="h-24 w-full rounded-xl" />
+
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-8 w-28" />
+      </div>
+      <TableSkeleton rows={3} t={t} />
+    </div>
+  );
 }

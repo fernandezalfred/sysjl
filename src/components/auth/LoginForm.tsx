@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { login, type LoginState } from "@/actions/auth";
+import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 
 const initialState: LoginState = { success: false };
 
-function SubmitButton() {
+function SubmitButton({ t }: { t: TranslateFn }) {
   const { pending } = useFormStatus();
 
   return (
@@ -15,19 +16,24 @@ function SubmitButton() {
       disabled={pending}
       className="w-full rounded-md bg-foreground px-4 py-2 font-medium text-background disabled:opacity-60"
     >
-      {pending ? "Signing in…" : "Sign in"}
+      {pending ? t("login.submitting") : t("login.submit")}
     </button>
   );
 }
 
-export function LoginForm() {
+interface LoginFormProps {
+  locale: Locale;
+}
+
+export function LoginForm({ locale }: LoginFormProps) {
+  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction] = useActionState(login, initialState);
 
   return (
     <form action={formAction} className="flex w-full max-w-sm flex-col gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="email" className="text-sm font-medium">
-          Email
+          {t("login.email")}
         </label>
         <input
           id="email"
@@ -41,7 +47,7 @@ export function LoginForm() {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="password" className="text-sm font-medium">
-          Password
+          {t("login.password")}
         </label>
         <input
           id="password"
@@ -59,7 +65,7 @@ export function LoginForm() {
         </p>
       ) : null}
 
-      <SubmitButton />
+      <SubmitButton t={t} />
     </form>
   );
 }

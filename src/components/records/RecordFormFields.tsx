@@ -1,4 +1,5 @@
 import { formatShortDate, todayDateString } from "@/lib/dates";
+import type { TranslateFn } from "@/lib/i18n/translations";
 
 interface RecordFormFieldsProps {
   defaultValues?: {
@@ -9,12 +10,13 @@ interface RecordFormFieldsProps {
     yogurtRemaining: number;
     totalSold: number;
   };
+  t: TranslateFn;
 }
 
 const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm";
 const labelClass = "text-xs font-medium text-foreground/60";
 
-export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
+export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
   // Editing keeps the record's original date; a new record is always stamped with
   // today (the browser's local day, not the user's input) — the date is never typed.
   const date = defaultValues?.date ?? todayDateString();
@@ -22,14 +24,14 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="flex flex-col gap-1 sm:col-span-2">
-        <span className={labelClass}>Date</span>
+        <span className={labelClass}>{t("records.date")}</span>
         <p className="text-sm">{formatShortDate(date)}</p>
         {defaultValues ? null : <input type="hidden" name="date" value={date} />}
       </div>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="queso-taken" className={labelClass}>
-          Queso taken
+          {t("records.quesoTaken")}
         </label>
         <input
           id="queso-taken"
@@ -44,7 +46,7 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="queso-remaining" className={labelClass}>
-          Queso left
+          {t("records.quesoLeft")}
         </label>
         <input
           id="queso-remaining"
@@ -59,7 +61,7 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="yogurt-taken" className={labelClass}>
-          Yogurt taken
+          {t("records.yogurtTaken")}
         </label>
         <input
           id="yogurt-taken"
@@ -74,7 +76,7 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="yogurt-remaining" className={labelClass}>
-          Yogurt left
+          {t("records.yogurtLeft")}
         </label>
         <input
           id="yogurt-remaining"
@@ -89,7 +91,7 @@ export function RecordFormFields({ defaultValues }: RecordFormFieldsProps) {
 
       <div className="flex flex-col gap-1 sm:col-span-2">
         <label htmlFor="total-sold" className={labelClass}>
-          Total sold
+          {t("records.totalSold")}
         </label>
         <input
           id="total-sold"

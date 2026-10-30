@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentProductPrices } from "@/lib/product-prices";
 import { PRODUCT_LABELS, formatCurrency } from "@/lib/pricing";
 import { SetProductPriceForm } from "@/components/admin/SetProductPriceForm";
+import { getT } from "@/lib/i18n/server";
 import type { ProductPriceHistoryRow } from "@/types/admin";
 
 export default function AdminProductsPage() {
@@ -20,12 +21,13 @@ export default function AdminProductsPage() {
 async function AdminProductsContent() {
   await connection();
 
-  const [prices, historyRows] = await Promise.all([
+  const [prices, historyRows, { t, locale }] = await Promise.all([
     getCurrentProductPrices(),
     prisma.productPrice.findMany({
       orderBy: { createdAt: "desc" },
       include: { setBy: { select: { name: true } } },
     }),
+    getT(),
   ]);
 
   const history: ProductPriceHistoryRow[] = historyRows.map((row) => ({
@@ -41,18 +43,25 @@ async function AdminProductsContent() {
     <div className="flex flex-col gap-8">
       <header>
         <Link href="/" className="text-sm text-foreground/60 underline hover:text-foreground">
-          ← Back to dashboard
+          {t("adminProducts.backToDashboard")}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Product Prices</h1>
-        <p className="text-sm text-foreground/60">
-          Set the purchase and sale price for Queso and Yogurt. Records already created keep the
-          sale price that was active when they were made — a new price only applies going forward.
-        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{t("adminProducts.heading")}</h1>
+        <p className="text-sm text-foreground/60">{t("adminProducts.subheading")}</p>
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <SetProductPriceForm key={`QUESO-${prices.QUESO.updatedAt}`} product="QUESO" current={prices.QUESO} />
-        <SetProductPriceForm key={`YOGURT-${prices.YOGURT.updatedAt}`} product="YOGURT" current={prices.YOGURT} />
+        <SetProductPriceForm
+          key={`QUESO-${prices.QUESO.updatedAt}`}
+          product="QUESO"
+          current={prices.QUESO}
+          locale={locale}
+        />
+        <SetProductPriceForm
+          key={`YOGURT-${prices.YOGURT.updatedAt}`}
+          product="YOGURT"
+          current={prices.YOGURT}
+          locale={locale}
+        />
       </div>
 
       <section aria-labelledby="price-history-heading" className="flex flex-col gap-3">
@@ -60,20 +69,20 @@ async function AdminProductsContent() {
           id="price-history-heading"
           className="text-sm font-medium uppercase tracking-wide text-foreground/60"
         >
-          Price History
+          {t("adminProducts.priceHistory")}
         </h2>
         {history.length === 0 ? (
-          <p className="text-sm text-foreground/60">No price changes have been made yet.</p>
+          <p className="text-sm text-foreground/60">{t("adminProducts.noHistory")}</p>
         ) : (
           <div className="overflow-hidden rounded-lg border border-foreground/10">
             <table className="w-full text-sm">
               <thead className="bg-foreground/[0.03] text-left text-foreground/60">
                 <tr>
-                  <th className="px-4 py-2 font-medium">Product</th>
-                  <th className="px-4 py-2 font-medium">Purchase price</th>
-                  <th className="px-4 py-2 font-medium">Sale price</th>
-                  <th className="px-4 py-2 font-medium">Set by</th>
-                  <th className="px-4 py-2 font-medium">Date</th>
+                  <th className="px-4 py-2 font-medium">{t("adminProducts.product")}</th>
+                  <th className="px-4 py-2 font-medium">{t("adminProducts.purchasePrice")}</th>
+                  <th className="px-4 py-2 font-medium">{t("adminProducts.salePrice")}</th>
+                  <th className="px-4 py-2 font-medium">{t("adminProducts.setBy")}</th>
+                  <th className="px-4 py-2 font-medium">{t("adminProducts.date")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/10">

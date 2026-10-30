@@ -1,11 +1,14 @@
 import { auth } from "@/auth";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATH_PREFIXES = ["/login"];
+const PUBLIC_EXACT_PATHS = ["/"];
 const ADMIN_PATH_PREFIX = "/admin";
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
+  const isPublicPath =
+    PUBLIC_EXACT_PATHS.includes(pathname) ||
+    PUBLIC_PATH_PREFIXES.some((path) => pathname.startsWith(path));
 
   if (!req.auth && !isPublicPath) {
     const loginUrl = new URL("/login", req.nextUrl.origin);

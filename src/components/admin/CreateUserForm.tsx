@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createUser, type ActionState } from "@/actions/admin-users";
+import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 
 const initialState: ActionState = { success: false };
 
-function SubmitButton() {
+function SubmitButton({ t }: { t: TranslateFn }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -14,22 +15,27 @@ function SubmitButton() {
       disabled={pending}
       className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
     >
-      {pending ? "Creating…" : "Create user"}
+      {pending ? t("adminUsers.creating") : t("adminUsers.createButton")}
     </button>
   );
 }
 
-export function CreateUserForm() {
+interface CreateUserFormProps {
+  locale: Locale;
+}
+
+export function CreateUserForm({ locale }: CreateUserFormProps) {
+  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction] = useActionState(createUser, initialState);
 
   return (
     <details className="rounded-lg border border-foreground/10 p-4">
-      <summary className="cursor-pointer text-sm font-medium">Create new user</summary>
+      <summary className="cursor-pointer text-sm font-medium">{t("adminUsers.createNew")}</summary>
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="new-name" className="text-xs font-medium text-foreground/60">
-              Name
+              {t("adminUsers.name")}
             </label>
             <input
               id="new-name"
@@ -41,7 +47,7 @@ export function CreateUserForm() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="new-email" className="text-xs font-medium text-foreground/60">
-              Email
+              {t("adminUsers.email")}
             </label>
             <input
               id="new-email"
@@ -54,7 +60,7 @@ export function CreateUserForm() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="new-password" className="text-xs font-medium text-foreground/60">
-              Password
+              {t("adminUsers.password")}
             </label>
             <input
               id="new-password"
@@ -69,7 +75,7 @@ export function CreateUserForm() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="new-role" className="text-xs font-medium text-foreground/60">
-              Role
+              {t("adminUsers.role")}
             </label>
             <select
               id="new-role"
@@ -77,8 +83,8 @@ export function CreateUserForm() {
               defaultValue="VEHICLE_USER"
               className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
             >
-              <option value="VEHICLE_USER">Vehicle user</option>
-              <option value="ADMIN">Admin</option>
+              <option value="VEHICLE_USER">{t("adminUsers.roleVehicleUser")}</option>
+              <option value="ADMIN">{t("adminUsers.roleAdmin")}</option>
             </select>
           </div>
         </div>
@@ -88,10 +94,12 @@ export function CreateUserForm() {
             {state.error}
           </p>
         ) : null}
-        {state.success ? <p className="text-sm text-green-600 dark:text-green-400">User created.</p> : null}
+        {state.success ? (
+          <p className="text-sm text-green-600 dark:text-green-400">{t("adminUsers.userCreated")}</p>
+        ) : null}
 
         <div>
-          <SubmitButton />
+          <SubmitButton t={t} />
         </div>
       </form>
     </details>

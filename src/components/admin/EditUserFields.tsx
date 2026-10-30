@@ -1,11 +1,13 @@
+import type { TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow, AdminVehicleOption } from "@/types/admin";
 
 interface EditUserFieldsProps {
   user: AdminUserRow;
   vehicles: AdminVehicleOption[];
+  t: TranslateFn;
 }
 
-export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
+export function EditUserFields({ user, vehicles, t }: EditUserFieldsProps) {
   const availableVehicles = vehicles.filter(
     (v) => v.assignedUserId === null || v.assignedUserId === user.id,
   );
@@ -14,7 +16,7 @@ export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="flex flex-col gap-1">
         <label htmlFor={`name-${user.id}`} className="text-xs font-medium text-foreground/60">
-          Name
+          {t("adminUsers.name")}
         </label>
         <input
           id={`name-${user.id}`}
@@ -27,7 +29,7 @@ export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor={`email-${user.id}`} className="text-xs font-medium text-foreground/60">
-          Email
+          {t("adminUsers.email")}
         </label>
         <input
           id={`email-${user.id}`}
@@ -41,7 +43,7 @@ export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor={`role-${user.id}`} className="text-xs font-medium text-foreground/60">
-          Role
+          {t("adminUsers.role")}
         </label>
         <select
           id={`role-${user.id}`}
@@ -49,14 +51,14 @@ export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
           defaultValue={user.role}
           className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
         >
-          <option value="VEHICLE_USER">Vehicle user</option>
-          <option value="ADMIN">Admin</option>
+          <option value="VEHICLE_USER">{t("adminUsers.roleVehicleUser")}</option>
+          <option value="ADMIN">{t("adminUsers.roleAdmin")}</option>
         </select>
       </div>
 
       <div className="flex flex-col gap-1">
         <label htmlFor={`vehicle-${user.id}`} className="text-xs font-medium text-foreground/60">
-          Vehicle
+          {t("adminUsers.vehicle")}
         </label>
         <select
           id={`vehicle-${user.id}`}
@@ -64,7 +66,7 @@ export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
           defaultValue={user.vehicleId ?? ""}
           className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
         >
-          <option value="">No vehicle</option>
+          <option value="">{t("adminUsers.noVehicle")}</option>
           {availableVehicles.map((v) => (
             <option key={v.id} value={v.id}>
               {v.name}
@@ -75,7 +77,7 @@ export function EditUserFields({ user, vehicles }: EditUserFieldsProps) {
 
       <div className="flex flex-col gap-1 sm:col-span-2">
         <label htmlFor={`newPassword-${user.id}`} className="text-xs font-medium text-foreground/60">
-          New password (leave blank to keep current)
+          {t("adminUsers.newPassword")}
         </label>
         <input
           id={`newPassword-${user.id}`}

@@ -6,6 +6,7 @@ import { formatShortDate } from "@/lib/dates";
 import { toEditableRecord } from "@/lib/records";
 import { CreateRecordForm } from "@/components/records/CreateRecordForm";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
+import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { DailyRecordRow, ProductBreakdown } from "@/types/landing";
 import type { DailyWorkRecordRow } from "@/types/records";
 
@@ -14,25 +15,29 @@ interface SaleRecordsSectionProps {
   currentUserId: string | null;
   isAdmin: boolean;
   vehicleUsers: { id: string; name: string }[];
+  locale: Locale;
 }
 
 type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
 
-function ProductCell({ breakdown }: { breakdown: ProductBreakdown }) {
+function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: TranslateFn }) {
   return (
     <>
       <div className="font-medium">
-        {breakdown.sold} sold ({formatCurrency(breakdown.revenue)})
+        {t("cell.soldWithRevenue", { sold: breakdown.sold, revenue: formatCurrency(breakdown.revenue) })}
       </div>
       <div className="text-xs text-foreground/60">
-        {breakdown.taken} taken · {breakdown.remaining} left (
-        {formatCurrency(breakdown.remainingValue)})
+        {t("cell.takenLeft", {
+          taken: breakdown.taken,
+          remaining: breakdown.remaining,
+          remainingValue: formatCurrency(breakdown.remainingValue),
+        })}
       </div>
     </>
   );
 }
 
-function TotalRevenueCell({ row }: { row: DailyRecordRow }) {
+function TotalRevenueCell({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
   const soldRevenue =
     row.queso.revenue + row.yogurt.revenue + row.milkMoteRevenue;
   const remainingValue = row.queso.remainingValue + row.yogurt.remainingValue;
@@ -40,16 +45,20 @@ function TotalRevenueCell({ row }: { row: DailyRecordRow }) {
   return (
     <>
       <div className="font-medium">
-        {formatCurrency(soldRevenue)} sold
+        {t("cell.sold", { amount: formatCurrency(soldRevenue) })}
         {row.isDailyWinner && (
           <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
-            Winner{row.winnerMargin !== null && ` (+${formatCurrency(row.winnerMargin)})`}
+            {row.winnerMargin !== null
+              ? t("cell.winnerMargin", { margin: formatCurrency(row.winnerMargin) })
+              : t("cell.winner")}
           </span>
         )}
       </div>
       <div className="text-xs text-foreground/60">
-        {formatCurrency(remainingValue)} left, value{" "}
-        {formatCurrency(row.totalRevenue)}
+        {t("cell.leftValue", {
+          left: formatCurrency(remainingValue),
+          total: formatCurrency(row.totalRevenue),
+        })}
       </div>
     </>
   );
@@ -83,7 +92,9 @@ export function SaleRecordsSection({
   currentUserId,
   isAdmin,
   vehicleUsers,
+  locale,
 }: SaleRecordsSectionProps) {
+  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<Mode>({ type: "create" });
   const dayGroups = groupByDay(dailyRecords);
@@ -109,7 +120,7 @@ export function SaleRecordsSection({
           id="records-heading"
           className="text-sm font-medium uppercase tracking-wide text-foreground/60"
         >
-          Sale Records
+          {t("saleRecords.heading")}
         </h2>
         {currentUserId ? (
           <button
@@ -117,7 +128,7 @@ export function SaleRecordsSection({
             onClick={openCreate}
             className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background"
           >
-            New record
+            {t("saleRecords.newRecord")}
           </button>
         ) : null}
       </div>
@@ -126,11 +137,11 @@ export function SaleRecordsSection({
         <table className="w-full text-sm">
           <thead className="bg-foreground/[0.03] text-left text-foreground/60">
             <tr>
-              <th className="px-4 py-2 font-medium">User</th>
-              <th className="px-4 py-2 font-medium">Queso</th>
-              <th className="px-4 py-2 font-medium">Yogurt</th>
-              <th className="px-4 py-2 font-medium">Milk & Mote</th>
-              <th className="px-4 py-2 font-medium">Total Revenue</th>
+              <th className="px-4 py-2 font-medium">{t("table.user")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.queso")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.yogurt")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.milkMote")}</th>
+              <th className="px-4 py-2 font-medium">{t("saleRecords.totalRevenue")}</th>
               <th className="px-4 py-2 font-medium" />
             </tr>
           </thead>
@@ -149,10 +160,10 @@ export function SaleRecordsSection({
                   <tr key={row.id}>
                     <td className="px-4 py-2 font-medium">{row.userName}</td>
                     <td className="px-4 py-2">
-                      <ProductCell breakdown={row.queso} />
+                      <ProductCell breakdown={row.queso} t={t} />
                     </td>
                     <td className="px-4 py-2">
-                      <ProductCell breakdown={row.yogurt} />
+                      <ProductCell breakdown={row.yogurt} t={t} />
                     </td>
                     <td className="px-4 py-2 font-medium">
                       {formatCurrency(row.milkMoteRevenue)}
@@ -164,7 +175,7 @@ export function SaleRecordsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell row={row} />
+                      <TotalRevenueCell row={row} t={t} />
                     </td>
                     <td className="px-4 py-2 text-right">
                       {isAdmin || row.userId === currentUserId ? (
@@ -173,7 +184,7 @@ export function SaleRecordsSection({
                           onClick={() => openEdit(row)}
                           className="text-sm text-foreground/60 underline hover:text-foreground"
                         >
-                          Edit
+                          {t("table.edit")}
                         </button>
                       ) : null}
                     </td>
@@ -197,15 +208,15 @@ export function SaleRecordsSection({
                   <div className="font-medium">{row.userName}</div>
                   <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-xs text-foreground/60">Queso</p>
-                      <ProductCell breakdown={row.queso} />
+                      <p className="text-xs text-foreground/60">{t("table.queso")}</p>
+                      <ProductCell breakdown={row.queso} t={t} />
                     </div>
                     <div>
-                      <p className="text-xs text-foreground/60">Yogurt</p>
-                      <ProductCell breakdown={row.yogurt} />
+                      <p className="text-xs text-foreground/60">{t("table.yogurt")}</p>
+                      <ProductCell breakdown={row.yogurt} t={t} />
                     </div>
                     <div>
-                      <p className="text-xs text-foreground/60">Milk & Mote</p>
+                      <p className="text-xs text-foreground/60">{t("table.milkMote")}</p>
                       <div className="font-medium">
                         {formatCurrency(row.milkMoteRevenue)}
                       </div>
@@ -219,8 +230,8 @@ export function SaleRecordsSection({
                     }
                   >
                     <div>
-                      <p className="text-xs text-foreground/60">Total Revenue</p>
-                      <TotalRevenueCell row={row} />
+                      <p className="text-xs text-foreground/60">{t("saleRecords.totalRevenue")}</p>
+                      <TotalRevenueCell row={row} t={t} />
                     </div>
                     {isAdmin || row.userId === currentUserId ? (
                       <button
@@ -228,7 +239,7 @@ export function SaleRecordsSection({
                         onClick={() => openEdit(row)}
                         className="text-sm text-foreground/60 underline hover:text-foreground"
                       >
-                        Edit
+                        {t("table.edit")}
                       </button>
                     ) : null}
                   </div>
@@ -244,7 +255,7 @@ export function SaleRecordsSection({
         className="w-full max-w-md rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
         <h3 className="mb-4 text-sm font-medium">
-          {mode.type === "create" ? "New record" : "Edit record"}
+          {mode.type === "create" ? t("records.newRecord") : t("records.editRecord")}
         </h3>
         {mode.type === "create" ? (
           <CreateRecordForm
@@ -253,6 +264,7 @@ export function SaleRecordsSection({
             onCancel={close}
             isAdmin={isAdmin}
             vehicleUsers={vehicleUsers}
+            t={t}
           />
         ) : (
           <EditRecordForm
@@ -260,6 +272,7 @@ export function SaleRecordsSection({
             record={mode.record}
             onSaved={close}
             onCancel={close}
+            t={t}
           />
         )}
       </dialog>

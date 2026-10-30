@@ -5,6 +5,7 @@ import { formatShortDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/pricing";
 import { toEditableRecord } from "@/lib/records";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
+import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { DailyRecordRow, UserTotal } from "@/types/landing";
 import type { DailyWorkRecordRow } from "@/types/records";
 
@@ -13,6 +14,8 @@ interface UserTotalsSectionProps {
   dailyRecords: DailyRecordRow[];
   currentUserId: string | null;
   isAdmin: boolean;
+  hideHeading?: boolean;
+  locale: Locale;
 }
 
 // Matches Sale Records' "sold" revenue: Queso + Yogurt + Milk & Mote, excluding
@@ -23,22 +26,27 @@ function soldRevenueOf(u: UserTotal): number {
 
 // Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
 // ("left") value and the full total (sold + left) as secondary text.
-function TotalRevenueCell({ u }: { u: UserTotal }) {
+function TotalRevenueCell({ u, t }: { u: UserTotal; t: TranslateFn }) {
   const soldRevenue = soldRevenueOf(u);
   const remainingValue = u.totalRevenue - soldRevenue;
 
   return (
     <>
       <div className="font-medium">
-        {formatCurrency(soldRevenue)} sold
+        {t("cell.sold", { amount: formatCurrency(soldRevenue) })}
         {u.isDailyWinner && (
           <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
-            Winner{u.winnerMargin !== null && ` (+${formatCurrency(u.winnerMargin)})`}
+            {u.winnerMargin !== null
+              ? t("cell.winnerMargin", { margin: formatCurrency(u.winnerMargin) })
+              : t("cell.winner")}
           </span>
         )}
       </div>
       <div className="text-xs text-foreground/60">
-        {formatCurrency(remainingValue)} left, value {formatCurrency(u.totalRevenue)}
+        {t("cell.leftValue", {
+          left: formatCurrency(remainingValue),
+          total: formatCurrency(u.totalRevenue),
+        })}
       </div>
     </>
   );
@@ -72,10 +80,15 @@ export function UserTotalsSection({
   dailyRecords,
   currentUserId,
   isAdmin,
+  hideHeading = false,
+  locale,
 }: UserTotalsSectionProps) {
+  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dayGroups = groupByDay(userTotals);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [editing, setEditing] = useState<DailyWorkRecordRow | null>(null);
+  const canEditAny = Boolean(currentUserId);
+  const columnCount = canEditAny ? 6 : 5;
 
   const dailyRecordsByKey = new Map(
     dailyRecords.map((row) => [`${row.date}|${row.userId}`, row]),
@@ -94,20 +107,26 @@ export function UserTotalsSection({
 
   return (
     <section aria-labelledby="user-totals-heading" className="flex flex-col gap-3">
-      <h2 id="user-totals-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/60">
-        Totals by User
-      </h2>
+      {hideHeading ? (
+        <h2 id="user-totals-heading" className="sr-only">
+          {t("landing.totalsByUser")}
+        </h2>
+      ) : (
+        <h2 id="user-totals-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+          {t("landing.totalsByUser")}
+        </h2>
+      )}
 
       <div className="hidden overflow-hidden rounded-lg border border-foreground/10 md:block">
         <table className="w-full text-sm">
           <thead className="bg-foreground/[0.03] text-left text-foreground/60">
             <tr>
-              <th className="px-4 py-2 font-medium">User</th>
-              <th className="px-4 py-2 font-medium">Queso</th>
-              <th className="px-4 py-2 font-medium">Yogurt</th>
-              <th className="px-4 py-2 font-medium">Milk & Mote</th>
-              <th className="px-4 py-2 font-medium">Total revenue</th>
-              <th className="px-4 py-2 font-medium" />
+              <th className="px-4 py-2 font-medium">{t("table.user")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.queso")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.yogurt")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.milkMote")}</th>
+              <th className="px-4 py-2 font-medium">{t("table.totalRevenue")}</th>
+              {canEditAny ? <th className="px-4 py-2 font-medium" /> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">
@@ -115,7 +134,7 @@ export function UserTotalsSection({
               <Fragment key={group.date}>
                 <tr className="bg-foreground/10 dark:bg-foreground/15">
                   <td
-                    colSpan={6}
+                    colSpan={columnCount}
                     className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-foreground"
                   >
                     {formatShortDate(group.date)}
@@ -134,19 +153,21 @@ export function UserTotalsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell u={u} />
+                      <TotalRevenueCell u={u} t={t} />
                     </td>
-                    <td className="px-4 py-2 text-right">
-                      {isAdmin || u.userId === currentUserId ? (
-                        <button
-                          type="button"
-                          onClick={() => openEdit(u)}
-                          className="text-sm text-foreground/60 underline hover:text-foreground"
-                        >
-                          Edit
-                        </button>
-                      ) : null}
-                    </td>
+                    {canEditAny ? (
+                      <td className="px-4 py-2 text-right">
+                        {isAdmin || u.userId === currentUserId ? (
+                          <button
+                            type="button"
+                            onClick={() => openEdit(u)}
+                            className="text-sm text-foreground/60 underline hover:text-foreground"
+                          >
+                            {t("table.edit")}
+                          </button>
+                        ) : null}
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </Fragment>
@@ -170,15 +191,15 @@ export function UserTotalsSection({
                   <div className="font-medium">{u.userName}</div>
                   <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-xs text-foreground/60">Queso</p>
+                      <p className="text-xs text-foreground/60">{t("table.queso")}</p>
                       <div className="font-medium">{formatCurrency(u.quesoRevenue)}</div>
                     </div>
                     <div>
-                      <p className="text-xs text-foreground/60">Yogurt</p>
+                      <p className="text-xs text-foreground/60">{t("table.yogurt")}</p>
                       <div className="font-medium">{formatCurrency(u.yogurtRevenue)}</div>
                     </div>
                     <div>
-                      <p className="text-xs text-foreground/60">Milk & Mote</p>
+                      <p className="text-xs text-foreground/60">{t("table.milkMote")}</p>
                       <div className="font-medium">{formatCurrency(u.milkMoteRevenue)}</div>
                     </div>
                   </div>
@@ -190,8 +211,8 @@ export function UserTotalsSection({
                           : "flex-1 border-t border-foreground/10 pt-2 text-sm"
                       }
                     >
-                      <p className="text-xs text-foreground/60">Total Revenue</p>
-                      <TotalRevenueCell u={u} />
+                      <p className="text-xs text-foreground/60">{t("table.totalRevenue")}</p>
+                      <TotalRevenueCell u={u} t={t} />
                     </div>
                     {isAdmin || u.userId === currentUserId ? (
                       <button
@@ -199,7 +220,7 @@ export function UserTotalsSection({
                         onClick={() => openEdit(u)}
                         className="text-sm text-foreground/60 underline hover:text-foreground"
                       >
-                        Edit
+                        {t("table.edit")}
                       </button>
                     ) : null}
                   </div>
@@ -214,9 +235,9 @@ export function UserTotalsSection({
         ref={dialogRef}
         className="w-full max-w-md rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
-        <h3 className="mb-4 text-sm font-medium">Edit record</h3>
+        <h3 className="mb-4 text-sm font-medium">{t("records.editRecord")}</h3>
         {editing ? (
-          <EditRecordForm key={editing.id} record={editing} onSaved={close} onCancel={close} />
+          <EditRecordForm key={editing.id} record={editing} onSaved={close} onCancel={close} t={t} />
         ) : null}
       </dialog>
     </section>

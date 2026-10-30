@@ -1,16 +1,24 @@
-# Current Feature
+# Current Feature: Split Landing Page — Keep Only Totals by User on Home, Move the Rest to /dashboard
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Home page (`/`) keeps the shared header plus only the **Totals by User** section (`UserTotalsSection`).
+- Move the **Summary Cards** (`SummaryCards`, the per-product/grand totals cards) and **Sale Records** (`SaleRecordsSection`) sections to a new route at `/dashboard`.
+- `/dashboard` must render those two sections exactly as they look today — this is a relocation, not a redesign.
+- `/dashboard` is protected the same way every other route already is (handled by the existing `src/proxy.ts` allowlist of `/login` and `/api/auth/*` — signed-out users are redirected to `/login` same as today); no new permission tier or role check beyond what already gates these sections.
+- Add a simple nav link between `/` and `/dashboard` so both pages stay reachable.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Pure page-composition/routing change: `SummaryCards`, `UserTotalsSection`, `SaleRecordsSection`, and the data behind them (`getLandingPageData()`, the `vehicleUsers` Prisma query used only by `SaleRecordsSection`) keep their current internal behavior — only *where* they're rendered changes.
+- `vehicleUsers` (fetched in `src/app/page.tsx` today) is only consumed by `SaleRecordsSection`, so that fetch moves to `/dashboard` with it.
+- Keep the existing header (title, last-updated timestamp, signed-in user name, admin links, sign-out button) looking the same; it can live on both pages or be shared, as long as the look is unchanged.
+- "Fancy landing page" = no new marketing/visual content was requested — home simply becomes a lighter page (header + Totals by User) using the existing look, not a new design.
+- Scope grew well beyond the above during this session via direct follow-up requests: loading-skeleton polish, a "New record" button on `/`, making `/` fully public (removed from `src/proxy.ts`'s auth gate — a deliberate, explicitly-confirmed override of `project-overview.md`'s "Only authenticated users can access the application" and its revenue-is-sensitive rule), landing-page marketing content (`DriverRecruitmentBanner`, `TopSellerBanner`, `AdminQuickSettings`, `Footer`), and full English/Spanish i18n across the app (`src/lib/i18n/`, `src/actions/locale.ts`, `src/components/i18n/`). None of this is reflected in the Goals above; noting it here so `/feature complete` doesn't understate what's in the diff.
 
 ## History
 

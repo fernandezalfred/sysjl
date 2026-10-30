@@ -115,6 +115,7 @@ export async function createDailyWorkRecord(
     });
 
     revalidatePath("/");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {
@@ -173,6 +174,7 @@ export async function updateDailyWorkRecord(
     });
 
     revalidatePath("/");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {
@@ -195,6 +197,7 @@ export async function deleteDailyWorkRecord(recordId: string): Promise<RecordAct
     await prisma.dailyWorkRecord.delete({ where: { id: existing.id } });
 
     revalidatePath("/");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {

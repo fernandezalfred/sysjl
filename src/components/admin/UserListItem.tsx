@@ -1,19 +1,18 @@
 import { setUserActive } from "@/actions/admin-users";
 import { EditUserForm } from "@/components/admin/EditUserForm";
+import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow, AdminVehicleOption } from "@/types/admin";
-
-const ROLE_LABELS: Record<AdminUserRow["role"], string> = {
-  ADMIN: "Admin",
-  VEHICLE_USER: "Vehicle user",
-};
 
 interface UserListItemProps {
   user: AdminUserRow;
   vehicles: AdminVehicleOption[];
+  locale: Locale;
 }
 
-export function UserListItem({ user, vehicles }: UserListItemProps) {
+export function UserListItem({ user, vehicles, locale }: UserListItemProps) {
+  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const toggleActive = setUserActive.bind(null, user.id, !user.isActive);
+  const roleLabel = user.role === "ADMIN" ? t("adminUsers.roleAdmin") : t("adminUsers.roleVehicleUser");
 
   return (
     <li className="rounded-lg border border-foreground/10 p-3">
@@ -24,20 +23,20 @@ export function UserListItem({ user, vehicles }: UserListItemProps) {
             <span className="text-sm text-foreground/60">{user.email}</span>
           </div>
           <div className="flex items-center gap-3 text-xs text-foreground/60">
-            <span>{ROLE_LABELS[user.role]}</span>
-            <span>{user.vehicleName ?? "No vehicle"}</span>
+            <span>{roleLabel}</span>
+            <span>{user.vehicleName ?? t("adminUsers.noVehicle")}</span>
             <span className={user.isActive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-              {user.isActive ? "Active" : "Inactive"}
+              {user.isActive ? t("adminUsers.active") : t("adminUsers.inactive")}
             </span>
           </div>
         </summary>
 
         <div className="mt-4 flex flex-col gap-4 border-t border-foreground/10 pt-4">
-          <EditUserForm user={user} vehicles={vehicles} />
+          <EditUserForm user={user} vehicles={vehicles} locale={locale} />
 
           <form action={toggleActive}>
             <button type="submit" className="text-sm text-foreground/60 underline hover:text-foreground">
-              {user.isActive ? "Deactivate account" : "Reactivate account"}
+              {user.isActive ? t("adminUsers.deactivate") : t("adminUsers.reactivate")}
             </button>
           </form>
         </div>

@@ -1,10 +1,14 @@
 import { logout } from "@/actions/auth";
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  label?: string;
+}
+
+export function SignOutButton({ label = "Sign out" }: SignOutButtonProps) {
   return (
     <form action={logout}>
       <button type="submit" className="text-sm text-foreground/60 underline hover:text-foreground">
-        Sign out
+        {label}
       </button>
     </form>
   );
