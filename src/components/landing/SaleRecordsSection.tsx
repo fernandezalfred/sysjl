@@ -20,7 +20,9 @@ type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
 function ProductCell({ breakdown }: { breakdown: ProductBreakdown }) {
   return (
     <>
-      <div className="font-medium">{breakdown.sold} sold</div>
+      <div className="font-medium">
+        {breakdown.sold} sold ({formatCurrency(breakdown.revenue)})
+      </div>
       <div className="text-xs text-foreground/60">
         {breakdown.taken} taken · {breakdown.remaining} left (
         {formatCurrency(breakdown.remainingValue)})
@@ -122,7 +124,10 @@ export function SaleRecordsSection({
           </thead>
           <tbody className="divide-y divide-foreground/10">
             {dailyRecords.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className={row.isDailyWinner ? "bg-green-50 dark:bg-green-950/40" : undefined}
+              >
                 <td className="px-4 py-2">{formatShortDate(row.date)}</td>
                 <td className="px-4 py-2 font-medium">{row.userName}</td>
                 <td className="px-4 py-2">
@@ -134,13 +139,7 @@ export function SaleRecordsSection({
                 <td className="px-4 py-2 font-medium">
                   {formatCurrency(row.milkMoteRevenue)}
                 </td>
-                <td
-                  className={
-                    row.isDailyWinner
-                      ? "rounded-md bg-green-50 px-4 py-2 dark:bg-green-950/40"
-                      : "px-4 py-2"
-                  }
-                >
+                <td className="px-4 py-2">
                   <TotalRevenueCell row={row} />
                 </td>
                 <td className="px-4 py-2 text-right">
@@ -164,7 +163,11 @@ export function SaleRecordsSection({
         {dailyRecords.map((row) => (
           <li
             key={row.id}
-            className="rounded-lg border border-foreground/10 p-3"
+            className={
+              row.isDailyWinner
+                ? "rounded-lg border border-foreground/10 bg-green-50 p-3 dark:bg-green-950/40"
+                : "rounded-lg border border-foreground/10 p-3"
+            }
           >
             <div className="flex items-baseline justify-between">
               <span className="font-medium">{row.userName}</span>
@@ -189,13 +192,7 @@ export function SaleRecordsSection({
               </div>
             </div>
             <div className="mt-2 flex items-end justify-between border-t border-foreground/10 pt-2 text-sm">
-              <div
-                className={
-                  row.isDailyWinner
-                    ? "rounded-md bg-green-50 px-2 py-1 dark:bg-green-950/40"
-                    : undefined
-                }
-              >
+              <div>
                 <p className="text-xs text-foreground/60">Total Revenue</p>
                 <TotalRevenueCell row={row} />
               </div>

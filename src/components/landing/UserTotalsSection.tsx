@@ -56,19 +56,16 @@ export function UserTotalsSection({ userTotals }: UserTotalsSectionProps) {
           </thead>
           <tbody className="divide-y divide-foreground/10">
             {userTotals.map((u) => (
-              <tr key={`${u.date}-${u.userId}`}>
+              <tr
+                key={`${u.date}-${u.userId}`}
+                className={u.isDailyWinner ? "bg-green-50 dark:bg-green-950/40" : undefined}
+              >
                 <td className="px-4 py-2">{formatShortDate(u.date)}</td>
                 <td className="px-4 py-2 font-medium">{u.userName}</td>
                 <td className="px-4 py-2">{formatCurrency(u.quesoRevenue)}</td>
                 <td className="px-4 py-2">{formatCurrency(u.yogurtRevenue)}</td>
                 <td className="px-4 py-2">{formatCurrency(u.milkMoteRevenue)}</td>
-                <td
-                  className={
-                    u.isDailyWinner
-                      ? "rounded-md bg-green-50 px-4 py-2 dark:bg-green-950/40"
-                      : "px-4 py-2"
-                  }
-                >
+                <td className="px-4 py-2">
                   <TotalRevenueCell u={u} />
                 </td>
               </tr>
@@ -79,7 +76,14 @@ export function UserTotalsSection({ userTotals }: UserTotalsSectionProps) {
 
       <ul className="flex flex-col gap-2 md:hidden">
         {userTotals.map((u) => (
-          <li key={`${u.date}-${u.userId}`} className="rounded-lg border border-foreground/10 p-3">
+          <li
+            key={`${u.date}-${u.userId}`}
+            className={
+              u.isDailyWinner
+                ? "rounded-lg border border-foreground/10 bg-green-50 p-3 dark:bg-green-950/40"
+                : "rounded-lg border border-foreground/10 p-3"
+            }
+          >
             <div className="flex items-baseline justify-between">
               <span className="font-medium">{u.userName}</span>
               <span className="text-xs text-foreground/60">{formatShortDate(u.date)}</span>
@@ -99,14 +103,8 @@ export function UserTotalsSection({ userTotals }: UserTotalsSectionProps) {
               </div>
             </div>
             <div className="mt-2 border-t border-foreground/10 pt-2 text-sm">
-              <div
-                className={
-                  u.isDailyWinner ? "rounded-md bg-green-50 px-2 py-1 dark:bg-green-950/40" : undefined
-                }
-              >
-                <p className="text-xs text-foreground/60">Total Revenue</p>
-                <TotalRevenueCell u={u} />
-              </div>
+              <p className="text-xs text-foreground/60">Total Revenue</p>
+              <TotalRevenueCell u={u} />
             </div>
           </li>
         ))}
