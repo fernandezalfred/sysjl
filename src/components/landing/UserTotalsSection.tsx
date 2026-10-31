@@ -87,6 +87,13 @@ export function UserTotalsSection({
   const dayGroups = groupByDay(userTotals);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [editing, setEditing] = useState<DailyWorkRecordRow | null>(null);
+  // Bumped on every open so the edit form below always gets a fresh `key` — without
+  // it, reopening to edit the same record twice in a row reuses the same form
+  // instance. Its useActionState result stays { success: true } from the prior save,
+  // and since `close` is a new function reference on every render, the form's "call
+  // onSaved on success" effect re-fires on the next render and immediately closes
+  // the dialog that was just reopened.
+  const [formKey, setFormKey] = useState(0);
   const canEditAny = Boolean(currentUserId);
   const columnCount = canEditAny ? 6 : 5;
 
@@ -98,6 +105,7 @@ export function UserTotalsSection({
     const row = dailyRecordsByKey.get(`${u.date}|${u.userId}`);
     if (!row) return;
     setEditing(toEditableRecord(row));
+    setFormKey((k) => k + 1);
     dialogRef.current?.showModal();
   }
 
@@ -237,7 +245,7 @@ export function UserTotalsSection({
       >
         <h3 className="mb-4 text-sm font-medium">{t("records.editRecord")}</h3>
         {editing ? (
-          <EditRecordForm key={editing.id} record={editing} onSaved={close} onCancel={close} t={t} />
+          <EditRecordForm key={formKey} record={editing} onSaved={close} onCancel={close} t={t} />
         ) : null}
       </dialog>
     </section>

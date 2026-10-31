@@ -97,15 +97,24 @@ export function SaleRecordsSection({
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<Mode>({ type: "create" });
+  // Bumped on every open so the create/edit form below always gets a fresh `key` —
+  // without it, reopening in the same mode twice in a row (e.g. "New record" after
+  // a successful create) reuses the same form instance. Its useActionState result
+  // stays { success: true } from the prior save, and since `close` is a new function
+  // reference on every render, the form's "call onSaved on success" effect re-fires
+  // on the next render and immediately closes the dialog that was just reopened.
+  const [formKey, setFormKey] = useState(0);
   const dayGroups = groupByDay(dailyRecords);
 
   function openCreate() {
     setMode({ type: "create" });
+    setFormKey((k) => k + 1);
     dialogRef.current?.showModal();
   }
 
   function openEdit(row: DailyRecordRow) {
     setMode({ type: "edit", record: toEditableRecord(row) });
+    setFormKey((k) => k + 1);
     dialogRef.current?.showModal();
   }
 
@@ -259,7 +268,7 @@ export function SaleRecordsSection({
         </h3>
         {mode.type === "create" ? (
           <CreateRecordForm
-            key="create"
+            key={formKey}
             onSaved={close}
             onCancel={close}
             isAdmin={isAdmin}
@@ -267,13 +276,7 @@ export function SaleRecordsSection({
             t={t}
           />
         ) : (
-          <EditRecordForm
-            key={mode.record.id}
-            record={mode.record}
-            onSaved={close}
-            onCancel={close}
-            t={t}
-          />
+          <EditRecordForm key={formKey} record={mode.record} onSaved={close} onCancel={close} t={t} />
         )}
       </dialog>
     </section>
