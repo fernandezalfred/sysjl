@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentProductPrices } from "@/lib/product-prices";
@@ -10,11 +9,9 @@ import type { ProductPriceHistoryRow } from "@/types/admin";
 
 export default function AdminProductsPage() {
   return (
-    <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <Suspense fallback={<AdminProductsSkeleton />}>
-        <AdminProductsContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<AdminProductsSkeleton />}>
+      <AdminProductsContent />
+    </Suspense>
   );
 }
 
@@ -42,10 +39,7 @@ async function AdminProductsContent() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <Link href="/" className="text-sm text-foreground/60 underline hover:text-foreground">
-          {t("adminProducts.backToDashboard")}
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{t("adminProducts.heading")}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("adminProducts.heading")}</h1>
         <p className="text-sm text-foreground/60">{t("adminProducts.subheading")}</p>
       </header>
 

@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getServerLocale } from "@/lib/i18n/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/translations";
-import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,19 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang={DEFAULT_LOCALE}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <div className="flex justify-end px-4 py-2 sm:px-6 lg:px-8">
-          <Suspense fallback={<LanguageSwitcher locale={DEFAULT_LOCALE} />}>
-            <LocaleSwitcherSlot />
-          </Suspense>
-        </div>
-        {children}
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
-}
-
-async function LocaleSwitcherSlot() {
-  const locale = await getServerLocale();
-  return <LanguageSwitcher locale={locale} />;
 }

@@ -7,17 +7,14 @@ import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SummaryCards } from "@/components/landing/SummaryCards";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
-import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function Dashboard() {
   return (
-    <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <Suspense fallback={<DashboardSkeleton t={defaultT} />}>
-        <DashboardContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<DashboardSkeleton t={defaultT} />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
 
@@ -36,15 +33,16 @@ async function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      <AppHeader
-        title="Dashboard"
-        generatedAt={data.generatedAt}
-        userName={session?.user?.name}
-        isAdmin={session?.user?.role === "ADMIN"}
-        isSignedIn={Boolean(session?.user?.id)}
-        activePage="dashboard"
-        t={t}
-      />
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("header.dashboard")}</h1>
+        <p className="text-sm text-foreground/60">
+          {t("header.updated")}{" "}
+          {new Date(data.generatedAt).toLocaleString("es-BO", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+        </p>
+      </header>
 
       <SummaryCards
         productTotals={data.productTotals}
@@ -68,7 +66,10 @@ async function DashboardContent() {
 function DashboardSkeleton({ t }: { t: TranslateFn }) {
   return (
     <div className="flex flex-col gap-8">
-      <AppHeaderSkeleton />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-7 w-32" />
+        <Skeleton className="h-4 w-36" />
+      </div>
 
       <div className="flex flex-col gap-3">
         <Skeleton className="h-4 w-24" />

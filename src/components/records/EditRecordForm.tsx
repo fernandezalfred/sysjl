@@ -40,7 +40,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
 
   useEffect(() => {
     if (state.success) onSaved();
-  }, [state.success, onSaved]);
+  }, [state, onSaved]);
 
   async function handleDelete() {
     if (!window.confirm(t("records.confirmDelete"))) return;

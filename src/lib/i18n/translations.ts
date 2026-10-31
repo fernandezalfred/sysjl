@@ -117,7 +117,6 @@ const en = {
   "adminUsers.saving": "Saving…",
   "adminUsers.saved": "Saved.",
 
-  "adminProducts.backToDashboard": "← Back to dashboard",
   "adminProducts.heading": "Product Prices",
   "adminProducts.subheading":
     "Set the purchase and sale price for Queso and Yogurt. Records already created keep the sale price that was active when they were made — a new price only applies going forward.",
@@ -136,6 +135,17 @@ const en = {
   "adminProducts.currentInfo": "Current: purchase {purchase}, sale {sale}",
   "adminProducts.setByInfo": " — set by {name} on {date}",
   "adminProducts.notSetYet": " (default, not yet set)",
+
+  "sidebar.openMenu": "Open menu",
+  "sidebar.closeMenu": "Close menu",
+  "sidebar.overview": "Overview",
+  "sidebar.administration": "Administration",
+  "sidebar.breadcrumbLabel": "Breadcrumb",
+
+  "adminPanel.quickStats": "Quick Stats",
+  "adminPanel.activeDrivers": "Active drivers",
+  "adminPanel.vehiclesAssigned": "Vehicles assigned",
+  "adminPanel.totalRecords": "Sale records",
 } as const;
 
 type DictionaryKey = keyof typeof en;
@@ -250,7 +260,6 @@ const es: Record<DictionaryKey, string> = {
   "adminUsers.saving": "Guardando…",
   "adminUsers.saved": "Guardado.",
 
-  "adminProducts.backToDashboard": "← Volver al panel",
   "adminProducts.heading": "Precios de Productos",
   "adminProducts.subheading":
     "Establece el precio de compra y venta para Queso y Yogurt. Los registros ya creados mantienen el precio de venta vigente al momento de crearse — un nuevo precio solo aplica hacia adelante.",
@@ -269,6 +278,17 @@ const es: Record<DictionaryKey, string> = {
   "adminProducts.currentInfo": "Actual: compra {purchase}, venta {sale}",
   "adminProducts.setByInfo": " — establecido por {name} el {date}",
   "adminProducts.notSetYet": " (predeterminado, aún no establecido)",
+
+  "sidebar.openMenu": "Abrir menú",
+  "sidebar.closeMenu": "Cerrar menú",
+  "sidebar.overview": "Resumen",
+  "sidebar.administration": "Administración",
+  "sidebar.breadcrumbLabel": "Ruta de navegación",
+
+  "adminPanel.quickStats": "Estadísticas Rápidas",
+  "adminPanel.activeDrivers": "Conductores activos",
+  "adminPanel.vehiclesAssigned": "Vehículos asignados",
+  "adminPanel.totalRecords": "Registros de venta",
 };
 
 export const dictionaries: Record<Locale, Record<DictionaryKey, string>> = { en, es };

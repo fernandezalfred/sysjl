@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { Skeleton } from "@/components/ui/Skeleton";
-import type { TranslateFn } from "@/lib/i18n/translations";
+import type { Locale, TranslateFn } from "@/lib/i18n/translations";
 
 interface AppHeaderProps {
   title: string;
@@ -10,10 +11,20 @@ interface AppHeaderProps {
   isAdmin: boolean;
   isSignedIn: boolean;
   activePage: "home" | "dashboard";
+  locale: Locale;
   t: TranslateFn;
 }
 
-export function AppHeader({ title, generatedAt, userName, isAdmin, isSignedIn, activePage, t }: AppHeaderProps) {
+export function AppHeader({
+  title,
+  generatedAt,
+  userName,
+  isAdmin,
+  isSignedIn,
+  activePage,
+  locale,
+  t,
+}: AppHeaderProps) {
   return (
     <header className="flex items-start justify-between gap-4">
       <div>
@@ -27,6 +38,7 @@ export function AppHeader({ title, generatedAt, userName, isAdmin, isSignedIn, a
         </p>
       </div>
       <div className="flex items-center gap-3">
+        <LanguageSwitcher locale={locale} />
         {isSignedIn ? (
           <>
             {activePage === "dashboard" ? (
@@ -72,6 +84,7 @@ export function AppHeaderSkeleton() {
         <Skeleton className="h-4 w-36" />
       </div>
       <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-10" />
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-4 w-20" />
       </div>

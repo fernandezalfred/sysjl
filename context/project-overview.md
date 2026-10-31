@@ -72,6 +72,14 @@ Users must only be able to view and modify their own authorized records. They mu
 
 The assigned vehicle and authenticated user must be determined and validated on the server. Do not trust a user ID or vehicle ID supplied by the browser.
 
+### 3.3 Data Modeling: Vehicles Are a Separate Entity
+
+A vehicle must be modeled as its own database entity, independent of the `User` collection — not as a field on `User`. This is required because:
+
+- A vehicle can exist unassigned (no driver yet), and an admin must be able to create and manage vehicles before anyone is assigned to them.
+- Vehicle-to-user assignment must be reassignable over time: a vehicle keeps its own identity and history across different drivers.
+- Section 5 (Central Deposit and Inventory Management) requires inventory and movement history tracked per vehicle, independent of whichever user currently drives it.
+
 ## 4. Product Management and Costs
 
 The application must initially support these products:
