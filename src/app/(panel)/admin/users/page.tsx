@@ -7,11 +7,9 @@ import { getT } from "@/lib/i18n/server";
 
 export default function AdminUsersPage() {
   return (
-    <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <Suspense fallback={<AdminUsersSkeleton />}>
-        <AdminUsersContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<AdminUsersSkeleton />}>
+      <AdminUsersContent />
+    </Suspense>
   );
 }
 

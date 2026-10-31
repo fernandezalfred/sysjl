@@ -34,7 +34,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, t }
 
   useEffect(() => {
     if (state.success) onSaved();
-  }, [state.success, onSaved]);
+  }, [state, onSaved]);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">

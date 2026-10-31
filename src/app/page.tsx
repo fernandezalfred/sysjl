@@ -51,6 +51,7 @@ async function LandingContent() {
           isAdmin={isAdmin}
           isSignedIn={isSignedIn}
           activePage="home"
+          locale={locale}
           t={t}
         />
         {isSignedIn ? (
