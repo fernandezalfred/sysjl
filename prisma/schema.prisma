@@ -17,19 +17,24 @@ enum Role {
 enum Product {
   QUESO
   YOGURT
+  MILK
+  MAIZ_PELADO
+  MAIZ_CASCARA
+  HABA
 }
 
 model User {
-  id            String            @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
-  email         String            @unique
-  passwordHash  String
-  role          Role              @default(VEHICLE_USER)
-  isActive      Boolean           @default(true)
-  workRecords   DailyWorkRecord[]
-  productPrices ProductPrice[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  email          String            @unique
+  passwordHash   String
+  role           Role              @default(VEHICLE_USER)
+  isActive       Boolean           @default(true)
+  workRecords    DailyWorkRecord[]
+  productPrices  ProductPrice[]
+  stockPurchases StockPurchase[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 // One record per user per working day: quantities taken from the deposit
@@ -69,4 +74,20 @@ model ProductPrice {
   setById       String   @db.ObjectId
   setBy         User     @relation(fields: [setById], references: [id])
   createdAt     DateTime @default(now())
+}
+
+// A single addition of stock to the central deposit for a product (e.g. a batch of
+// cheese bought from a supplier). Current deposit stock is derived, not stored here:
+// sum(quantity) for a product minus sum(taken - remaining) across DailyWorkRecord.
+// Entries are editable/deletable in place — they are correctable data-entry records,
+// not something snapshotted elsewhere for revenue integrity.
+model StockPurchase {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  product     Product
+  quantity    Int
+  unitCost    Float
+  createdById String   @db.ObjectId
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

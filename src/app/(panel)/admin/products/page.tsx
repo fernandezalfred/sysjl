@@ -21,20 +21,28 @@ async function AdminProductsContent() {
   const [prices, historyRows, { t, locale }] = await Promise.all([
     getCurrentProductPrices(),
     prisma.productPrice.findMany({
+      where: { product: { in: ["QUESO", "YOGURT"] } },
       orderBy: { createdAt: "desc" },
       include: { setBy: { select: { name: true } } },
     }),
     getT(),
   ]);
 
-  const history: ProductPriceHistoryRow[] = historyRows.map((row) => ({
-    id: row.id,
-    product: row.product,
-    purchasePrice: row.purchasePrice,
-    salePrice: row.salePrice,
-    setByName: row.setBy.name,
-    createdAt: row.createdAt.toISOString(),
-  }));
+  // This page only ever manages Queso/Yogurt pricing (see SetProductPriceForm below);
+  // the `where` above already scopes the query, this predicate just lets TypeScript
+  // narrow `Product` (which now also includes e.g. MILK) down to the two this page knows.
+  const history: ProductPriceHistoryRow[] = historyRows
+    .filter((row): row is typeof row & { product: "QUESO" | "YOGURT" } =>
+      row.product === "QUESO" || row.product === "YOGURT",
+    )
+    .map((row) => ({
+      id: row.id,
+      product: row.product,
+      purchasePrice: row.purchasePrice,
+      salePrice: row.salePrice,
+      setByName: row.setBy.name,
+      createdAt: row.createdAt.toISOString(),
+    }));
 
   return (
     <div className="flex flex-col gap-8">
