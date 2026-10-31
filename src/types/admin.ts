@@ -8,15 +8,6 @@ export interface AdminUserRow {
   isActive: boolean;
 }
 
-export interface ProductPriceHistoryRow {
-  id: string;
-  product: "QUESO" | "YOGURT";
-  purchasePrice: number;
-  salePrice: number;
-  setByName: string;
-  createdAt: string;
-}
-
 // Covers /admin/cheese, /admin/yogurt, /admin/milk — pages fixed to one product.
 // Maiz Pelado/Cascara and Haba are picked per-purchase on /admin/grains instead.
 export type SingleStockProduct = "QUESO" | "YOGURT" | "MILK";
