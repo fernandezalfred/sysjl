@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { PricedProduct } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, NotAuthorizedError } from "@/lib/require-admin";
 
@@ -11,7 +12,7 @@ export interface ActionState {
 }
 
 const setPriceSchema = z.object({
-  product: z.enum(["QUESO", "YOGURT"]),
+  product: z.enum(PricedProduct),
   salePrice: z.coerce.number().min(0, "Sale price must be 0 or more."),
 });
 

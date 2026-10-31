@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { setProductPrice, type ActionState } from "@/actions/product-prices";
 import { formatCurrency, PRODUCT_LABELS } from "@/lib/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
-import type { ProductCode } from "@/types/landing";
+import type { PricedProduct } from "@prisma/client";
 import type { ProductPriceInfo } from "@/lib/product-prices";
 
 const initialState: ActionState = { success: false };
@@ -24,7 +24,7 @@ function SubmitButton({ t }: { t: TranslateFn }) {
 }
 
 interface SetProductPriceFormProps {
-  product: ProductCode;
+  product: PricedProduct;
   current: ProductPriceInfo;
   locale: Locale;
 }

@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { formatCurrency } from "@/lib/pricing";
-import { CreateStockPurchaseForm } from "@/components/admin/CreateStockPurchaseForm";
-import { EditStockPurchaseForm } from "@/components/admin/EditStockPurchaseForm";
+import { CreateStockPurchaseForm } from "@/components/admin/stock-purchases/CreateStockPurchaseForm";
+import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditStockPurchaseForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow, SingleStockProduct } from "@/types/admin";
 

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { CreateUserForm } from "@/components/admin/CreateUserForm";
-import { UserList } from "@/components/admin/UserList";
+import { CreateUserForm } from "@/components/admin/users/CreateUserForm";
+import { UserList } from "@/components/admin/users/UserList";
 import { getT } from "@/lib/i18n/server";
 
 export default function AdminUsersPage() {

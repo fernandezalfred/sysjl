@@ -8,7 +8,7 @@ import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SummaryCards } from "@/components/landing/SummaryCards";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
-import { SetProductPriceForm } from "@/components/admin/SetProductPriceForm";
+import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 

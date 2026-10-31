@@ -1,4 +1,4 @@
-import { UserListItem } from "@/components/admin/UserListItem";
+import { UserListItem } from "@/components/admin/users/UserListItem";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
 

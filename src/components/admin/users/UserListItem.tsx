@@ -1,5 +1,5 @@
 import { setUserActive } from "@/actions/admin-users";
-import { EditUserForm } from "@/components/admin/EditUserForm";
+import { EditUserForm } from "@/components/admin/users/EditUserForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
 

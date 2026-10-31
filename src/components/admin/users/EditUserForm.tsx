@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateUser, type ActionState } from "@/actions/admin-users";
-import { EditUserFields } from "@/components/admin/EditUserFields";
+import { EditUserFields } from "@/components/admin/users/EditUserFields";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
 

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
-import { GrainPurchasesSection } from "@/components/admin/GrainPurchasesSection";
+import { GrainPurchasesSection } from "@/components/admin/grain-purchases/GrainPurchasesSection";
 import type { GrainProduct, StockPurchaseRow } from "@/types/admin";
 
 const GRAIN_PRODUCTS: GrainProduct[] = ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"];

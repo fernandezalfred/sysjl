@@ -7,7 +7,7 @@ import {
   updateStockPurchase,
   type ActionState,
 } from "@/actions/stock-purchases";
-import { StockPurchaseFormFields } from "@/components/admin/StockPurchaseFormFields";
+import { StockPurchaseFormFields } from "@/components/admin/stock-purchases/StockPurchaseFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow } from "@/types/admin";
 

@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { formatCurrency } from "@/lib/pricing";
-import { CreateGrainPurchaseForm } from "@/components/admin/CreateGrainPurchaseForm";
-import { EditStockPurchaseForm } from "@/components/admin/EditStockPurchaseForm";
+import { CreateGrainPurchaseForm } from "@/components/admin/grain-purchases/CreateGrainPurchaseForm";
+import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditStockPurchaseForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { GrainProduct, StockPurchaseRow } from "@/types/admin";
 
