@@ -63,17 +63,15 @@ model DailyWorkRecord {
   @@unique([userId, date])
 }
 
-// Append-only price history: never updated in place, so the admin and timestamp
-// behind every past price are kept. The current price for a product is its most
-// recent row (highest createdAt).
+// A single current sale price per product, updated in place on each change — no
+// history is kept, just who last set it and when.
 model ProductPrice {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  product       Product
-  purchasePrice Float
-  salePrice     Float
-  setById       String   @db.ObjectId
-  setBy         User     @relation(fields: [setById], references: [id])
-  createdAt     DateTime @default(now())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  product   Product  @unique
+  salePrice Float
+  setById   String   @db.ObjectId
+  setBy     User     @relation(fields: [setById], references: [id])
+  updatedAt DateTime @updatedAt
 }
 
 // A single addition of stock to the central deposit for a product (e.g. a batch of

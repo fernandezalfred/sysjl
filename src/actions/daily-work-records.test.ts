@@ -13,7 +13,7 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
       findUnique: vi.fn(),
     },
     productPrice: {
-      findFirst: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
   revalidatePathMock: vi.fn(),
@@ -51,7 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // No admin-set price yet by default: createDailyWorkRecord falls back to the
   // legacy defaults (Queso 9, Yogurt 33). Individual tests override this.
-  prismaMock.productPrice.findFirst.mockResolvedValue(null);
+  prismaMock.productPrice.findUnique.mockResolvedValue(null);
 });
 
 describe("createDailyWorkRecord", () => {
@@ -117,7 +117,7 @@ describe("createDailyWorkRecord", () => {
   it("falls back to the legacy default sale prices when the admin hasn't set one yet", async () => {
     authMock.mockResolvedValue(SESSION);
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
-    prismaMock.productPrice.findFirst.mockResolvedValue(null);
+    prismaMock.productPrice.findUnique.mockResolvedValue(null);
     const result = await createDailyWorkRecord({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
@@ -130,11 +130,11 @@ describe("createDailyWorkRecord", () => {
   it("snapshots the admin's current sale price onto the record at creation time", async () => {
     authMock.mockResolvedValue(SESSION);
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
-    prismaMock.productPrice.findFirst.mockImplementation(({ where }: { where: { product: string } }) =>
+    prismaMock.productPrice.findUnique.mockImplementation(({ where }: { where: { product: string } }) =>
       Promise.resolve(
         where.product === "QUESO"
-          ? { purchasePrice: 8, salePrice: 10, createdAt: new Date(), setBy: { name: "Admin" } }
-          : { purchasePrice: 28, salePrice: 36, createdAt: new Date(), setBy: { name: "Admin" } },
+          ? { salePrice: 10, updatedAt: new Date(), setBy: { name: "Admin" } }
+          : { salePrice: 36, updatedAt: new Date(), setBy: { name: "Admin" } },
       ),
     );
     const result = await createDailyWorkRecord({ success: false }, formData(VALID_FIELDS));

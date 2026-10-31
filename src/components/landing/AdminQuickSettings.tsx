@@ -13,11 +13,6 @@ export function AdminQuickSettings({ t }: AdminQuickSettingsProps) {
       description: t("adminSettings.manageUsers.desc"),
     },
     {
-      href: "/admin/products",
-      label: t("adminSettings.productPrices.label"),
-      description: t("adminSettings.productPrices.desc"),
-    },
-    {
       href: "/dashboard",
       label: t("adminSettings.dashboard.label"),
       description: t("adminSettings.dashboard.desc"),

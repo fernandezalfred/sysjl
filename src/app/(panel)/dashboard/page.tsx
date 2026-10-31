@@ -3,10 +3,12 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
+import { getCurrentProductPrices } from "@/lib/product-prices";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SummaryCards } from "@/components/landing/SummaryCards";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
+import { SetProductPriceForm } from "@/components/admin/SetProductPriceForm";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
@@ -31,6 +33,9 @@ async function DashboardContent() {
     getT(),
   ]);
 
+  const isAdmin = session?.user?.role === "ADMIN";
+  const prices = isAdmin ? await getCurrentProductPrices() : null;
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -52,10 +57,36 @@ async function DashboardContent() {
         t={t}
       />
 
+      {isAdmin && prices ? (
+        <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
+          <h2
+            id="sale-prices-heading"
+            className="text-sm font-medium uppercase tracking-wide text-foreground/60"
+          >
+            {t("adminProducts.heading")}
+          </h2>
+          <p className="text-sm text-foreground/60">{t("adminProducts.subheading")}</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <SetProductPriceForm
+              key={`QUESO-${prices.QUESO.updatedAt}`}
+              product="QUESO"
+              current={prices.QUESO}
+              locale={locale}
+            />
+            <SetProductPriceForm
+              key={`YOGURT-${prices.YOGURT.updatedAt}`}
+              product="YOGURT"
+              current={prices.YOGURT}
+              locale={locale}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <SaleRecordsSection
         dailyRecords={data.dailyRecords}
         currentUserId={session?.user?.id ?? null}
-        isAdmin={session?.user?.role === "ADMIN"}
+        isAdmin={isAdmin}
         vehicleUsers={vehicleUsers}
         locale={locale}
       />

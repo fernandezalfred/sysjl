@@ -12,35 +12,37 @@ export interface ActionState {
 
 const setPriceSchema = z.object({
   product: z.enum(["QUESO", "YOGURT"]),
-  purchasePrice: z.coerce.number().min(0, "Purchase price must be 0 or more."),
   salePrice: z.coerce.number().min(0, "Sale price must be 0 or more."),
 });
 
-// Always inserts a new row rather than updating one in place, so the full price
-// history — including who changed it and when — is preserved per project-overview.md §4.
+// Updates the product's single price row in place — no history is kept, just who
+// last set it and when.
 export async function setProductPrice(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const session = await requireAdminSession();
 
     const parsed = setPriceSchema.safeParse({
       product: formData.get("product"),
-      purchasePrice: formData.get("purchasePrice"),
       salePrice: formData.get("salePrice"),
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
     }
 
-    await prisma.productPrice.create({
-      data: {
+    await prisma.productPrice.upsert({
+      where: { product: parsed.data.product },
+      update: {
+        salePrice: parsed.data.salePrice,
+        setById: session.user.id,
+      },
+      create: {
         product: parsed.data.product,
-        purchasePrice: parsed.data.purchasePrice,
         salePrice: parsed.data.salePrice,
         setById: session.user.id,
       },
     });
 
-    revalidatePath("/admin/products");
+    revalidatePath("/dashboard");
     revalidatePath("/");
     return { success: true };
   } catch (error) {

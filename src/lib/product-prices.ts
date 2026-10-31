@@ -6,21 +6,19 @@ const PRODUCTS: ProductCode[] = ["QUESO", "YOGURT"];
 
 export interface ProductPriceInfo {
   product: ProductCode;
-  purchasePrice: number;
   salePrice: number;
   updatedAt: string | null;
   updatedByName: string | null;
 }
 
-// Current price per product: the latest ProductPrice row (by createdAt). Falls back
-// to the legacy hardcoded sale price, with no purchase price, when the admin hasn't
-// set one yet — e.g. a fresh install before the first price is entered.
+// Current sale price per product — one row per product, updated in place. Falls
+// back to the legacy hardcoded price when the admin hasn't set one yet — e.g. a
+// fresh install before the first price is entered.
 export async function getCurrentProductPrices(): Promise<Record<ProductCode, ProductPriceInfo>> {
   const rows = await Promise.all(
     PRODUCTS.map((product) =>
-      prisma.productPrice.findFirst({
+      prisma.productPrice.findUnique({
         where: { product },
-        orderBy: { createdAt: "desc" },
         include: { setBy: { select: { name: true } } },
       }),
     ),
@@ -32,14 +30,12 @@ export async function getCurrentProductPrices(): Promise<Record<ProductCode, Pro
     result[product] = row
       ? {
           product,
-          purchasePrice: row.purchasePrice,
           salePrice: row.salePrice,
-          updatedAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
           updatedByName: row.setBy.name,
         }
       : {
           product,
-          purchasePrice: 0,
           salePrice: CURRENT_UNIT_PRICE[product],
           updatedAt: null,
           updatedByName: null,

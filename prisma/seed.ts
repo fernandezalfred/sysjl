@@ -31,16 +31,17 @@ async function main() {
     },
   });
 
-  // Seed an initial price per product only if none exists yet — ProductPrice is an
-  // append-only history, so this must never run again once an admin has set one.
-  for (const [product, purchasePrice, salePrice] of [
-    ["QUESO", 7, 9],
-    ["YOGURT", 25, 33],
+  // Seed an initial sale price per product only if none is set yet — ProductPrice
+  // holds a single current row per product, so this must never overwrite an
+  // admin-set price on a later seed run.
+  for (const [product, salePrice] of [
+    ["QUESO", 9],
+    ["YOGURT", 33],
   ] as const) {
-    const existing = await prisma.productPrice.findFirst({ where: { product } });
+    const existing = await prisma.productPrice.findUnique({ where: { product } });
     if (!existing) {
       await prisma.productPrice.create({
-        data: { product, purchasePrice, salePrice, setById: admin.id },
+        data: { product, salePrice, setById: admin.id },
       });
     }
   }

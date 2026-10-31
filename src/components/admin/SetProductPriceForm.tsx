@@ -38,7 +38,6 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
       <h3 className="text-sm font-medium">{PRODUCT_LABELS[product]}</h3>
       <p className="mt-1 text-xs text-foreground/60">
         {t("adminProducts.currentInfo", {
-          purchase: formatCurrency(current.purchasePrice),
           sale: formatCurrency(current.salePrice),
         })}
         {current.updatedByName
@@ -51,38 +50,20 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
 
       <form action={formAction} className="mt-3 flex flex-col gap-3">
         <input type="hidden" name="product" value={product} />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`${product}-purchase`} className="text-xs font-medium text-foreground/60">
-              {t("adminProducts.purchasePriceBs")}
-            </label>
-            <input
-              id={`${product}-purchase`}
-              name="purchasePrice"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={current.purchasePrice}
-              required
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`${product}-sale`} className="text-xs font-medium text-foreground/60">
-              {t("adminProducts.salePriceBs")}
-            </label>
-            <input
-              id={`${product}-sale`}
-              name="salePrice"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={current.salePrice}
-              required
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
-            />
-          </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`${product}-sale`} className="text-xs font-medium text-foreground/60">
+            {t("adminProducts.salePriceBs")}
+          </label>
+          <input
+            id={`${product}-sale`}
+            name="salePrice"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={current.salePrice}
+            required
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          />
         </div>
 
         {state.error ? (

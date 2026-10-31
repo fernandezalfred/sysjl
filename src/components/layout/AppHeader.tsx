@@ -52,14 +52,9 @@ export function AppHeader({
             )}
             <span className="text-sm text-foreground/70">{userName}</span>
             {isAdmin ? (
-              <>
-                <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
-                  {t("header.manageUsers")}
-                </Link>
-                <Link href="/admin/products" className="text-sm text-foreground/60 underline hover:text-foreground">
-                  {t("header.productPrices")}
-                </Link>
-              </>
+              <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
+                {t("header.manageUsers")}
+              </Link>
             ) : null}
             <SignOutButton label={t("header.signOut")} />
           </>
