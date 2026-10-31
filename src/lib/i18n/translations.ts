@@ -106,12 +106,10 @@ const en = {
   "adminUsers.creating": "Creating…",
   "adminUsers.userCreated": "User created.",
   "adminUsers.usersHeading": "Users",
-  "adminUsers.noVehicle": "No vehicle",
   "adminUsers.active": "Active",
   "adminUsers.inactive": "Inactive",
   "adminUsers.deactivate": "Deactivate account",
   "adminUsers.reactivate": "Reactivate account",
-  "adminUsers.vehicle": "Vehicle",
   "adminUsers.newPassword": "New password (leave blank to keep current)",
   "adminUsers.saveChanges": "Save changes",
   "adminUsers.saving": "Saving…",
@@ -144,7 +142,6 @@ const en = {
 
   "adminPanel.quickStats": "Quick Stats",
   "adminPanel.activeDrivers": "Active drivers",
-  "adminPanel.vehiclesAssigned": "Vehicles assigned",
   "adminPanel.totalRecords": "Sale records",
 } as const;
 
@@ -249,12 +246,10 @@ const es: Record<DictionaryKey, string> = {
   "adminUsers.creating": "Creando…",
   "adminUsers.userCreated": "Usuario creado.",
   "adminUsers.usersHeading": "Usuarios",
-  "adminUsers.noVehicle": "Sin vehículo",
   "adminUsers.active": "Activo",
   "adminUsers.inactive": "Inactivo",
   "adminUsers.deactivate": "Desactivar cuenta",
   "adminUsers.reactivate": "Reactivar cuenta",
-  "adminUsers.vehicle": "Vehículo",
   "adminUsers.newPassword": "Nueva contraseña (déjalo en blanco para mantener la actual)",
   "adminUsers.saveChanges": "Guardar cambios",
   "adminUsers.saving": "Guardando…",
@@ -287,7 +282,6 @@ const es: Record<DictionaryKey, string> = {
 
   "adminPanel.quickStats": "Estadísticas Rápidas",
   "adminPanel.activeDrivers": "Conductores activos",
-  "adminPanel.vehiclesAssigned": "Vehículos asignados",
   "adminPanel.totalRecords": "Registros de venta",
 };
 

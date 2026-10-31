@@ -9,11 +9,6 @@ const { authMock, prismaMock, hashPasswordMock, revalidatePathMock } = vi.hoiste
       create: vi.fn(),
       update: vi.fn(),
     },
-    vehicle: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      create: vi.fn(),
-    },
   },
   hashPasswordMock: vi.fn(),
   revalidatePathMock: vi.fn(),
@@ -92,14 +87,13 @@ describe("updateUser", () => {
   beforeEach(() => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.user.findFirst.mockResolvedValue(null);
-    prismaMock.vehicle.findUnique.mockResolvedValue(null);
   });
 
   it("rejects a non-admin session", async () => {
     authMock.mockResolvedValue(NON_ADMIN_SESSION);
     const result = await updateUser(
       { success: false },
-      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "", vehicleId: "" }),
+      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "" }),
     );
     expect(result).toEqual({ success: false, error: "Admin access required." });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
@@ -108,7 +102,7 @@ describe("updateUser", () => {
   it("does not hash or touch the password when newPassword is blank", async () => {
     const result = await updateUser(
       { success: false },
-      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "", vehicleId: "" }),
+      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "" }),
     );
     expect(result).toEqual({ success: true });
     expect(hashPasswordMock).not.toHaveBeenCalled();
@@ -121,36 +115,13 @@ describe("updateUser", () => {
   it("hashes and includes the password when newPassword is provided", async () => {
     await updateUser(
       { success: false },
-      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "longenough", vehicleId: "" }),
+      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "longenough" }),
     );
     expect(hashPasswordMock).toHaveBeenCalledWith("longenough");
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: "u1" },
       data: { name: "A", email: "a@b.com", role: "VEHICLE_USER", passwordHash: "hashed:longenough" },
     });
-  });
-
-  it("rejects assigning a vehicle already held by another user", async () => {
-    prismaMock.vehicle.findUnique.mockResolvedValue({ id: "v1", userId: "someone-else" });
-    const result = await updateUser(
-      { success: false },
-      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "", vehicleId: "v1" }),
-    );
-    expect(result).toEqual({ success: false, error: "That vehicle is already assigned to another user." });
-    expect(prismaMock.vehicle.update).not.toHaveBeenCalled();
-    expect(prismaMock.user.update).not.toHaveBeenCalled();
-  });
-
-  it("unassigns the user's current vehicle before assigning a new one", async () => {
-    prismaMock.vehicle.findUnique
-      .mockResolvedValueOnce({ id: "v-current", userId: "u1" }) // currentVehicle lookup
-      .mockResolvedValueOnce({ id: "v-new", userId: null }); // target lookup
-    await updateUser(
-      { success: false },
-      formData({ userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "", vehicleId: "v-new" }),
-    );
-    expect(prismaMock.vehicle.update).toHaveBeenCalledWith({ where: { id: "v-current" }, data: { userId: null } });
-    expect(prismaMock.vehicle.update).toHaveBeenCalledWith({ where: { id: "v-new" }, data: { userId: "u1" } });
   });
 });
 

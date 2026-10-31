@@ -23,10 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: { vehicle: true },
-        });
+        const user = await prisma.user.findUnique({ where: { email } });
         if (!user || !user.isActive) return null;
 
         const isValid = await verifyPassword(password, user.passwordHash);
@@ -37,7 +34,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
-          vehicleId: user.vehicle?.id ?? null,
         };
       },
     }),
@@ -46,14 +42,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.role = user.role;
-        token.vehicleId = user.vehicleId;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.sub!;
       session.user.role = token.role;
-      session.user.vehicleId = token.vehicleId;
       return session;
     },
   },

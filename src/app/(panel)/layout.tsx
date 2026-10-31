@@ -34,14 +34,12 @@ async function PanelContent({ children }: { children: ReactNode }) {
 }
 
 async function getQuickStats(): Promise<QuickStatsData> {
-  const [activeDrivers, vehiclesAssigned, vehiclesTotal, totalRecords] = await Promise.all([
+  const [activeDrivers, totalRecords] = await Promise.all([
     prisma.user.count({ where: { role: "VEHICLE_USER", isActive: true } }),
-    prisma.vehicle.count({ where: { userId: { not: null } } }),
-    prisma.vehicle.count(),
     prisma.dailyWorkRecord.count(),
   ]);
 
-  return { activeDrivers, vehiclesAssigned, vehiclesTotal, totalRecords };
+  return { activeDrivers, totalRecords };
 }
 
 function PanelSkeleton() {

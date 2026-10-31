@@ -1,7 +1,4 @@
 // Prisma ORM 6 — MongoDB connector.
-// Minimal schema to support authentication for now: User + Vehicle,
-// enough for login and role checks. Full inventory/sales models are a
-// separate feature.
 
 generator client {
   provider = "prisma-client-js"
@@ -29,20 +26,10 @@ model User {
   passwordHash  String
   role          Role              @default(VEHICLE_USER)
   isActive      Boolean           @default(true)
-  vehicle       Vehicle?
   workRecords   DailyWorkRecord[]
   productPrices ProductPrice[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
-}
-
-model Vehicle {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  userId    String?  @unique @db.ObjectId
-  user      User?    @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 // One record per user per working day: quantities taken from the deposit

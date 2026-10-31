@@ -22,7 +22,7 @@ const MOCK_WORK_RECORDS = [
     quesoSalePrice: 9,
     yogurtSalePrice: 33,
     createdAt: new Date("2026-10-27T08:00:00.000Z"),
-    user: { name: "Carla Mamani", vehicle: { id: "v1", name: "Vehicle 1" } },
+    user: { name: "Carla Mamani" },
   },
   {
     id: "wr2",
@@ -36,7 +36,7 @@ const MOCK_WORK_RECORDS = [
     quesoSalePrice: 9,
     yogurtSalePrice: 33,
     createdAt: new Date("2026-10-27T09:00:00.000Z"),
-    user: { name: "Jorge Quispe", vehicle: { id: "v2", name: "Vehicle 2" } },
+    user: { name: "Jorge Quispe" },
   },
 ];
 
@@ -53,8 +53,6 @@ const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   date: "2026-10-27",
   userId: "u1",
   userName: "Test User",
-  vehicleId: "v1",
-  vehicleName: "Vehicle 1",
   product: "QUESO",
   unitPrice: 9,
   quantityTaken: 10,

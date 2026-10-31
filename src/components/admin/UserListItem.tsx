@@ -1,15 +1,14 @@
 import { setUserActive } from "@/actions/admin-users";
 import { EditUserForm } from "@/components/admin/EditUserForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
-import type { AdminUserRow, AdminVehicleOption } from "@/types/admin";
+import type { AdminUserRow } from "@/types/admin";
 
 interface UserListItemProps {
   user: AdminUserRow;
-  vehicles: AdminVehicleOption[];
   locale: Locale;
 }
 
-export function UserListItem({ user, vehicles, locale }: UserListItemProps) {
+export function UserListItem({ user, locale }: UserListItemProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const toggleActive = setUserActive.bind(null, user.id, !user.isActive);
   const roleLabel = user.role === "ADMIN" ? t("adminUsers.roleAdmin") : t("adminUsers.roleVehicleUser");
@@ -24,7 +23,6 @@ export function UserListItem({ user, vehicles, locale }: UserListItemProps) {
           </div>
           <div className="flex items-center gap-3 text-xs text-foreground/60">
             <span>{roleLabel}</span>
-            <span>{user.vehicleName ?? t("adminUsers.noVehicle")}</span>
             <span className={user.isActive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
               {user.isActive ? t("adminUsers.active") : t("adminUsers.inactive")}
             </span>
@@ -32,7 +30,7 @@ export function UserListItem({ user, vehicles, locale }: UserListItemProps) {
         </summary>
 
         <div className="mt-4 flex flex-col gap-4 border-t border-foreground/10 pt-4">
-          <EditUserForm user={user} vehicles={vehicles} locale={locale} />
+          <EditUserForm user={user} locale={locale} />
 
           <form action={toggleActive}>
             <button type="submit" className="text-sm text-foreground/60 underline hover:text-foreground">

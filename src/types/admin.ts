@@ -6,14 +6,6 @@ export interface AdminUserRow {
   email: string;
   role: Role;
   isActive: boolean;
-  vehicleId: string | null;
-  vehicleName: string | null;
-}
-
-export interface AdminVehicleOption {
-  id: string;
-  name: string;
-  assignedUserId: string | null;
 }
 
 export interface ProductPriceHistoryRow {

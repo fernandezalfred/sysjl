@@ -162,7 +162,7 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
 
 export async function getLandingPageData(): Promise<LandingPageData> {
   const workRecords = await prisma.dailyWorkRecord.findMany({
-    include: { user: { include: { vehicle: true } } },
+    include: { user: true },
   });
 
   const records: SaleRecord[] = workRecords.flatMap((r) => {
@@ -170,8 +170,6 @@ export async function getLandingPageData(): Promise<LandingPageData> {
       date: r.date.toISOString().slice(0, 10),
       userId: r.userId,
       userName: r.user.name,
-      vehicleId: r.user.vehicle?.id ?? "",
-      vehicleName: r.user.vehicle?.name ?? "No vehicle",
       totalSold: r.totalSold,
       createdAt: r.createdAt.toISOString(),
     };

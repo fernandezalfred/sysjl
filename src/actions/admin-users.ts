@@ -65,7 +65,6 @@ const updateUserSchema = z.object({
   email: z.string().email("Enter a valid email address."),
   role: roleSchema,
   newPassword: z.union([z.string().min(8, "Password must be at least 8 characters."), z.literal("")]),
-  vehicleId: z.string(),
 });
 
 export async function updateUser(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -78,33 +77,16 @@ export async function updateUser(_prevState: ActionState, formData: FormData): P
       email: formData.get("email"),
       role: formData.get("role"),
       newPassword: formData.get("newPassword") ?? "",
-      vehicleId: formData.get("vehicleId") ?? "",
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
     }
 
-    const { userId, name, email, role, newPassword, vehicleId } = parsed.data;
+    const { userId, name, email, role, newPassword } = parsed.data;
 
     const emailTaken = await prisma.user.findFirst({ where: { email, NOT: { id: userId } } });
     if (emailTaken) {
       return { success: false, error: "A user with this email already exists." };
-    }
-
-    const currentVehicle = await prisma.vehicle.findUnique({ where: { userId } });
-    if (currentVehicle && currentVehicle.id !== vehicleId) {
-      await prisma.vehicle.update({ where: { id: currentVehicle.id }, data: { userId: null } });
-    }
-
-    if (vehicleId) {
-      const target = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
-      if (!target) {
-        return { success: false, error: "Vehicle not found." };
-      }
-      if (target.userId && target.userId !== userId) {
-        return { success: false, error: "That vehicle is already assigned to another user." };
-      }
-      await prisma.vehicle.update({ where: { id: vehicleId }, data: { userId } });
     }
 
     await prisma.user.update({

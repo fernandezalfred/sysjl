@@ -8,8 +8,6 @@ export interface SaleRecord {
   date: string;
   userId: string;
   userName: string;
-  vehicleId: string;
-  vehicleName: string;
   product: ProductCode;
   unitPrice: number;
   quantityTaken: number;

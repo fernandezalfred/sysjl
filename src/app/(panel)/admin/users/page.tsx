@@ -16,9 +16,8 @@ export default function AdminUsersPage() {
 async function AdminUsersContent() {
   await connection();
 
-  const [users, vehicles, { t, locale }] = await Promise.all([
-    prisma.user.findMany({ include: { vehicle: true }, orderBy: { createdAt: "asc" } }),
-    prisma.vehicle.findMany({ orderBy: { name: "asc" } }),
+  const [users, { t, locale }] = await Promise.all([
+    prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
     getT(),
   ]);
 
@@ -38,10 +37,7 @@ async function AdminUsersContent() {
           email: u.email,
           role: u.role,
           isActive: u.isActive,
-          vehicleId: u.vehicle?.id ?? null,
-          vehicleName: u.vehicle?.name ?? null,
         }))}
-        vehicles={vehicles.map((v) => ({ id: v.id, name: v.name, assignedUserId: v.userId }))}
         locale={locale}
       />
     </div>

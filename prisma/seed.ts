@@ -31,15 +31,6 @@ async function main() {
     },
   });
 
-  await prisma.vehicle.upsert({
-    where: { userId: vehicleUser.id },
-    update: {},
-    create: {
-      name: "Vehicle 1",
-      userId: vehicleUser.id,
-    },
-  });
-
   // Seed an initial price per product only if none exists yet — ProductPrice is an
   // append-only history, so this must never run again once an admin has set one.
   for (const [product, purchasePrice, salePrice] of [

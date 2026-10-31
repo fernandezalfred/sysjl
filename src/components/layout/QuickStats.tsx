@@ -2,8 +2,6 @@ import type { TranslateFn } from "@/lib/i18n/translations";
 
 export interface QuickStatsData {
   activeDrivers: number;
-  vehiclesAssigned: number;
-  vehiclesTotal: number;
   totalRecords: number;
 }
 
@@ -15,10 +13,6 @@ interface QuickStatsProps {
 export function QuickStats({ stats, t }: QuickStatsProps) {
   const tiles = [
     { label: t("adminPanel.activeDrivers"), value: String(stats.activeDrivers) },
-    {
-      label: t("adminPanel.vehiclesAssigned"),
-      value: `${stats.vehiclesAssigned} / ${stats.vehiclesTotal}`,
-    },
     { label: t("adminPanel.totalRecords"), value: String(stats.totalRecords) },
   ];
 
@@ -27,7 +21,7 @@ export function QuickStats({ stats, t }: QuickStatsProps) {
       <h2 className="text-xs font-medium uppercase tracking-wide text-foreground/60">
         {t("adminPanel.quickStats")}
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {tiles.map((tile) => (
           <div
             key={tile.label}

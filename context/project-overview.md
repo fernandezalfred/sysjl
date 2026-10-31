@@ -41,23 +41,18 @@ Before implementation, inspect the existing repository, dependencies, database c
 The admin can:
 
 - Manage user accounts.
-- Create, edit, and deactivate vehicle assignments.
-- Assign one user to each vehicle.
 - Configure product costs and prices.
 - Manage central deposit inventory.
 - View all users' daily work records.
-- View records from all vehicles.
 - View business-wide inventory and revenue.
 - View product costs, profitability information, and remaining stock.
-- Review historical records and filter them by date, user, or vehicle.
+- Review historical records and filter them by date or user.
 - Correct erroneous records using an auditable process.
 - Access the administrative landing page and reports.
 
 Only administrators may view or change sensitive financial information, including product costs, profit calculations, and business-wide revenue.
 
 ### 3.2 Vehicle User
-
-Each regular user is assigned to a vehicle.
 
 The user can:
 
@@ -70,15 +65,7 @@ The user can:
 
 Users must only be able to view and modify their own authorized records. They must not access other users' records or administrative financial information.
 
-The assigned vehicle and authenticated user must be determined and validated on the server. Do not trust a user ID or vehicle ID supplied by the browser.
-
-### 3.3 Data Modeling: Vehicles Are a Separate Entity
-
-A vehicle must be modeled as its own database entity, independent of the `User` collection — not as a field on `User`. This is required because:
-
-- A vehicle can exist unassigned (no driver yet), and an admin must be able to create and manage vehicles before anyone is assigned to them.
-- Vehicle-to-user assignment must be reassignable over time: a vehicle keeps its own identity and history across different drivers.
-- Section 5 (Central Deposit and Inventory Management) requires inventory and movement history tracked per vehicle, independent of whichever user currently drives it.
+The authenticated user must be determined and validated on the server. Do not trust a user ID supplied by the browser.
 
 ## 4. Product Management and Costs
 

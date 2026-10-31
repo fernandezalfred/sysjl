@@ -1,14 +1,13 @@
 import { UserListItem } from "@/components/admin/UserListItem";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
-import type { AdminUserRow, AdminVehicleOption } from "@/types/admin";
+import type { AdminUserRow } from "@/types/admin";
 
 interface UserListProps {
   users: AdminUserRow[];
-  vehicles: AdminVehicleOption[];
   locale: Locale;
 }
 
-export function UserList({ users, vehicles, locale }: UserListProps) {
+export function UserList({ users, locale }: UserListProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
 
   return (
@@ -18,7 +17,7 @@ export function UserList({ users, vehicles, locale }: UserListProps) {
       </h2>
       <ul className="flex flex-col gap-2">
         {users.map((user) => (
-          <UserListItem key={user.id} user={user} vehicles={vehicles} locale={locale} />
+          <UserListItem key={user.id} user={user} locale={locale} />
         ))}
       </ul>
     </section>
