@@ -1,16 +1,22 @@
-# Current Feature
+# Current Feature: Grains & Milk Pages — Group by Day, Quartilla Pricing, Milk Driver Attribution
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Populated by /feature load -->
+- `/admin/grains`: group purchases by day, matching the Sale Records / Totals by User UI (day header row/card, descending by date), instead of one flat list.
+- Relabel the quantity/price fields for grains from "quintal" to "quartilla" — the unit grains are actually priced and purchased in. The three grain items (Maíz Pelado, Maíz con Cáscara, Haba) stay as-is.
 
 ## Notes
 
-<!-- Populated by /feature load -->
+- The total-cost calculation (`quantity * unitCost`) is already correct for "price per quartilla × quantity of quartillas" — confirmed with the user this is a terminology/label fix, not a formula change. `unitCost`/`quantity` stay the same DB fields and Zod schema; only the i18n labels and the `GrainProduct`/`StockPurchaseRow` doc comments change.
+- "stock.quantityQuintal"/"stock.unitCostQuintal"/"stock.quantityUnitQuintal" and the "price per quintal" wording in `grains.subheading` are used exclusively by `GrainPurchasesSection` (confirmed via grep) — safe to rename in place rather than leaving unused keys around.
+- Day-grouping needs a raw per-purchase date key. `StockPurchaseRow.createdAtFormatted` is a pre-formatted locale string, not grouping-friendly. Adding `createdAtDate: string` (local YYYY-MM-DD, via a new `formatDateKey()` in `src/lib/dates.ts`) to the shared `StockPurchaseRow` type, populated at both of its construction sites (`admin/grains/page.tsx` and the shared `AdminProductStockPage.tsx` used by Cheese/Yogurt/Milk) even though only Grains groups by it — same precedent as the existing `product` field on that type.
+- Scope is the Grains page only; Cheese/Yogurt/Milk (`AdminProductStockPage`/`StockPurchasesSection`) keep their current flat, ungrouped list and "quintal" wording (not part of this request).
+- Matching the dashboard's established pattern (`SaleRecordsSection`/`UserTotalsSection`): the day header carries the date, so the per-row/card date is dropped once grouped (not duplicated).
+- Direct follow-up: each day's header row/card also shows that day's total cost (sum of `quantity * unitCost` across that day's purchases), e.g. two purchases of 105 and 306.20 same day → header shows Bs 411.20 alongside the date.
 
 ## History
 

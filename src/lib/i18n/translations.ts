@@ -168,11 +168,11 @@ const en = {
   "stock.quantityUnit": "{quantity} units",
   "stock.quantityLiters": "Quantity purchased (liters)",
   "stock.quantityUnitLiters": "{quantity} liters",
-  "stock.quantityQuintal": "Quantity purchased (quintals)",
-  "stock.quantityUnitQuintal": "{quantity} quintals",
+  "stock.quantityQuartilla": "Quantity purchased (quartillas)",
+  "stock.quantityUnitQuartilla": "{quantity} quartillas",
   "stock.unitCost": "Unit cost",
   "stock.unitCostLiters": "Cost per liter",
-  "stock.unitCostQuintal": "Cost per quintal",
+  "stock.unitCostQuartilla": "Price per quartilla",
   "stock.totalCost": "Total cost",
   "stock.save": "Save purchase",
   "stock.saving": "Saving…",
@@ -190,7 +190,7 @@ const en = {
 
   "grains.heading": "Grains",
   "grains.subheading":
-    "Record grain purchases into the central deposit — pick the item and its price per quintal. Purchases only; stock is not tracked.",
+    "Record grain purchases into the central deposit — pick the item and its price per quartilla. Purchases only; stock is not tracked.",
   "grains.item": "Item",
   "grains.selectItem": "Select an item",
 } as const;
@@ -358,11 +358,11 @@ const es: Record<DictionaryKey, string> = {
   "stock.quantityUnit": "{quantity} unidades",
   "stock.quantityLiters": "Cantidad comprada (litros)",
   "stock.quantityUnitLiters": "{quantity} litros",
-  "stock.quantityQuintal": "Cantidad comprada (quintales)",
-  "stock.quantityUnitQuintal": "{quantity} quintales",
+  "stock.quantityQuartilla": "Cantidad comprada (cuartillas)",
+  "stock.quantityUnitQuartilla": "{quantity} cuartillas",
   "stock.unitCost": "Costo unitario",
   "stock.unitCostLiters": "Costo por litro",
-  "stock.unitCostQuintal": "Costo por quintal",
+  "stock.unitCostQuartilla": "Precio por cuartilla",
   "stock.totalCost": "Costo total",
   "stock.save": "Guardar compra",
   "stock.saving": "Guardando…",
@@ -380,7 +380,7 @@ const es: Record<DictionaryKey, string> = {
 
   "grains.heading": "Granos",
   "grains.subheading":
-    "Registra las compras de granos hacia el depósito central — elige el insumo y su precio por quintal. Solo compras; no se controla el stock.",
+    "Registra las compras de granos hacia el depósito central — elige el insumo y su precio por cuartilla. Solo compras; no se controla el stock.",
   "grains.item": "Insumo",
   "grains.selectItem": "Selecciona un insumo",
 };
