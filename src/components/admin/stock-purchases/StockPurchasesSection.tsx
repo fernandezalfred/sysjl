@@ -15,17 +15,12 @@ interface StockPurchasesSectionProps {
 
 type Mode = { type: "create" } | { type: "edit"; purchase: StockPurchaseRow };
 
-// Queso/Yogurt are bought/costed by plain count, Milk by the liter. (Maiz Pelado,
-// Maiz Cascara, and Haba are quintal-priced too, but they live on the dropdown-based
-// /admin/grains page, not here — see GrainPurchasesSection.)
+// Queso/Yogurt are bought/costed by plain count. (Milk has its own section now;
+// Maiz Pelado, Maiz Cascara, and Haba are quartilla-priced and live on the
+// dropdown-based /admin/grains page, not here — see GrainPurchasesSection.)
 const QUANTITY_UNIT_KEYS: Record<SingleStockProduct, { quantity: string; unitCost: string; quantityUnit: string }> = {
   QUESO: { quantity: "stock.quantity", unitCost: "stock.unitCost", quantityUnit: "stock.quantityUnit" },
   YOGURT: { quantity: "stock.quantity", unitCost: "stock.unitCost", quantityUnit: "stock.quantityUnit" },
-  MILK: {
-    quantity: "stock.quantityLiters",
-    unitCost: "stock.unitCostLiters",
-    quantityUnit: "stock.quantityUnitLiters",
-  },
 };
 
 export function StockPurchasesSection({ purchases, product, locale }: StockPurchasesSectionProps) {

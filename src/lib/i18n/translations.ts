@@ -193,6 +193,8 @@ const en = {
     "Record grain purchases into the central deposit — pick the item and its price per quartilla. Purchases only; stock is not tracked.",
   "grains.item": "Item",
   "grains.selectItem": "Select an item",
+
+  "milk.forDriver": "For",
 } as const;
 
 type DictionaryKey = keyof typeof en;
@@ -383,6 +385,8 @@ const es: Record<DictionaryKey, string> = {
     "Registra las compras de granos hacia el depósito central — elige el insumo y su precio por cuartilla. Solo compras; no se controla el stock.",
   "grains.item": "Insumo",
   "grains.selectItem": "Selecciona un insumo",
+
+  "milk.forDriver": "Para",
 };
 
 export const dictionaries: Record<Locale, Record<DictionaryKey, string>> = { en, es };

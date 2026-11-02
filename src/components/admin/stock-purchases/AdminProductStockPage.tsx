@@ -12,21 +12,18 @@ interface AdminProductStockPageProps {
   product: SingleStockProduct;
 }
 
-// Queso and Yogurt are left untranslated as business terms elsewhere in this app, but
-// Milk ("Leche" in Spanish) genuinely differs by locale, so every label here goes
-// through t() rather than the locale-agnostic PRODUCT_LABELS used elsewhere in the app.
 const PRODUCT_LABEL_KEYS: Record<SingleStockProduct, string> = {
   QUESO: "product.queso",
   YOGURT: "product.yogurt",
-  MILK: "product.milk",
 };
 
 function productLabel(product: SingleStockProduct, t: TranslateFn): string {
   return t(PRODUCT_LABEL_KEYS[product]);
 }
 
-// Shared by /admin/cheese, /admin/yogurt, and /admin/milk — all three pages are
-// identical except for which product's stock purchases they read, create, edit, and delete.
+// Shared by /admin/cheese and /admin/yogurt — Milk has its own page/section now
+// (MilkPurchasesSection), since it diverged enough (day-grouping, driver attribution,
+// no current-stock figure) to no longer fit this simple shared shape.
 export function AdminProductStockPage({ product }: AdminProductStockPageProps) {
   return (
     <Suspense fallback={<AdminProductStockSkeleton />}>
@@ -64,6 +61,7 @@ async function AdminProductStockContent({ product }: AdminProductStockPageProps)
     quantity: row.quantity,
     unitCost: row.unitCost,
     createdByName: row.createdBy.name,
+    forUserName: null,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
     createdAtDate: formatDateKey(row.createdAt),
   }));

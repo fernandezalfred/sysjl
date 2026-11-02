@@ -31,17 +31,20 @@ enum PricedProduct {
 }
 
 model User {
-  id             String            @id @default(auto()) @map("_id") @db.ObjectId
-  name           String
-  email          String            @unique
-  passwordHash   String
-  role           Role              @default(VEHICLE_USER)
-  isActive       Boolean           @default(true)
-  workRecords    DailyWorkRecord[]
-  productPrices  ProductPrice[]
-  stockPurchases StockPurchase[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  email             String            @unique
+  passwordHash      String
+  role              Role              @default(VEHICLE_USER)
+  isActive          Boolean           @default(true)
+  workRecords       DailyWorkRecord[]
+  productPrices     ProductPrice[]
+  stockPurchases    StockPurchase[]   @relation("StockPurchaseCreatedBy")
+  // Milk purchases attributed to this user as the driver it's for (not who entered
+  // it) — see StockPurchase.forUser.
+  stockPurchasesFor StockPurchase[]   @relation("StockPurchaseForUser")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 // One record per user per working day: quantities taken from the deposit
@@ -91,8 +94,13 @@ model StockPurchase {
   product     Product
   quantity    Int
   unitCost    Float
+  // Who actually entered this purchase — always the acting admin, for every product.
   createdById String   @db.ObjectId
-  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdBy   User     @relation("StockPurchaseCreatedBy", fields: [createdById], references: [id])
+  // Milk only: which driver this purchase is for, picked from a dropdown on create.
+  // Distinct from createdBy/createdById, which stays the entering admin even for Milk.
+  forUserId   String?  @db.ObjectId
+  forUser     User?    @relation("StockPurchaseForUser", fields: [forUserId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

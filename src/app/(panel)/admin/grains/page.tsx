@@ -34,6 +34,7 @@ async function AdminGrainsContent() {
     quantity: row.quantity,
     unitCost: row.unitCost,
     createdByName: row.createdBy.name,
+    forUserName: null,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
     createdAtDate: formatDateKey(row.createdAt),
   }));
