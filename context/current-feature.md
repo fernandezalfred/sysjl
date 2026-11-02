@@ -1,16 +1,31 @@
-# Current Feature
+# Current Feature: Product Investment, Sold & Left Tracking + Chart
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Populated by /feature load -->
+- Add an admin-only dashboard section showing, per product (Queso, Yogurt), all-time:
+  - Investment: total Bs spent on stock purchases (`sum(quantity * unitCost)` from `StockPurchase`).
+  - Sold: total quantity sold across all `DailyWorkRecord`s (`taken - remaining`, summed).
+  - Left: current deposit stock (reuse `getCurrentStock()` from `src/lib/stock.ts`).
+- Add a chart (Chart.js via `react-chartjs-2`) visualizing investment vs. sold vs. left per product.
 
 ## Notes
 
-<!-- Populated by /feature load -->
+- Scope is explicitly Queso and Yogurt only. Milk is excluded (purchases/investment exist but no sold/left quantity tracking). Mote is excluded entirely (no data source exists). Confirmed with user.
+- Investment figures are cost/financial data — per `project-overview.md` §3, restrict this section to admins only (same gating as existing admin-only dashboard sections).
+- No charting library is installed yet; this feature adds `chart.js` + `react-chartjs-2` as a new dependency (user-approved).
+- Load the `dataviz` skill before building the chart (palette, accessibility, layout conventions).
+- Real bug found and fixed along the way: the public `/dashboard` "Remaining Stock" cards (`SummaryCards`) were summing each record's own `quantityRemaining` across all history (127 for Yogurt, 73 for Queso) — a cumulative sum of end-of-day leftovers, not actual current deposit stock. Swapped to the same `getCurrentStock()` figure already used by `/admin/cheese` and `/admin/yogurt` (purchased minus sold, all-time: 591 Queso, 12 Yogurt), so the two pages now agree.
+- Added a second admin-only goal as a direct follow-up: a "Sales Revenue Trend" section on `/dashboard` — a grand total of `totalSold` (the user-entered Bs revenue field) summed across every `DailyWorkRecord` ever, plus a line chart of that same total bucketed by day, week (Monday-start), or month via a client-side toggle. New pure utility `src/lib/date-buckets.ts` (`aggregateByPeriod`, `formatPeriodLabel`) does the bucketing/formatting and is unit-tested; the chart reuses the already-fetched `data.dailyRecords` (no new DB query).
+- Added a third stat to that section, confirmed against a real example (Raul, 2026-10-30): `recordAdjustedRevenue()`/`buildAdjustedRevenueTotal()` compute, per record, `totalSold - (Queso's remaining value + Yogurt's remaining value)` — revenue actually realized, since unsold stock value hasn't been turned into revenue yet. Verified: Queso left 8×Bs9=72, Yogurt left 12×Bs33=396, 3070−468=2602, matching the user's number exactly. Deliberately a new, separate metric from `DailyRecordRow.totalRevenue` (which ADDS remaining value instead, for the unrelated daily-winner comparison) — that field and its tests were left untouched.
+- Also added this per-record figure ("Earned: {amount}") as a third line in the Sale Records table's existing Total Revenue cell (`TotalRevenueCell` in `SaleRecordsSection.tsx`), both desktop and mobile. Real bug found and fixed while wiring this up: that cell lives in a Client Component, and importing `recordAdjustedRevenue` from `landing-data.ts` (which also exports the Prisma-backed `getLandingPageData`) leaked `@prisma/client` into the browser bundle — confirmed via `grep -rl PrismaClient .next/static`. Fixed by moving `recordAdjustedRevenue`/`buildAdjustedRevenueTotal` into a new, Prisma-free `src/lib/revenue.ts` (tests moved to `revenue.test.ts` alongside it); re-verified the client chunk is clean after the move.
+- `recordAdjustedRevenue` went through two wrong iterations before landing on the real formula, both corrected directly by the user:
+  1. First tried `queso.sold * CURRENT_UNIT_PRICE.QUESO + yogurt.sold * CURRENT_UNIT_PRICE.YOGURT + milkMoteRevenue` — rejected because it came out numerically identical to `totalSold` itself (both 2930 for the same record), which the user flagged as nonsensical for two supposedly different figures.
+  2. Reverted to the original `totalSold - (queso.remainingValue + yogurt.remainingValue)` formula, but applied it using a remaining-value figure borrowed from an unrelated historical note instead of the actual record's own data — produced 2336 against a user-stated correct answer of 1546, another wrong turn.
+  3. The real formula, confirmed by the user: **Earned is a profit margin, not a revenue figure.** For Queso and Yogurt, each unit sold earns `salePrice - unitCost` (e.g. cost 6/sale 9 → margin 3 per Queso; cost 22/sale 33 → margin 11 per Yogurt); Milk & Mote has no cost data, so its revenue is added in full, uncorrected. Implemented as `(queso.revenue - queso.sold * unitCosts.QUESO) + (yogurt.revenue - yogurt.sold * unitCosts.YOGURT) + milkMoteRevenue`, where `queso.revenue`/`yogurt.revenue` already embed each record's own snapshotted sale price. The user explicitly warned product cost "may change in the future," so unit cost is never hardcoded: `getLatestUnitCost(product)` (`src/lib/stock.ts`) reads the most recent `StockPurchase.unitCost` for that product, fetched admin-only in the dashboard page and threaded down as a `UnitCosts` map (`recordAdjustedRevenue`/`buildAdjustedRevenueTotal` in `src/lib/revenue.ts` now take it as a required parameter). Since profit/cost is sensitive financial data per `project-overview.md` §3, the "Earned" line in `SaleRecordsSection`'s `TotalRevenueCell` is now admin-only — vehicle users see only the existing sold/left lines, with no cost or margin ever exposed to them.
 
 ## History
 

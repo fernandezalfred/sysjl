@@ -4,6 +4,7 @@ import { Fragment, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/pricing";
 import { formatShortDate } from "@/lib/dates";
 import { toEditableRecord } from "@/lib/records";
+import { recordAdjustedRevenue, type UnitCosts } from "@/lib/revenue";
 import { CreateRecordForm } from "@/components/records/CreateRecordForm";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
@@ -16,6 +17,7 @@ interface SaleRecordsSectionProps {
   isAdmin: boolean;
   vehicleUsers: { id: string; name: string }[];
   locale: Locale;
+  unitCosts: UnitCosts | null;
 }
 
 type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
@@ -37,7 +39,15 @@ function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: Transla
   );
 }
 
-function TotalRevenueCell({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
+function TotalRevenueCell({
+  row,
+  t,
+  unitCosts,
+}: {
+  row: DailyRecordRow;
+  t: TranslateFn;
+  unitCosts: UnitCosts | null;
+}) {
   const soldRevenue =
     row.queso.revenue + row.yogurt.revenue + row.milkMoteRevenue;
   const remainingValue = row.queso.remainingValue + row.yogurt.remainingValue;
@@ -60,6 +70,11 @@ function TotalRevenueCell({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
           total: formatCurrency(row.totalRevenue),
         })}
       </div>
+      {unitCosts ? (
+        <div className="text-xs text-foreground/60">
+          {t("cell.earned", { amount: formatCurrency(recordAdjustedRevenue(row, unitCosts)) })}
+        </div>
+      ) : null}
     </>
   );
 }
@@ -93,6 +108,7 @@ export function SaleRecordsSection({
   isAdmin,
   vehicleUsers,
   locale,
+  unitCosts,
 }: SaleRecordsSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -184,7 +200,7 @@ export function SaleRecordsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell row={row} t={t} />
+                      <TotalRevenueCell row={row} t={t} unitCosts={unitCosts} />
                     </td>
                     <td className="px-4 py-2 text-right">
                       {isAdmin || row.userId === currentUserId ? (
@@ -240,7 +256,7 @@ export function SaleRecordsSection({
                   >
                     <div>
                       <p className="text-xs text-foreground/60">{t("saleRecords.totalRevenue")}</p>
-                      <TotalRevenueCell row={row} t={t} />
+                      <TotalRevenueCell row={row} t={t} unitCosts={unitCosts} />
                     </div>
                     {isAdmin || row.userId === currentUserId ? (
                       <button

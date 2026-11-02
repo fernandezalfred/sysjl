@@ -3,11 +3,16 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
+import { buildAdjustedRevenueTotal } from "@/lib/revenue";
 import { getCurrentProductPrices } from "@/lib/product-prices";
+import { getProductInvestmentSummaries } from "@/lib/investment";
+import { getCurrentStock, getLatestUnitCost } from "@/lib/stock";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SummaryCards } from "@/components/landing/SummaryCards";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
+import { ProductInvestmentSection } from "@/components/landing/ProductInvestmentSection";
+import { SaleRecordsTrendSection } from "@/components/landing/SaleRecordsTrendSection";
 import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
@@ -22,7 +27,7 @@ export default function Dashboard() {
 
 async function DashboardContent() {
   await connection();
-  const [data, session, vehicleUsers, { t, locale }] = await Promise.all([
+  const [data, session, vehicleUsers, { t, locale }, quesoStock, yogurtStock] = await Promise.all([
     getLandingPageData(),
     auth(),
     prisma.user.findMany({
@@ -31,10 +36,38 @@ async function DashboardContent() {
       orderBy: { name: "asc" },
     }),
     getT(),
+    getCurrentStock("QUESO"),
+    getCurrentStock("YOGURT"),
   ]);
 
+  // Current deposit stock (purchased minus sold, all-time) — not the same thing as
+  // each record's own "remaining" quantity summed, which only reflects what was left
+  // in vehicles at each day's end and isn't the actual stock figure. Must match
+  // /admin/cheese and /admin/yogurt, which already compute it this way.
+  const currentStock: Record<"QUESO" | "YOGURT", number> = { QUESO: quesoStock, YOGURT: yogurtStock };
+
   const isAdmin = session?.user?.role === "ADMIN";
-  const prices = isAdmin ? await getCurrentProductPrices() : null;
+  // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
+  // so the cost lookup and its use below are both gated on isAdmin.
+  const [prices, investmentSummaries, quesoCost, yogurtCost] = isAdmin
+    ? await Promise.all([
+        getCurrentProductPrices(),
+        getProductInvestmentSummaries(),
+        getLatestUnitCost("QUESO"),
+        getLatestUnitCost("YOGURT"),
+      ])
+    : [null, null, null, null];
+
+  const unitCosts =
+    quesoCost !== null && yogurtCost !== null ? { QUESO: quesoCost, YOGURT: yogurtCost } : null;
+
+  // Revenue isn't computed in investment.ts (no access to per-record sale-price
+  // history there) — merged in here from the already-computed, price-correct
+  // `ProductTotal.revenue`.
+  const investmentDetails = investmentSummaries?.map((summary) => ({
+    ...summary,
+    revenue: data.productTotals.find((p) => p.product === summary.product)?.revenue ?? 0,
+  }));
 
   return (
     <div className="flex flex-col gap-8">
@@ -49,13 +82,7 @@ async function DashboardContent() {
         </p>
       </header>
 
-      <SummaryCards
-        productTotals={data.productTotals}
-        grandTotalQuantitySold={data.grandTotalQuantitySold}
-        grandTotalRevenue={data.grandTotalRevenue}
-        grandTotalRemainingValue={data.grandTotalRemainingValue}
-        t={t}
-      />
+      <SummaryCards productTotals={data.productTotals} currentStock={currentStock} t={t} />
 
       {isAdmin && prices ? (
         <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
@@ -83,12 +110,26 @@ async function DashboardContent() {
         </section>
       ) : null}
 
+      {isAdmin && investmentDetails ? (
+        <ProductInvestmentSection details={investmentDetails} t={t} locale={locale} />
+      ) : null}
+
+      {isAdmin && unitCosts ? (
+        <SaleRecordsTrendSection
+          items={data.dailyRecords.map((r) => ({ date: r.date, value: r.totalSold }))}
+          adjustedRevenueTotal={buildAdjustedRevenueTotal(data.dailyRecords, unitCosts)}
+          t={t}
+          locale={locale}
+        />
+      ) : null}
+
       <SaleRecordsSection
         dailyRecords={data.dailyRecords}
         currentUserId={session?.user?.id ?? null}
         isAdmin={isAdmin}
         vehicleUsers={vehicleUsers}
         locale={locale}
+        unitCosts={unitCosts}
       />
     </div>
   );
