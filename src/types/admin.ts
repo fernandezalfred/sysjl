@@ -8,11 +8,11 @@ export interface AdminUserRow {
   isActive: boolean;
 }
 
-// Covers /admin/cheese and /admin/yogurt — pages fixed to one product. Milk has its
-// own implementation now (MilkPurchasesSection — day-grouping, driver-attribution
-// specifics that no longer fit this simple shared shape), and Maiz Pelado/Cascara/Haba
-// are picked per-purchase on /admin/grains instead.
-export type SingleStockProduct = "QUESO" | "YOGURT";
+// Covers /admin/cheese only — fixed to one product. Yogurt and Milk each have their
+// own implementation (YogurtPurchasesSection, MilkPurchasesSection — day-grouping,
+// earning/driver-attribution specifics that no longer fit this simple shared shape),
+// and Maiz Pelado/Cascara/Haba are picked per-purchase on /admin/grains instead.
+export type SingleStockProduct = "QUESO";
 
 // The items selectable from /admin/grains' "Item" dropdown — all quartilla-priced.
 export type GrainProduct = "MAIZ_PELADO" | "MAIZ_CASCARA" | "HABA";
@@ -24,6 +24,7 @@ export interface StockPurchaseRow {
   product: Product;
   quantity: number;
   unitCost: number;
+  // Always the admin who entered the purchase, for every product.
   createdByName: string;
   // Only read by Milk: which driver the purchase is for (StockPurchase.forUser),
   // null for every other product and for pre-existing Milk purchases with no driver
@@ -34,6 +35,6 @@ export interface StockPurchaseRow {
   // the server-rendered string (different ICU data between Node and the browser).
   createdAtFormatted: string;
   // Raw YYYY-MM-DD grouping key (see formatDateKey in src/lib/dates.ts). Only read
-  // by Grains and Milk, which group purchases by day; other products ignore it.
+  // by Grains, Milk, and Yogurt, which group purchases by day; Cheese ignores it.
   createdAtDate: string;
 }

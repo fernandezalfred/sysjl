@@ -5,7 +5,6 @@ import { useFormStatus } from "react-dom";
 import { createStockPurchase, type ActionState } from "@/actions/stock-purchases";
 import { StockPurchaseFormFields } from "@/components/admin/stock-purchases/StockPurchaseFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
-import type { SingleStockProduct } from "@/types/admin";
 
 const initialState: ActionState = { success: false };
 
@@ -23,7 +22,9 @@ function SubmitButton({ t }: { t: TranslateFn }) {
 }
 
 interface CreateStockPurchaseFormProps {
-  product: SingleStockProduct;
+  // Shared by Cheese (AdminProductStockPage) and Yogurt (YogurtPurchasesSection),
+  // the only two products still bought/costed by plain count.
+  product: "QUESO" | "YOGURT";
   quantityLabel: string;
   unitCostLabel: string;
   onSaved: () => void;

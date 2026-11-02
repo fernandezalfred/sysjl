@@ -14,16 +14,16 @@ interface AdminProductStockPageProps {
 
 const PRODUCT_LABEL_KEYS: Record<SingleStockProduct, string> = {
   QUESO: "product.queso",
-  YOGURT: "product.yogurt",
 };
 
 function productLabel(product: SingleStockProduct, t: TranslateFn): string {
   return t(PRODUCT_LABEL_KEYS[product]);
 }
 
-// Shared by /admin/cheese and /admin/yogurt — Milk has its own page/section now
-// (MilkPurchasesSection), since it diverged enough (day-grouping, driver attribution,
-// no current-stock figure) to no longer fit this simple shared shape.
+// Only /admin/cheese now — Yogurt has its own page/section (YogurtPurchasesSection)
+// and Milk has its own too (MilkPurchasesSection), since both diverged enough
+// (day-grouping, earning-vs-cost, different stat boxes) to no longer fit this
+// simple shared shape.
 export function AdminProductStockPage({ product }: AdminProductStockPageProps) {
   return (
     <Suspense fallback={<AdminProductStockSkeleton />}>
@@ -32,21 +32,11 @@ export function AdminProductStockPage({ product }: AdminProductStockPageProps) {
   );
 }
 
-// Only Queso and Yogurt have a meaningful "current stock" figure (purchased minus
-// sold, via DailyWorkRecord taken/remaining). Milk has no sales-quantity tracking, so
-// its stock would only ever show the purchased total — not shown, to avoid implying
-// it reflects sales the way Queso/Yogurt's figure does.
-function tracksCurrentStock(product: SingleStockProduct): boolean {
-  return product === "QUESO" || product === "YOGURT";
-}
-
 async function AdminProductStockContent({ product }: AdminProductStockPageProps) {
   await connection();
 
-  const showCurrentStock = tracksCurrentStock(product);
-
   const [currentStock, purchaseRows, { t, locale }] = await Promise.all([
-    showCurrentStock ? getCurrentStock(product) : Promise.resolve(null),
+    getCurrentStock(product),
     prisma.stockPurchase.findMany({
       where: { product },
       orderBy: { createdAt: "desc" },
@@ -67,23 +57,20 @@ async function AdminProductStockContent({ product }: AdminProductStockPageProps)
   }));
 
   const label = productLabel(product, t);
-  const subheadingKey = showCurrentStock ? "stock.subheading" : "stock.subheadingPurchaseOnly";
 
   return (
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{label}</h1>
-        <p className="text-sm text-foreground/60">{t(subheadingKey, { product: label })}</p>
+        <p className="text-sm text-foreground/60">{t("stock.subheading", { product: label })}</p>
       </header>
 
-      {showCurrentStock ? (
-        <div className="rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-foreground/50">
-            {t("stock.currentStock")}
-          </p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight">{currentStock}</p>
-        </div>
-      ) : null}
+      <div className="rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-foreground/50">
+          {t("stock.currentStock")}
+        </p>
+        <p className="mt-1 text-2xl font-semibold tracking-tight">{currentStock}</p>
+      </div>
 
       <StockPurchasesSection purchases={purchases} product={product} locale={locale} />
     </div>
