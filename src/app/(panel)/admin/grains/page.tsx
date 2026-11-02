@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
+import { formatDateKey } from "@/lib/dates";
 import { GrainPurchasesSection } from "@/components/admin/grain-purchases/GrainPurchasesSection";
 import type { GrainProduct, StockPurchaseRow } from "@/types/admin";
 
@@ -33,7 +34,9 @@ async function AdminGrainsContent() {
     quantity: row.quantity,
     unitCost: row.unitCost,
     createdByName: row.createdBy.name,
+    forUserName: null,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
+    createdAtDate: formatDateKey(row.createdAt),
   }));
 
   return (

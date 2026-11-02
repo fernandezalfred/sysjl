@@ -33,7 +33,29 @@ const quantityAndCost = z.object({
 
 const createSchema = quantityAndCost.extend({
   product: z.enum(["QUESO", "YOGURT", "MILK", "MAIZ_PELADO", "MAIZ_CASCARA", "HABA"]),
+  // Only read for MILK: the driver this purchase is for, picked from a dropdown on
+  // that page. Distinct from createdById, which stays the entering admin for every
+  // product, Milk included — this never replaces it.
+  forUserId: z.string().optional(),
 });
+
+// The driver a Milk purchase is for must be an active vehicle user — never the
+// entering admin themselves, and never a deactivated or nonexistent account.
+async function resolveMilkForUserId(forUserId: string | undefined): Promise<{ id: string } | { error: string }> {
+  if (!forUserId) {
+    return { error: "Select a user." };
+  }
+
+  const target = await prisma.user.findUnique({ where: { id: forUserId } });
+  if (!target || !target.isActive) {
+    return { error: "User not found." };
+  }
+  if (target.role !== "VEHICLE_USER") {
+    return { error: "Selected user is not a vehicle user." };
+  }
+
+  return { id: target.id };
+}
 
 export async function createStockPurchase(
   _prevState: ActionState,
@@ -46,9 +68,19 @@ export async function createStockPurchase(
       product: formData.get("product"),
       quantity: formData.get("quantity"),
       unitCost: formData.get("unitCost"),
+      forUserId: formData.get("forUserId") ?? undefined,
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    }
+
+    let forUserId: string | undefined;
+    if (parsed.data.product === "MILK") {
+      const resolved = await resolveMilkForUserId(parsed.data.forUserId);
+      if ("error" in resolved) {
+        return { success: false, error: resolved.error };
+      }
+      forUserId = resolved.id;
     }
 
     await prisma.stockPurchase.create({
@@ -57,6 +89,7 @@ export async function createStockPurchase(
         quantity: parsed.data.quantity,
         unitCost: parsed.data.unitCost,
         createdById: session.user.id,
+        forUserId,
       },
     });
 

@@ -9,6 +9,9 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    user: {
+      findUnique: vi.fn(),
+    },
   },
   revalidatePathMock: vi.fn(),
 }));
@@ -92,17 +95,50 @@ describe("createStockPurchase", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/yogurt");
   });
 
-  it("creates a MILK stock purchase and revalidates the milk page", async () => {
+  it("creates a MILK stock purchase tagged with the acting admin and the selected driver", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.user.findUnique.mockResolvedValue({ id: "driver-1", role: "VEHICLE_USER", isActive: true });
+    const result = await createStockPurchase(
+      { success: false },
+      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "driver-1" }),
+    );
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
+      data: { product: "MILK", quantity: 50, unitCost: 6.5, createdById: "admin-1", forUserId: "driver-1" },
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
+  });
+
+  it("rejects a MILK purchase with no driver selected", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     const result = await createStockPurchase(
       { success: false },
       formData({ ...VALID_FIELDS, product: "MILK" }),
     );
-    expect(result).toEqual({ success: true });
-    expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
-      data: { product: "MILK", quantity: 50, unitCost: 6.5, createdById: "admin-1" },
-    });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
+    expect(result).toEqual({ success: false, error: "Select a user." });
+    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a MILK purchase attributed to a non-existent user", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    const result = await createStockPurchase(
+      { success: false },
+      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "missing" }),
+    );
+    expect(result).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a MILK purchase attributed to an admin instead of a vehicle user", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.user.findUnique.mockResolvedValue({ id: "admin-2", role: "ADMIN", isActive: true });
+    const result = await createStockPurchase(
+      { success: false },
+      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "admin-2" }),
+    );
+    expect(result).toEqual({ success: false, error: "Selected user is not a vehicle user." });
+    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
   });
 
   it("creates a MAIZ_PELADO stock purchase and revalidates the grains page", async () => {
