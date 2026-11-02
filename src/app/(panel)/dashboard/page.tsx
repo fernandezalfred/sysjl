@@ -3,10 +3,10 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
-import { buildAdjustedRevenueTotal } from "@/lib/revenue";
+import { buildAdjustedRevenueTotal, type MilkGrainsDeductions } from "@/lib/revenue";
 import { getCurrentProductPrices } from "@/lib/product-prices";
 import { getProductInvestmentSummaries } from "@/lib/investment";
-import { getCurrentStock, getLatestUnitCost } from "@/lib/stock";
+import { getCurrentStock, getLatestUnitCost, getLatestMilkCostByUser, getGrainsCostByDay } from "@/lib/stock";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SummaryCards } from "@/components/landing/SummaryCards";
@@ -49,17 +49,37 @@ async function DashboardContent() {
   const isAdmin = session?.user?.role === "ADMIN";
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
-  const [prices, investmentSummaries, quesoCost, yogurtCost] = isAdmin
+  const [prices, investmentSummaries, quesoCost, yogurtCost, milkCostByUserId, grainsCostByDay] = isAdmin
     ? await Promise.all([
         getCurrentProductPrices(),
         getProductInvestmentSummaries(),
         getLatestUnitCost("QUESO"),
         getLatestUnitCost("YOGURT"),
+        getLatestMilkCostByUser(vehicleUsers.map((u) => u.id)),
+        getGrainsCostByDay(),
       ])
-    : [null, null, null, null];
+    : [null, null, null, null, null, null];
 
   const unitCosts =
     quesoCost !== null && yogurtCost !== null ? { QUESO: quesoCost, YOGURT: yogurtCost } : null;
+
+  // Grains cost is tracked per purchase day, not per driver — split evenly across
+  // however many drivers actually have a work record that same day, so the full
+  // day's grains cost isn't deducted multiple times when several drivers worked it.
+  const deductions: MilkGrainsDeductions | null =
+    milkCostByUserId && grainsCostByDay
+      ? (() => {
+          const recordCountByDate = new Map<string, number>();
+          for (const r of data.dailyRecords) {
+            recordCountByDate.set(r.date, (recordCountByDate.get(r.date) ?? 0) + 1);
+          }
+          const grainsShareByDate: Record<string, number> = {};
+          for (const [date, total] of Object.entries(grainsCostByDay)) {
+            grainsShareByDate[date] = total / (recordCountByDate.get(date) ?? 1);
+          }
+          return { milkCostByUserId, grainsShareByDate };
+        })()
+      : null;
 
   // Revenue isn't computed in investment.ts (no access to per-record sale-price
   // history there) — merged in here from the already-computed, price-correct
@@ -117,7 +137,7 @@ async function DashboardContent() {
       {isAdmin && unitCosts ? (
         <SaleRecordsTrendSection
           items={data.dailyRecords.map((r) => ({ date: r.date, value: r.totalSold }))}
-          adjustedRevenueTotal={buildAdjustedRevenueTotal(data.dailyRecords, unitCosts)}
+          adjustedRevenueTotal={buildAdjustedRevenueTotal(data.dailyRecords, unitCosts, deductions ?? undefined)}
           t={t}
           locale={locale}
         />
@@ -130,6 +150,7 @@ async function DashboardContent() {
         vehicleUsers={vehicleUsers}
         locale={locale}
         unitCosts={unitCosts}
+        deductions={deductions}
       />
     </div>
   );
