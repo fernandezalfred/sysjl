@@ -1,0 +1,66 @@
+import { describe, expect, it } from "vitest";
+import { buildDailyRecords } from "@/lib/landing-data";
+import { buildAdjustedRevenueTotal, recordAdjustedRevenue, type UnitCosts } from "@/lib/revenue";
+import type { SaleRecord } from "@/types/landing";
+
+const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
+  id: "r1",
+  workRecordId: "wr1",
+  totalSold: 8,
+  createdAt: "2026-10-27T10:00:00.000Z",
+  date: "2026-10-27",
+  userId: "u1",
+  userName: "Test User",
+  product: "QUESO",
+  unitPrice: 9,
+  quantityTaken: 10,
+  quantityRemaining: 2,
+  ...overrides,
+});
+
+// Queso: sale 9, cost 6, margin 3 per unit. Yogurt: sale 33, cost 22, margin 11 per unit.
+const unitCosts: UnitCosts = { QUESO: 6, YOGURT: 22 };
+
+describe("recordAdjustedRevenue", () => {
+  it("is each product's per-unit profit margin (sale price minus cost) times quantity sold, plus Milk & Mote revenue in full", () => {
+    // Queso sold 150 @ Bs3 margin = 450; Yogurt sold 22 @ Bs11 margin = 242; Milk & Mote = 100.
+    // 450 + 242 + 100 = 792.
+    const records = [
+      record({ id: "r1a", date: "2026-10-30", userId: "raul", userName: "Raul", product: "QUESO", unitPrice: 9, quantityTaken: 150, quantityRemaining: 0, totalSold: 2176 }),
+      record({ id: "r1b", date: "2026-10-30", userId: "raul", userName: "Raul", product: "YOGURT", unitPrice: 33, quantityTaken: 22, quantityRemaining: 0, totalSold: 2176 }),
+    ];
+
+    const [row] = buildDailyRecords(records);
+
+    expect(recordAdjustedRevenue(row, unitCosts)).toBe(792);
+  });
+
+  it("follows the cost passed in, not a fixed constant, since purchase cost can change", () => {
+    const records = [
+      record({ id: "r2a", date: "2026-10-29", userId: "u1", userName: "A", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
+      record({ id: "r2b", date: "2026-10-29", userId: "u1", userName: "A", product: "YOGURT", unitPrice: 33, quantityTaken: 0, quantityRemaining: 0, totalSold: 90 }),
+    ];
+
+    const [row] = buildDailyRecords(records);
+
+    expect(recordAdjustedRevenue(row, { QUESO: 6, YOGURT: 22 })).toBe(30);
+    expect(recordAdjustedRevenue(row, { QUESO: 4, YOGURT: 22 })).toBe(50);
+  });
+});
+
+describe("buildAdjustedRevenueTotal", () => {
+  it("sums across every record, not just one", () => {
+    const records = [
+      record({ id: "r1", date: "2026-10-30", userId: "u1", userName: "A", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
+      record({ id: "r2", date: "2026-10-29", userId: "u2", userName: "B", product: "QUESO", unitPrice: 9, quantityTaken: 5, quantityRemaining: 0, totalSold: 45 }),
+    ];
+
+    const total = buildAdjustedRevenueTotal(buildDailyRecords(records), unitCosts);
+
+    expect(total).toBe(45);
+  });
+
+  it("is zero for no records", () => {
+    expect(buildAdjustedRevenueTotal([], unitCosts)).toBe(0);
+  });
+});

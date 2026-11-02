@@ -34,3 +34,16 @@ export async function getCurrentStock(product: Product): Promise<number> {
 
   return totalPurchased - (totalTaken - totalRemaining);
 }
+
+// The purchase cost used for profit calculations is the most recent StockPurchase
+// entry's unitCost — not a fixed constant — since the admin can record a new
+// purchase at a different cost at any time and profit math should follow it.
+export async function getLatestUnitCost(product: Product): Promise<number> {
+  const latest = await prisma.stockPurchase.findFirst({
+    where: { product },
+    orderBy: { createdAt: "desc" },
+    select: { unitCost: true },
+  });
+
+  return latest?.unitCost ?? 0;
+}
