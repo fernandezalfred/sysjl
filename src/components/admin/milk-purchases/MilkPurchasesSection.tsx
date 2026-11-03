@@ -181,7 +181,7 @@ export function MilkPurchasesSection({ purchases, vehicleUsers, locale }: MilkPu
                         <button
                           type="button"
                           onClick={() => openEdit(purchase)}
-                          className="text-sm text-foreground/60 underline hover:text-foreground"
+                          className="-m-2 p-2 text-sm text-foreground/60 underline hover:text-foreground"
                         >
                           {t("table.edit")}
                         </button>
@@ -197,7 +197,7 @@ export function MilkPurchasesSection({ purchases, vehicleUsers, locale }: MilkPu
 
       <dialog
         ref={dialogRef}
-        className="w-full max-w-md rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
+        className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
         <h3 className="mb-4 text-sm font-medium">
           {mode.type === "create"

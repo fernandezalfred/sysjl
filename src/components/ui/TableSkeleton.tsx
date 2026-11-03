@@ -17,7 +17,7 @@ export function TableSkeleton({ rows = 2, t }: TableSkeletonProps) {
         <Skeleton className="h-3.5 w-24 bg-foreground/20" />
       </div>
 
-      <table className="hidden w-full text-sm sm:table">
+      <table className="hidden w-full text-sm md:table">
         <thead className="bg-foreground/[0.03] text-left text-foreground/60">
           <tr>
             <th className="px-4 py-2 font-medium">{t("table.user")}</th>
@@ -49,7 +49,7 @@ export function TableSkeleton({ rows = 2, t }: TableSkeletonProps) {
         </tbody>
       </table>
 
-      <ul className="divide-y divide-foreground/10 sm:hidden">
+      <ul className="divide-y divide-foreground/10 md:hidden">
         {Array.from({ length: rows }).map((_, i) => (
           <li key={i} className="flex flex-col gap-3 p-4">
             <Skeleton className="h-4 w-24" />

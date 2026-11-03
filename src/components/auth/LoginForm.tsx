@@ -41,7 +41,7 @@ export function LoginForm({ locale }: LoginFormProps) {
           type="email"
           autoComplete="email"
           required
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         />
       </div>
 
@@ -55,7 +55,7 @@ export function LoginForm({ locale }: LoginFormProps) {
           type="password"
           autoComplete="current-password"
           required
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         />
       </div>
 

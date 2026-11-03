@@ -99,13 +99,13 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
             type="button"
             onClick={() => setIsNavOpen(true)}
             aria-label={t("sidebar.openMenu")}
-            className="rounded-md border border-foreground/15 px-2.5 py-1.5 text-sm text-foreground/70 hover:text-foreground"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-md border border-foreground/15 text-sm text-foreground/70 hover:text-foreground"
           >
             ☰
           </button>
           <div className="flex items-center gap-3">
             <LanguageSwitcher locale={locale} />
-            <span className="text-sm text-foreground/70">{userName}</span>
+            <span className="max-w-[7rem] truncate text-sm text-foreground/70">{userName}</span>
             <SignOutButton label={t("header.signOut")} />
           </div>
         </div>
@@ -127,7 +127,7 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
                 type="button"
                 onClick={() => setIsNavOpen(false)}
                 aria-label={t("sidebar.closeMenu")}
-                className="rounded-md px-2 py-1 text-foreground/60 hover:text-foreground"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground/60 hover:text-foreground"
               >
                 ✕
               </button>
@@ -165,7 +165,7 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
         <div className="sticky top-0 z-20 hidden flex-col gap-3 bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:flex">
           <div className="flex items-center justify-end gap-3">
             <LanguageSwitcher locale={locale} />
-            <span className="text-sm text-foreground/70">{userName}</span>
+            <span className="max-w-[12rem] truncate text-sm text-foreground/70">{userName}</span>
             <SignOutButton label={t("header.signOut")} />
           </div>
           <Breadcrumbs items={breadcrumbs} label={t("sidebar.breadcrumbLabel")} />

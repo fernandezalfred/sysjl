@@ -26,7 +26,7 @@ export function AppHeader({
   t,
 }: AppHeaderProps) {
   return (
-    <header className="flex items-start justify-between gap-4">
+    <header className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="text-sm text-foreground/60">
@@ -37,7 +37,7 @@ export function AppHeader({
           })}
         </p>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <LanguageSwitcher locale={locale} />
         {isSignedIn ? (
           <>
@@ -50,7 +50,7 @@ export function AppHeader({
                 {t("header.dashboard")}
               </Link>
             )}
-            <span className="text-sm text-foreground/70">{userName}</span>
+            <span className="max-w-[9rem] truncate text-sm text-foreground/70">{userName}</span>
             {isAdmin ? (
               <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
                 {t("header.manageUsers")}
