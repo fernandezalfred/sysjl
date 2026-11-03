@@ -13,7 +13,7 @@ interface RecordFormFieldsProps {
   t: TranslateFn;
 }
 
-const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
+const inputClass = "w-full min-w-0 rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
 const labelClass = "text-xs font-medium text-foreground/60";
 
 export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
@@ -21,9 +21,8 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
   // today (the browser's local day, not the user's input) — the date is never typed.
   const date = defaultValues?.date ?? todayDateString();
 
-  // Single column always — this grid only ever renders inside a `max-w-md` dialog, so a
-  // `sm:` (viewport) breakpoint would cram it to 2 narrow columns on any desktop/tablet
-  // viewport regardless of the dialog's own (always-narrow) rendered width.
+  // Each product's taken and left share one row (always two columns, not a viewport
+  // breakpoint — this only ever renders inside a narrow `max-w-md` dialog).
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="flex flex-col gap-1">
@@ -32,64 +31,68 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
         {defaultValues ? null : <input type="hidden" name="date" value={date} />}
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="queso-taken" className={labelClass}>
-          {t("records.quesoTaken")}
-        </label>
-        <input
-          id="queso-taken"
-          name="quesoTaken"
-          type="number"
-          min={0}
-          required
-          defaultValue={defaultValues?.quesoTaken}
-          className={inputClass}
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="queso-taken" className={labelClass}>
+            {t("records.quesoTaken")}
+          </label>
+          <input
+            id="queso-taken"
+            name="quesoTaken"
+            type="number"
+            min={0}
+            required
+            defaultValue={defaultValues?.quesoTaken}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="queso-remaining" className={labelClass}>
+            {t("records.quesoLeft")}
+          </label>
+          <input
+            id="queso-remaining"
+            name="quesoRemaining"
+            type="number"
+            min={0}
+            required
+            defaultValue={defaultValues?.quesoRemaining}
+            className={inputClass}
+          />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="queso-remaining" className={labelClass}>
-          {t("records.quesoLeft")}
-        </label>
-        <input
-          id="queso-remaining"
-          name="quesoRemaining"
-          type="number"
-          min={0}
-          required
-          defaultValue={defaultValues?.quesoRemaining}
-          className={inputClass}
-        />
-      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="yogurt-taken" className={labelClass}>
+            {t("records.yogurtTaken")}
+          </label>
+          <input
+            id="yogurt-taken"
+            name="yogurtTaken"
+            type="number"
+            min={0}
+            required
+            defaultValue={defaultValues?.yogurtTaken}
+            className={inputClass}
+          />
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="yogurt-taken" className={labelClass}>
-          {t("records.yogurtTaken")}
-        </label>
-        <input
-          id="yogurt-taken"
-          name="yogurtTaken"
-          type="number"
-          min={0}
-          required
-          defaultValue={defaultValues?.yogurtTaken}
-          className={inputClass}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="yogurt-remaining" className={labelClass}>
-          {t("records.yogurtLeft")}
-        </label>
-        <input
-          id="yogurt-remaining"
-          name="yogurtRemaining"
-          type="number"
-          min={0}
-          required
-          defaultValue={defaultValues?.yogurtRemaining}
-          className={inputClass}
-        />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="yogurt-remaining" className={labelClass}>
+            {t("records.yogurtLeft")}
+          </label>
+          <input
+            id="yogurt-remaining"
+            name="yogurtRemaining"
+            type="number"
+            min={0}
+            required
+            defaultValue={defaultValues?.yogurtRemaining}
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-1">

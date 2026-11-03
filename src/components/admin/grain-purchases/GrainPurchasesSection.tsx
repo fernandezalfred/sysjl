@@ -7,6 +7,7 @@ import { CreateGrainPurchaseForm } from "@/components/admin/grain-purchases/Crea
 import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditStockPurchaseForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { GrainProduct, StockPurchaseRow } from "@/types/admin";
+import { useBackdropClose } from "@/hooks/useBackdropClose";
 
 interface GrainPurchasesSectionProps {
   purchases: StockPurchaseRow[];
@@ -64,6 +65,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
   const quantityLabel = t("stock.quantityQuartilla");
   const unitCostLabel = t("stock.unitCostQuartilla");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const backdropClose = useBackdropClose();
   const [mode, setMode] = useState<Mode>({ type: "create" });
   // See StockPurchasesSection for why this is needed: without a fresh `key` on every
   // open, reopening in the same mode reuses the same form instance, whose stale
@@ -203,6 +205,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
 
       <dialog
         ref={dialogRef}
+        {...backdropClose}
         className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
         <h3 className="mb-4 text-sm font-medium">

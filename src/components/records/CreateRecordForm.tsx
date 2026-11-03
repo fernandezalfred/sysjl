@@ -26,10 +26,13 @@ interface CreateRecordFormProps {
   onCancel: () => void;
   isAdmin: boolean;
   vehicleUsers: { id: string; name: string }[];
+  // Shown, locked, in the User field for a vehicle user — their record is always
+  // their own (the server takes the user from the session, never from the form).
+  currentUserName: string | null;
   t: TranslateFn;
 }
 
-export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, t }: CreateRecordFormProps) {
+export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, currentUserName, t }: CreateRecordFormProps) {
   const [state, formAction] = useActionState(createDailyWorkRecord, initialState);
 
   useEffect(() => {
@@ -38,11 +41,11 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, t }
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
-      {isAdmin ? (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="record-user" className="text-xs font-medium text-foreground/60">
-            {t("records.userLabel")}
-          </label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="record-user" className="text-xs font-medium text-foreground/60">
+          {t("records.userLabel")}
+        </label>
+        {isAdmin ? (
           <select
             id="record-user"
             name="userId"
@@ -59,8 +62,18 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, t }
               </option>
             ))}
           </select>
-        </div>
-      ) : null}
+        ) : (
+          // Same dropdown as the admin's, with the driver as its only option. It has no
+          // `name`, so nothing is submitted — the server uses the session user.
+          <select
+            id="record-user"
+            defaultValue="self"
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
+          >
+            <option value="self">{currentUserName ?? ""}</option>
+          </select>
+        )}
+      </div>
 
       <RecordFormFields t={t} />
 

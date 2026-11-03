@@ -35,3 +35,15 @@ dialog::backdrop {
 dialog:modal {
   margin: auto;
 }
+
+/* Keep the page behind an open modal from scrolling: lock the page itself, and
+   stop a scroll that reaches the end of the modal's own content from carrying
+   on to the page (scroll chaining, mostly on touch screens). */
+html:has(dialog:modal),
+html:has(dialog:modal) body {
+  overflow: hidden;
+}
+
+dialog:modal {
+  overscroll-behavior: contain;
+}

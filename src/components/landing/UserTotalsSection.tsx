@@ -9,6 +9,7 @@ import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { DailyRecordRow, UserTotal } from "@/types/landing";
 import type { DailyWorkRecordRow } from "@/types/records";
+import { useBackdropClose } from "@/hooks/useBackdropClose";
 
 interface UserTotalsSectionProps {
   userTotals: UserTotal[];
@@ -87,6 +88,7 @@ export function UserTotalsSection({
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dayGroups = groupByDay(userTotals);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const backdropClose = useBackdropClose();
   const [editing, setEditing] = useState<DailyWorkRecordRow | null>(null);
   // Bumped on every open so the edit form below always gets a fresh `key` — without
   // it, reopening to edit the same record twice in a row reuses the same form
@@ -242,6 +244,7 @@ export function UserTotalsSection({
 
       <dialog
         ref={dialogRef}
+        {...backdropClose}
         className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
         <h3 className="mb-4 text-sm font-medium">{t("records.editRecord")}</h3>

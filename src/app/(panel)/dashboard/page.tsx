@@ -100,6 +100,7 @@ async function DashboardContent() {
       <SaleRecordsSection
         dailyRecords={data.dailyRecords}
         currentUserId={session?.user?.id ?? null}
+        currentUserName={session?.user?.name ?? null}
         isAdmin={isAdmin}
         vehicleUsers={vehicleUsers}
         locale={locale}

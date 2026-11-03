@@ -74,7 +74,12 @@ async function LandingContent() {
           {t("landing.totalsByUser")}
         </h2>
         {isSignedIn ? (
-          <CreateRecordButton isAdmin={isAdmin} vehicleUsers={vehicleUsers} locale={locale} />
+          <CreateRecordButton
+            isAdmin={isAdmin}
+            vehicleUsers={vehicleUsers}
+            currentUserName={session?.user?.name ?? null}
+            locale={locale}
+          />
         ) : null}
       </div>
 

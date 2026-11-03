@@ -12,10 +12,12 @@ import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { DailyRecordRow, ProductBreakdown } from "@/types/landing";
 import type { DailyWorkRecordRow } from "@/types/records";
+import { useBackdropClose } from "@/hooks/useBackdropClose";
 
 interface SaleRecordsSectionProps {
   dailyRecords: DailyRecordRow[];
   currentUserId: string | null;
+  currentUserName: string | null;
   isAdmin: boolean;
   vehicleUsers: { id: string; name: string }[];
   locale: Locale;
@@ -121,6 +123,7 @@ function groupByDay(rows: DailyRecordRow[]): DayGroup[] {
 export function SaleRecordsSection({
   dailyRecords,
   currentUserId,
+  currentUserName,
   isAdmin,
   vehicleUsers,
   locale,
@@ -129,6 +132,7 @@ export function SaleRecordsSection({
 }: SaleRecordsSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const backdropClose = useBackdropClose();
   const [mode, setMode] = useState<Mode>({ type: "create" });
   // Bumped on every open so the create/edit form below always gets a fresh `key` —
   // without it, reopening in the same mode twice in a row (e.g. "New record" after
@@ -294,6 +298,7 @@ export function SaleRecordsSection({
 
       <dialog
         ref={dialogRef}
+        {...backdropClose}
         className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
         <h3 className="mb-4 text-sm font-medium">
@@ -306,6 +311,7 @@ export function SaleRecordsSection({
             onCancel={close}
             isAdmin={isAdmin}
             vehicleUsers={vehicleUsers}
+            currentUserName={currentUserName}
             t={t}
           />
         ) : (

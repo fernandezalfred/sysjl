@@ -6,6 +6,7 @@ import { CreateStockPurchaseForm } from "@/components/admin/stock-purchases/Crea
 import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditStockPurchaseForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow, SingleStockProduct } from "@/types/admin";
+import { useBackdropClose } from "@/hooks/useBackdropClose";
 
 interface StockPurchasesSectionProps {
   purchases: StockPurchaseRow[];
@@ -22,6 +23,7 @@ export function StockPurchasesSection({ purchases, product, locale }: StockPurch
   const quantityLabel = t("stock.quantity");
   const unitCostLabel = t("stock.unitCost");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const backdropClose = useBackdropClose();
   const [mode, setMode] = useState<Mode>({ type: "create" });
   // Bumped on every open so the create/edit form below always gets a fresh `key` —
   // without it, reopening in the same mode twice in a row reuses the same form
@@ -137,6 +139,7 @@ export function StockPurchasesSection({ purchases, product, locale }: StockPurch
 
       <dialog
         ref={dialogRef}
+        {...backdropClose}
         className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
       >
         <h3 className="mb-4 text-sm font-medium">
