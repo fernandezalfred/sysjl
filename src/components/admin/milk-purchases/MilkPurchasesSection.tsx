@@ -8,6 +8,8 @@ import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditSt
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow } from "@/types/admin";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
+import { useGroupedPagination } from "@/hooks/usePagination";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface MilkPurchasesSectionProps {
   purchases: StockPurchaseRow[];
@@ -61,7 +63,7 @@ export function MilkPurchasesSection({ purchases, vehicleUsers, locale }: MilkPu
   // open, reopening in the same mode reuses the same form instance, whose stale
   // success state re-closes the dialog as soon as it's reopened.
   const [formKey, setFormKey] = useState(0);
-  const dayGroups = groupByDay(purchases);
+  const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(purchases), "purchases");
 
   function openCreate() {
     setMode({ type: "create" });
@@ -196,6 +198,8 @@ export function MilkPurchasesSection({ purchases, vehicleUsers, locale }: MilkPu
           </div>
         </>
       )}
+
+      <Pagination {...pager} t={t} />
 
       <dialog
         ref={dialogRef}

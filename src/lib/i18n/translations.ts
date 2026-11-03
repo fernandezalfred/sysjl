@@ -145,6 +145,11 @@ const en = {
   "sidebar.administration": "Administration",
   "sidebar.breadcrumbLabel": "Breadcrumb",
 
+  "pagination.label": "Pagination",
+  "pagination.previous": "Previous",
+  "pagination.next": "Next",
+  "pagination.pageOf": "Page {page} of {pageCount}",
+
 
   "stock.subheading":
     "Record {product} purchased into the central deposit. Stock is automatically reduced when a driver takes {product} out and restored when the unsold remainder is reported back.",
@@ -327,6 +332,11 @@ const es: Record<DictionaryKey, string> = {
   "sidebar.overview": "Resumen",
   "sidebar.administration": "Administración",
   "sidebar.breadcrumbLabel": "Ruta de navegación",
+
+  "pagination.label": "Paginación",
+  "pagination.previous": "Anterior",
+  "pagination.next": "Siguiente",
+  "pagination.pageOf": "Página {page} de {pageCount}",
 
 
   "stock.subheading":

@@ -13,6 +13,8 @@ import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translation
 import type { DailyRecordRow, ProductBreakdown } from "@/types/landing";
 import type { DailyWorkRecordRow } from "@/types/records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
+import { useGroupedPagination } from "@/hooks/usePagination";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface SaleRecordsSectionProps {
   dailyRecords: DailyRecordRow[];
@@ -141,7 +143,7 @@ export function SaleRecordsSection({
   // reference on every render, the form's "call onSaved on success" effect re-fires
   // on the next render and immediately closes the dialog that was just reopened.
   const [formKey, setFormKey] = useState(0);
-  const dayGroups = groupByDay(dailyRecords);
+  const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(dailyRecords), "rows");
 
   function openCreate() {
     setMode({ type: "create" });
@@ -295,6 +297,8 @@ export function SaleRecordsSection({
           </div>
         ))}
       </div>
+
+      <Pagination {...pager} t={t} />
 
       <dialog
         ref={dialogRef}

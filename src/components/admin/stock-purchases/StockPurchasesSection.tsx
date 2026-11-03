@@ -7,6 +7,8 @@ import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditSt
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow, SingleStockProduct } from "@/types/admin";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
+import { usePagination } from "@/hooks/usePagination";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface StockPurchasesSectionProps {
   purchases: StockPurchaseRow[];
@@ -20,6 +22,7 @@ type Mode = { type: "create" } | { type: "edit"; purchase: StockPurchaseRow };
 // have their own page/section now) is bought/costed by plain count.
 export function StockPurchasesSection({ purchases, product, locale }: StockPurchasesSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
+  const { pageItems: pagePurchases, ...pager } = usePagination(purchases);
   const quantityLabel = t("stock.quantity");
   const unitCostLabel = t("stock.unitCost");
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -84,7 +87,7 @@ export function StockPurchasesSection({ purchases, product, locale }: StockPurch
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/10">
-                {purchases.map((purchase) => (
+                {pagePurchases.map((purchase) => (
                   <tr key={purchase.id}>
                     <td className="px-4 py-2">{purchase.quantity}</td>
                     <td className="px-4 py-2">{formatCurrency(purchase.unitCost)}</td>
@@ -109,7 +112,7 @@ export function StockPurchasesSection({ purchases, product, locale }: StockPurch
           </div>
 
           <ul className="flex flex-col gap-2 md:hidden">
-            {purchases.map((purchase) => (
+            {pagePurchases.map((purchase) => (
               <li key={purchase.id} className="rounded-lg border border-foreground/10 p-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -136,6 +139,8 @@ export function StockPurchasesSection({ purchases, product, locale }: StockPurch
           </ul>
         </>
       )}
+
+      <Pagination {...pager} t={t} />
 
       <dialog
         ref={dialogRef}

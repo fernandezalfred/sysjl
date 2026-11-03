@@ -10,6 +10,8 @@ import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translation
 import type { DailyRecordRow, UserTotal } from "@/types/landing";
 import type { DailyWorkRecordRow } from "@/types/records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
+import { useGroupedPagination } from "@/hooks/usePagination";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface UserTotalsSectionProps {
   userTotals: UserTotal[];
@@ -86,7 +88,7 @@ export function UserTotalsSection({
   locale,
 }: UserTotalsSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const dayGroups = groupByDay(userTotals);
+  const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(userTotals), "totals");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backdropClose = useBackdropClose();
   const [editing, setEditing] = useState<DailyWorkRecordRow | null>(null);
@@ -241,6 +243,8 @@ export function UserTotalsSection({
           </div>
         ))}
       </div>
+
+      <Pagination {...pager} t={t} />
 
       <dialog
         ref={dialogRef}
