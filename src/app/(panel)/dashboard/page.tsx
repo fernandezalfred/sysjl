@@ -102,7 +102,9 @@ async function DashboardContent() {
         </p>
       </header>
 
-      <SummaryCards productTotals={data.productTotals} currentStock={currentStock} t={t} />
+      {isAdmin ? (
+        <SummaryCards productTotals={data.productTotals} currentStock={currentStock} t={t} />
+      ) : null}
 
       {isAdmin && prices ? (
         <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
