@@ -37,13 +37,13 @@ describe("translate", () => {
 
 describe("defaultT", () => {
   it("always translates using the default locale regardless of what the caller passes", () => {
-    expect(DEFAULT_LOCALE).toBe("en");
-    expect(defaultT("header.signOut")).toBe(translate("en", "header.signOut"));
+    expect(DEFAULT_LOCALE).toBe("es");
+    expect(defaultT("header.signOut")).toBe(translate("es", "header.signOut"));
   });
 
   it("supports interpolation like translate() does", () => {
     expect(defaultT("footer.rights", { year: 2030 })).toBe(
-      "© 2030 SysJL. All rights reserved.",
+      "© 2030 SysJL. Todos los derechos reservados.",
     );
   });
 });
