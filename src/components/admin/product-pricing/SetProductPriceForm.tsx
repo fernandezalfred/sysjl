@@ -62,7 +62,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
             step="0.01"
             defaultValue={current.salePrice}
             required
-            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
           />
         </div>
 

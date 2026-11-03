@@ -60,7 +60,7 @@ export function CreateGrainPurchaseForm({
           name="product"
           required
           defaultValue=""
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         >
           <option value="" disabled>
             {t("grains.selectItem")}

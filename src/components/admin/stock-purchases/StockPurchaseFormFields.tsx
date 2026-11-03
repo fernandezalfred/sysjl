@@ -7,7 +7,7 @@ interface StockPurchaseFormFieldsProps {
   unitCostLabel: string;
 }
 
-const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm";
+const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
 const labelClass = "text-xs font-medium text-foreground/60";
 
 export function StockPurchaseFormFields({
@@ -15,8 +15,9 @@ export function StockPurchaseFormFields({
   quantityLabel,
   unitCostLabel,
 }: StockPurchaseFormFieldsProps) {
+  // Single column always — see RecordFormFields.tsx for why (same fixed-width dialog).
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3">
       <div className="flex flex-col gap-1">
         <label htmlFor="stock-quantity" className={labelClass}>
           {quantityLabel}

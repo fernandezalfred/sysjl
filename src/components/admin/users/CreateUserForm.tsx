@@ -41,7 +41,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
               id="new-name"
               name="name"
               required
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
             />
           </div>
 
@@ -54,7 +54,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
               name="email"
               type="email"
               required
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
             />
           </div>
 
@@ -69,7 +69,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
               required
               minLength={8}
               autoComplete="new-password"
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
             />
           </div>
 
@@ -81,7 +81,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
               id="new-role"
               name="role"
               defaultValue="VEHICLE_USER"
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
             >
               <option value="VEHICLE_USER">{t("adminUsers.roleVehicleUser")}</option>
               <option value="ADMIN">{t("adminUsers.roleAdmin")}</option>

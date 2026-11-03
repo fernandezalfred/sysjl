@@ -13,7 +13,7 @@ interface RecordFormFieldsProps {
   t: TranslateFn;
 }
 
-const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm";
+const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
 const labelClass = "text-xs font-medium text-foreground/60";
 
 export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
@@ -21,9 +21,12 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
   // today (the browser's local day, not the user's input) — the date is never typed.
   const date = defaultValues?.date ?? todayDateString();
 
+  // Single column always — this grid only ever renders inside a `max-w-md` dialog, so a
+  // `sm:` (viewport) breakpoint would cram it to 2 narrow columns on any desktop/tablet
+  // viewport regardless of the dialog's own (always-narrow) rendered width.
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div className="flex flex-col gap-1 sm:col-span-2">
+    <div className="grid grid-cols-1 gap-3">
+      <div className="flex flex-col gap-1">
         <span className={labelClass}>{t("records.date")}</span>
         <p className="text-sm">{formatShortDate(date)}</p>
         {defaultValues ? null : <input type="hidden" name="date" value={date} />}
@@ -89,7 +92,7 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-1 sm:col-span-2">
+      <div className="flex flex-col gap-1">
         <label htmlFor="total-sold" className={labelClass}>
           {t("records.totalSold")}
         </label>

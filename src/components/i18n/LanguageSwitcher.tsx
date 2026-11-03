@@ -13,7 +13,7 @@ export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
         name="locale"
         value="en"
         disabled={locale === "en"}
-        className={locale === "en" ? "font-semibold text-foreground" : "underline hover:text-foreground"}
+        className={`p-2 ${locale === "en" ? "font-semibold text-foreground" : "underline hover:text-foreground"}`}
       >
         EN
       </button>
@@ -23,7 +23,7 @@ export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
         name="locale"
         value="es"
         disabled={locale === "es"}
-        className={locale === "es" ? "font-semibold text-foreground" : "underline hover:text-foreground"}
+        className={`p-2 ${locale === "es" ? "font-semibold text-foreground" : "underline hover:text-foreground"}`}
       >
         ES
       </button>

@@ -48,7 +48,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, t }
             name="userId"
             required
             defaultValue=""
-            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
           >
             <option value="" disabled>
               {t("records.selectUser")}

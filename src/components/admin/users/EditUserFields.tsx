@@ -18,7 +18,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
           name="name"
           defaultValue={user.name}
           required
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         />
       </div>
 
@@ -32,7 +32,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
           type="email"
           defaultValue={user.email}
           required
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         />
       </div>
 
@@ -44,7 +44,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
           id={`role-${user.id}`}
           name="role"
           defaultValue={user.role}
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         >
           <option value="VEHICLE_USER">{t("adminUsers.roleVehicleUser")}</option>
           <option value="ADMIN">{t("adminUsers.roleAdmin")}</option>
@@ -61,7 +61,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
           type="password"
           autoComplete="new-password"
           minLength={8}
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
         />
       </div>
     </div>
