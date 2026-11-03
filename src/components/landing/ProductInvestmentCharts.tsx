@@ -11,7 +11,7 @@ import {
   type ChartOptions,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/pricing";
 import { translate, type Locale } from "@/lib/i18n/translations";
 import type { ProductInvestmentDetail } from "@/lib/investment";
 import type { ProductCode } from "@/types/landing";
@@ -122,7 +122,7 @@ export function ProductInvestmentCharts({ details, locale }: ProductInvestmentCh
             data={{
               labels: bsLabels,
               datasets: details.map((d) =>
-                productDataset(d.label, PRODUCT_COLORS[d.product], [d.investment, d.revenue]),
+                productDataset(t(PRODUCT_LABEL_KEYS[d.product]), PRODUCT_COLORS[d.product], [d.investment, d.revenue]),
               ),
             }}
           />
@@ -136,7 +136,7 @@ export function ProductInvestmentCharts({ details, locale }: ProductInvestmentCh
             options={unitsOptions}
             data={{
               labels: unitsLabels,
-              datasets: details.map((d) => productDataset(d.label, PRODUCT_COLORS[d.product], [d.sold, d.left])),
+              datasets: details.map((d) => productDataset(t(PRODUCT_LABEL_KEYS[d.product]), PRODUCT_COLORS[d.product], [d.sold, d.left])),
             }}
           />
         </div>

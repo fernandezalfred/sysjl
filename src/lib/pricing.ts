@@ -5,6 +5,12 @@ export const PRODUCT_LABELS: Record<ProductCode, string> = {
   YOGURT: "Yogurt",
 };
 
+// i18n keys for showing a product's name in the UI in the viewer's language.
+export const PRODUCT_LABEL_KEYS: Record<ProductCode, string> = {
+  QUESO: "product.queso",
+  YOGURT: "product.yogurt",
+};
+
 // Fallback sale price used only when the admin hasn't set a price for a product yet
 // (see src/lib/product-prices.ts) — the starting values from context/project-overview.md §4.
 export const CURRENT_UNIT_PRICE: Record<ProductCode, number> = {

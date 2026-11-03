@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/pricing";
 import type { Locale, TranslateFn } from "@/lib/i18n/translations";
 import type { ProductInvestmentDetail } from "@/lib/investment";
 import { ProductInvestmentCharts } from "@/components/landing/ProductInvestmentCharts";
@@ -24,7 +24,7 @@ export function ProductInvestmentSection({ details, t, locale }: ProductInvestme
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {details.map((d) => (
           <div key={d.product} className="rounded-lg border border-foreground/10 p-4">
-            <p className="text-xs text-foreground/60">{d.label}</p>
+            <p className="text-xs text-foreground/60">{t(PRODUCT_LABEL_KEYS[d.product])}</p>
             <dl className="mt-1 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <div>
                 <dt className="text-foreground/60">{t("investment.investment")}</dt>

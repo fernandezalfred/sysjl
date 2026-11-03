@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { setProductPrice, type ActionState } from "@/actions/product-prices";
-import { formatCurrency, PRODUCT_LABELS } from "@/lib/pricing";
+import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { PricedProduct } from "@prisma/client";
 import type { ProductPriceInfo } from "@/lib/product-prices";
@@ -35,7 +35,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
 
   return (
     <div className="rounded-lg border border-foreground/10 p-4">
-      <h3 className="text-sm font-medium">{PRODUCT_LABELS[product]}</h3>
+      <h3 className="text-sm font-medium">{t(PRODUCT_LABEL_KEYS[product])}</h3>
       <p className="mt-1 text-xs text-foreground/60">
         {t("adminProducts.currentInfo", {
           sale: formatCurrency(current.salePrice),

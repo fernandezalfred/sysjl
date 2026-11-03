@@ -2,6 +2,7 @@
 
 import { Fragment, useRef, useState } from "react";
 import { formatShortDate } from "@/lib/dates";
+import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { toEditableRecord } from "@/lib/records";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
@@ -32,8 +33,8 @@ function TotalRevenueCell({ u, t }: { u: UserTotal; t: TranslateFn }) {
 
   return (
     <>
-      <div className="font-medium">
-        {t("cell.sold", { amount: formatCurrency(soldRevenue) })}
+      <div>
+        <LabeledAmount label={t("cell.sold")} amount={formatCurrency(soldRevenue)} />
         {u.isDailyWinner && (
           <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
             {u.winnerMargin !== null
@@ -43,10 +44,10 @@ function TotalRevenueCell({ u, t }: { u: UserTotal; t: TranslateFn }) {
         )}
       </div>
       <div className="text-xs text-foreground/60">
-        {t("cell.leftValue", {
-          left: formatCurrency(remainingValue),
-          total: formatCurrency(u.totalRevenue),
-        })}
+        <LabeledAmount label={t("cell.unsold")} amount={formatCurrency(remainingValue)} />
+      </div>
+      <div className="text-xs text-foreground/60">
+        <LabeledAmount label={t("cell.soldPlusUnsold")} amount={formatCurrency(u.totalRevenue)} />
       </div>
     </>
   );
@@ -151,9 +152,9 @@ export function UserTotalsSection({
                 {group.totals.map((u) => (
                   <tr key={`${u.date}-${u.userId}`}>
                     <td className="px-4 py-2 font-medium">{u.userName}</td>
-                    <td className="px-4 py-2">{formatCurrency(u.quesoRevenue)}</td>
-                    <td className="px-4 py-2">{formatCurrency(u.yogurtRevenue)}</td>
-                    <td className="px-4 py-2">{formatCurrency(u.milkMoteRevenue)}</td>
+                    <td className="px-4 py-2 font-semibold">{formatCurrency(u.quesoRevenue)}</td>
+                    <td className="px-4 py-2 font-semibold">{formatCurrency(u.yogurtRevenue)}</td>
+                    <td className="px-4 py-2 font-semibold">{formatCurrency(u.milkMoteRevenue)}</td>
                     <td
                       className={
                         u.isDailyWinner
@@ -200,15 +201,15 @@ export function UserTotalsSection({
                   <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-xs text-foreground/60">{t("table.queso")}</p>
-                      <div className="font-medium">{formatCurrency(u.quesoRevenue)}</div>
+                      <div className="font-semibold">{formatCurrency(u.quesoRevenue)}</div>
                     </div>
                     <div>
                       <p className="text-xs text-foreground/60">{t("table.yogurt")}</p>
-                      <div className="font-medium">{formatCurrency(u.yogurtRevenue)}</div>
+                      <div className="font-semibold">{formatCurrency(u.yogurtRevenue)}</div>
                     </div>
                     <div>
                       <p className="text-xs text-foreground/60">{t("table.milkMote")}</p>
-                      <div className="font-medium">{formatCurrency(u.milkMoteRevenue)}</div>
+                      <div className="font-semibold">{formatCurrency(u.milkMoteRevenue)}</div>
                     </div>
                   </div>
                   <div className="mt-2 flex items-end justify-between gap-2">

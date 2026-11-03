@@ -13,8 +13,8 @@ export interface RecordActionState {
 }
 
 const baseQuantities = z.object({
-  quesoTaken: z.coerce.number().int().min(0, "Queso taken must be 0 or more."),
-  quesoRemaining: z.coerce.number().int().min(0, "Queso left must be 0 or more."),
+  quesoTaken: z.coerce.number().int().min(0, "Cheese taken must be 0 or more."),
+  quesoRemaining: z.coerce.number().int().min(0, "Cheese left must be 0 or more."),
   yogurtTaken: z.coerce.number().int().min(0, "Yogurt taken must be 0 or more."),
   yogurtRemaining: z.coerce.number().int().min(0, "Yogurt left must be 0 or more."),
   totalSold: z.coerce.number().int().min(0, "Total sold must be 0 or more."),
@@ -26,7 +26,7 @@ const baseQuantities = z.object({
 const createSchema = baseQuantities
   .extend({ date: z.string().min(1, "Date is required.") })
   .refine((v) => v.quesoRemaining <= v.quesoTaken, {
-    message: "Queso left cannot exceed Queso taken.",
+    message: "Cheese left cannot exceed Cheese taken.",
     path: ["quesoRemaining"],
   })
   .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
@@ -128,7 +128,7 @@ export async function createDailyWorkRecord(
 const updateSchema = baseQuantities
   .extend({ recordId: z.string().min(1) })
   .refine((v) => v.quesoRemaining <= v.quesoTaken, {
-    message: "Queso left cannot exceed Queso taken.",
+    message: "Cheese left cannot exceed Cheese taken.",
     path: ["quesoRemaining"],
   })
   .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {

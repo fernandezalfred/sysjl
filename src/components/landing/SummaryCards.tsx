@@ -1,3 +1,4 @@
+import { PRODUCT_LABEL_KEYS } from "@/lib/pricing";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { ProductTotal } from "@/types/landing";
 
@@ -18,7 +19,7 @@ export function SummaryCards({ productTotals, currentStock, t }: SummaryCardsPro
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {productTotals.map((p) => (
           <div key={p.product} className="rounded-lg border border-foreground/10 p-4">
-            <p className="text-xs text-foreground/60">{p.label}</p>
+            <p className="text-xs text-foreground/60">{t(PRODUCT_LABEL_KEYS[p.product])}</p>
             <p className="mt-1 text-xl font-semibold">
               {p.quantitySold} {unitsLabel}
             </p>
@@ -32,7 +33,7 @@ export function SummaryCards({ productTotals, currentStock, t }: SummaryCardsPro
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {productTotals.map((p) => (
           <div key={p.product} className="rounded-lg border border-foreground/10 p-4">
-            <p className="text-xs text-foreground/60">{p.label}</p>
+            <p className="text-xs text-foreground/60">{t(PRODUCT_LABEL_KEYS[p.product])}</p>
             <p className="mt-1 text-xl font-semibold">
               {currentStock[p.product]} {unitsLabel}
             </p>
