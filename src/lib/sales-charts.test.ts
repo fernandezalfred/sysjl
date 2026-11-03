@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/landing-data";
-import { buildLastDayProductSales, buildUserSalesByPeriod, buildUserTrend, latestWorkDay } from "@/lib/sales-charts";
+import {
+  buildLastDayProductSales,
+  buildSalesChartsData,
+  buildUserSalesByPeriod,
+  buildUserTrend,
+  latestWorkDay,
+} from "@/lib/sales-charts";
 import type { SaleRecord } from "@/types/landing";
 
 const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
@@ -131,5 +137,25 @@ describe("buildUserTrend", () => {
 
   it("is empty with no records", () => {
     expect(buildUserTrend([], "day")).toEqual({ periods: [], series: [] });
+  });
+});
+
+describe("buildSalesChartsData", () => {
+  it("bundles the per-period, latest-day and trend data for the charts", () => {
+    const data = buildSalesChartsData(rows);
+    expect(data.userSalesByPeriod).toEqual({
+      day: buildUserSalesByPeriod(rows, "day"),
+      week: buildUserSalesByPeriod(rows, "week"),
+      month: buildUserSalesByPeriod(rows, "month"),
+    });
+    expect(data.lastDayProductSales).toEqual(buildLastDayProductSales(rows));
+    expect(data.userTrends.week).toEqual(buildUserTrend(rows, "week"));
+  });
+
+  it("has no period or latest-day data with no records", () => {
+    const data = buildSalesChartsData([]);
+    expect(data.userSalesByPeriod).toBeNull();
+    expect(data.lastDayProductSales).toBeNull();
+    expect(data.userTrends.day).toEqual({ periods: [], series: [] });
   });
 });

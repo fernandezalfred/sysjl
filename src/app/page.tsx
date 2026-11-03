@@ -3,12 +3,14 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
+import { buildSalesChartsData } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
 import { AdminQuickSettings } from "@/components/landing/AdminQuickSettings";
 import { TopSellerBanner } from "@/components/landing/TopSellerBanner";
 import { DriverRecruitmentBanner } from "@/components/landing/DriverRecruitmentBanner";
+import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { CreateRecordButton } from "@/components/records/CreateRecordButton";
@@ -69,6 +71,8 @@ async function LandingContent() {
 
       {isAdmin ? <AdminQuickSettings t={t} /> : null}
 
+      <SalesChartsSection {...buildSalesChartsData(data.dailyRecords)} t={t} locale={locale} />
+
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/60">
           {t("landing.totalsByUser")}
@@ -106,6 +110,17 @@ function LandingSkeleton({ t }: { t: TranslateFn }) {
       </div>
 
       <Skeleton className="h-24 w-full rounded-xl" />
+
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-40 w-full" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
 
       <div className="flex items-center justify-between gap-4">
         <Skeleton className="h-4 w-28" />

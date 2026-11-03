@@ -1,21 +1,17 @@
-import type { Granularity } from "@/lib/date-buckets";
 import type { Locale, TranslateFn } from "@/lib/i18n/translations";
-import type { UserProductSales, UserSalesPeriod, UserTrend } from "@/lib/sales-charts";
+import type { SalesChartsData } from "@/lib/sales-charts";
 import { UserSalesChart } from "@/components/sales-charts/UserSalesChart";
 import { LastDayProductCharts } from "@/components/sales-charts/LastDayProductCharts";
 import { UserTrendChart } from "@/components/sales-charts/UserTrendChart";
 import { formatDayLabel } from "@/components/sales-charts/chart-theme";
 
-interface SalesChartsSectionProps {
-  userSalesByPeriod: Record<Granularity, UserSalesPeriod> | null;
-  lastDayProductSales: { date: string; users: UserProductSales[] } | null;
-  userTrends: Record<Granularity, UserTrend>;
+interface SalesChartsSectionProps extends SalesChartsData {
   t: TranslateFn;
   locale: Locale;
 }
 
-// Sales charts visible to every signed-in user (admins and vehicle users alike):
-// sales revenue only, no cost or profit data.
+// Sales charts shown to everyone, guests included (public landing page and
+// /dashboard): sales revenue only, no cost or profit data.
 export function SalesChartsSection({ userSalesByPeriod, lastDayProductSales, userTrends, t, locale }: SalesChartsSectionProps) {
   return (
     <section aria-labelledby="sales-charts-heading" className="flex flex-col gap-6">

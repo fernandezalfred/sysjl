@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
 import { getNetProfitInputs } from "@/lib/net-profit";
-import { buildLastDayProductSales, buildUserSalesByPeriod, buildUserTrend } from "@/lib/sales-charts";
+import { buildSalesChartsData } from "@/lib/sales-charts";
 import { getCurrentProductPrices } from "@/lib/product-prices";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
@@ -12,7 +12,6 @@ import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
 import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
 import { Skeleton } from "@/components/ui/Skeleton";
-import type { DailyRecordRow } from "@/types/landing";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function Dashboard() {
@@ -59,17 +58,7 @@ async function DashboardContent() {
         </p>
       </header>
 
-      <SalesChartsSection
-        userSalesByPeriod={buildUserSalesPeriods(data.dailyRecords)}
-        lastDayProductSales={buildLastDayProductSales(data.dailyRecords)}
-        userTrends={{
-          day: buildUserTrend(data.dailyRecords, "day"),
-          week: buildUserTrend(data.dailyRecords, "week"),
-          month: buildUserTrend(data.dailyRecords, "month"),
-        }}
-        t={t}
-        locale={locale}
-      />
+      <SalesChartsSection {...buildSalesChartsData(data.dailyRecords)} t={t} locale={locale} />
 
       {isAdmin && prices ? (
         <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
@@ -109,13 +98,6 @@ async function DashboardContent() {
       />
     </div>
   );
-}
-
-function buildUserSalesPeriods(records: DailyRecordRow[]) {
-  const day = buildUserSalesByPeriod(records, "day");
-  const week = buildUserSalesByPeriod(records, "week");
-  const month = buildUserSalesByPeriod(records, "month");
-  return day && week && month ? { day, week, month } : null;
 }
 
 function DashboardSkeleton({ t }: { t: TranslateFn }) {

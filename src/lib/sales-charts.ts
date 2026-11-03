@@ -121,3 +121,27 @@ export function buildUserTrend(records: DailyRecordRow[], granularity: Granulari
   const series = Array.from(byUser.values()).sort((a, b) => a.userName.localeCompare(b.userName));
   return { periods, series };
 }
+
+export interface SalesChartsData {
+  userSalesByPeriod: Record<Granularity, UserSalesPeriod> | null;
+  lastDayProductSales: { date: string; users: UserProductSales[] } | null;
+  userTrends: Record<Granularity, UserTrend>;
+}
+
+// Everything the Sales by User charts need, from the same records Sale Records
+// shows — shared by the public landing page and /dashboard.
+export function buildSalesChartsData(records: DailyRecordRow[]): SalesChartsData {
+  const day = buildUserSalesByPeriod(records, "day");
+  const week = buildUserSalesByPeriod(records, "week");
+  const month = buildUserSalesByPeriod(records, "month");
+
+  return {
+    userSalesByPeriod: day && week && month ? { day, week, month } : null,
+    lastDayProductSales: buildLastDayProductSales(records),
+    userTrends: {
+      day: buildUserTrend(records, "day"),
+      week: buildUserTrend(records, "week"),
+      month: buildUserTrend(records, "month"),
+    },
+  };
+}
