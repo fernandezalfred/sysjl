@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/landing-data";
 import {
   buildAdjustedRevenueTotal,
+  buildGrainsShareByDate,
   milkCostKey,
   recordAdjustedRevenue,
   type MilkGrainsDeductions,
@@ -116,5 +117,20 @@ describe("buildAdjustedRevenueTotal", () => {
 
   it("is zero for no records", () => {
     expect(buildAdjustedRevenueTotal([], unitCosts)).toBe(0);
+  });
+});
+
+describe("buildGrainsShareByDate", () => {
+  it("splits each day's grains cost evenly across that day's records", () => {
+    const records = [{ date: "2026-11-01" }, { date: "2026-11-01" }, { date: "2026-10-31" }];
+
+    expect(buildGrainsShareByDate({ "2026-11-01": 411.2, "2026-10-31": 300 }, records)).toEqual({
+      "2026-11-01": 205.6,
+      "2026-10-31": 300,
+    });
+  });
+
+  it("keeps the full cost for a purchase day with no sale records", () => {
+    expect(buildGrainsShareByDate({ "2026-10-20": 100 }, [])).toEqual({ "2026-10-20": 100 });
   });
 });

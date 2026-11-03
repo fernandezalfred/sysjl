@@ -54,3 +54,21 @@ export function buildAdjustedRevenueTotal(
 ): number {
   return records.reduce((sum, r) => sum + recordAdjustedRevenue(r, unitCosts, deductions), 0);
 }
+
+// Grains cost is tracked per purchase day, not per driver — split evenly across
+// however many drivers actually have a work record that same day, so the full
+// day's grains cost isn't deducted multiple times when several drivers worked it.
+export function buildGrainsShareByDate(
+  grainsCostByDay: Record<string, number>,
+  records: Pick<DailyRecordRow, "date">[],
+): Record<string, number> {
+  const recordCountByDate = new Map<string, number>();
+  for (const r of records) {
+    recordCountByDate.set(r.date, (recordCountByDate.get(r.date) ?? 0) + 1);
+  }
+  const result: Record<string, number> = {};
+  for (const [date, total] of Object.entries(grainsCostByDay)) {
+    result[date] = total / (recordCountByDate.get(date) ?? 1);
+  }
+  return result;
+}

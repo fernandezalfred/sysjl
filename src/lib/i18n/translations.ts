@@ -154,8 +154,11 @@ const en = {
   "sidebar.breadcrumbLabel": "Breadcrumb",
 
   "adminPanel.quickStats": "Quick Stats",
-  "adminPanel.activeDrivers": "Active drivers",
-  "adminPanel.totalRecords": "Sale records",
+  "quickStats.lastDaySales": "Sales · {date}",
+  "quickStats.lastDayNetProfit": "Net profit · {date}",
+  "quickStats.monthNetProfit": "Net profit · {month}",
+  "quickStats.depositStock": "Deposit stock",
+  "quickStats.units": "{quantity} units",
 
   "stock.subheading":
     "Record {product} purchased into the central deposit. Stock is automatically reduced when a driver takes {product} out and restored when the unsold remainder is reported back.",
@@ -348,8 +351,11 @@ const es: Record<DictionaryKey, string> = {
   "sidebar.breadcrumbLabel": "Ruta de navegación",
 
   "adminPanel.quickStats": "Estadísticas Rápidas",
-  "adminPanel.activeDrivers": "Conductores activos",
-  "adminPanel.totalRecords": "Registros de venta",
+  "quickStats.lastDaySales": "Ventas · {date}",
+  "quickStats.lastDayNetProfit": "Ganancia neta · {date}",
+  "quickStats.monthNetProfit": "Ganancia neta · {month}",
+  "quickStats.depositStock": "Stock en depósito",
+  "quickStats.units": "{quantity} unidades",
 
   "stock.subheading":
     "Registra el {product} comprado hacia el depósito central. El stock se reduce automáticamente cuando un conductor retira {product} y se restituye cuando se reporta lo que sobró.",
