@@ -131,14 +131,27 @@ describe("createStockPurchase", () => {
     expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
   });
 
-  it("rejects a MILK purchase attributed to an admin instead of a vehicle user", async () => {
+  it("accepts a MILK purchase attributed to an active admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.user.findUnique.mockResolvedValue({ id: "admin-2", role: "ADMIN", isActive: true });
     const result = await createStockPurchase(
       { success: false },
       formData({ ...VALID_FIELDS, product: "MILK", forUserId: "admin-2" }),
     );
-    expect(result).toEqual({ success: false, error: "Selected user is not a vehicle user." });
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ forUserId: "admin-2" }) }),
+    );
+  });
+
+  it("rejects a MILK purchase attributed to a deactivated user", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.user.findUnique.mockResolvedValue({ id: "driver-2", role: "VEHICLE_USER", isActive: false });
+    const result = await createStockPurchase(
+      { success: false },
+      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "driver-2" }),
+    );
+    expect(result).toEqual({ success: false, error: "User not found." });
     expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
   });
 

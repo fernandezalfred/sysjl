@@ -13,7 +13,7 @@ import { Pagination } from "@/components/ui/Pagination";
 
 interface MilkPurchasesSectionProps {
   purchases: StockPurchaseRow[];
-  vehicleUsers: { id: string; name: string }[];
+  activeUsers: { id: string; name: string }[];
   locale: Locale;
 }
 
@@ -52,7 +52,7 @@ function groupByDay(purchases: StockPurchaseRow[]): DayGroup[] {
 // are attributed to the driver they're for (picked on create), grouped by day with a
 // per-day total cost, and have no "current stock" figure — Milk has no quantity-level
 // sales tracking to derive one from.
-export function MilkPurchasesSection({ purchases, vehicleUsers, locale }: MilkPurchasesSectionProps) {
+export function MilkPurchasesSection({ purchases, activeUsers, locale }: MilkPurchasesSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const quantityLabel = t("stock.quantityLiters");
   const unitCostLabel = t("stock.unitCostLiters");
@@ -216,7 +216,7 @@ export function MilkPurchasesSection({ purchases, vehicleUsers, locale }: MilkPu
             key={formKey}
             quantityLabel={quantityLabel}
             unitCostLabel={unitCostLabel}
-            vehicleUsers={vehicleUsers}
+            activeUsers={activeUsers}
             onSaved={close}
             onCancel={close}
             t={t}

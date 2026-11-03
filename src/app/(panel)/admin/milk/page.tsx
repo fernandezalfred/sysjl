@@ -17,7 +17,7 @@ export default function AdminMilkPage() {
 async function AdminMilkContent() {
   await connection();
 
-  const [purchaseRows, vehicleUsers, { t, locale }] = await Promise.all([
+  const [purchaseRows, activeUsers, { t, locale }] = await Promise.all([
     prisma.stockPurchase.findMany({
       where: { product: "MILK" },
       orderBy: { createdAt: "desc" },
@@ -27,7 +27,7 @@ async function AdminMilkContent() {
       },
     }),
     prisma.user.findMany({
-      where: { role: "VEHICLE_USER", isActive: true },
+      where: { isActive: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -54,7 +54,7 @@ async function AdminMilkContent() {
         <p className="text-sm text-foreground/60">{t("stock.subheadingPurchaseOnly", { product: label })}</p>
       </header>
 
-      <MilkPurchasesSection purchases={purchases} vehicleUsers={vehicleUsers} locale={locale} />
+      <MilkPurchasesSection purchases={purchases} activeUsers={activeUsers} locale={locale} />
     </div>
   );
 }

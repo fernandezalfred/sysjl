@@ -24,7 +24,7 @@ function SubmitButton({ t }: { t: TranslateFn }) {
 interface CreateMilkPurchaseFormProps {
   quantityLabel: string;
   unitCostLabel: string;
-  vehicleUsers: { id: string; name: string }[];
+  activeUsers: { id: string; name: string }[];
   onSaved: () => void;
   onCancel: () => void;
   t: TranslateFn;
@@ -33,7 +33,7 @@ interface CreateMilkPurchaseFormProps {
 export function CreateMilkPurchaseForm({
   quantityLabel,
   unitCostLabel,
-  vehicleUsers,
+  activeUsers,
   onSaved,
   onCancel,
   t,
@@ -62,7 +62,7 @@ export function CreateMilkPurchaseForm({
           <option value="" disabled>
             {t("records.selectUser")}
           </option>
-          {vehicleUsers.map((user) => (
+          {activeUsers.map((user) => (
             <option key={user.id} value={user.id}>
               {user.name}
             </option>

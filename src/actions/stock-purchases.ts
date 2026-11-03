@@ -39,8 +39,8 @@ const createSchema = quantityAndCost.extend({
   forUserId: z.string().optional(),
 });
 
-// The driver a Milk purchase is for must be an active vehicle user — never the
-// entering admin themselves, and never a deactivated or nonexistent account.
+// The user a Milk purchase is for must be an active account (any role) — never a
+// deactivated or nonexistent one.
 async function resolveMilkForUserId(forUserId: string | undefined): Promise<{ id: string } | { error: string }> {
   if (!forUserId) {
     return { error: "Select a user." };
@@ -50,10 +50,6 @@ async function resolveMilkForUserId(forUserId: string | undefined): Promise<{ id
   if (!target || !target.isActive) {
     return { error: "User not found." };
   }
-  if (target.role !== "VEHICLE_USER") {
-    return { error: "Selected user is not a vehicle user." };
-  }
-
   return { id: target.id };
 }
 
