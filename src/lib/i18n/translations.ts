@@ -27,11 +27,6 @@ const en = {
     "Track daily sales, stock, and revenue across our delivery fleet — live, every day.",
   "landing.totalsByUser": "Totals by User",
 
-  "driverBanner.label": "Join the team",
-  "driverBanner.title": "Drive, sell, earn.",
-  "driverBanner.body":
-    "We're always looking for drivers to take a vehicle out and sell Cheese, Yogurt, Milk & Hominy. Top sellers earn extra on top of their regular pay.",
-  "driverBanner.cta": "Already on the team? Sign in",
 
   "topSeller.badge": "Top Seller",
   "topSeller.leadingSingular": "{names} is leading the pack{marginPart}.",
@@ -215,11 +210,6 @@ const es: Record<DictionaryKey, string> = {
     "Sigue las ventas, el stock y los ingresos de nuestra flota de reparto — en vivo, todos los días.",
   "landing.totalsByUser": "Totales por Usuario",
 
-  "driverBanner.label": "Únete al equipo",
-  "driverBanner.title": "Conduce, vende, gana.",
-  "driverBanner.body":
-    "Siempre buscamos conductores para salir con un vehículo y vender Queso, Yogurt, Leche y Mote. Los mejores vendedores ganan un extra sobre su pago regular.",
-  "driverBanner.cta": "¿Ya eres parte del equipo? Inicia sesión",
 
   "topSeller.badge": "Mejor Vendedor",
   "topSeller.leadingSingular": "{names} va a la cabeza{marginPart}.",

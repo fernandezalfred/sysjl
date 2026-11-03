@@ -9,7 +9,6 @@ import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
 import { AdminQuickSettings } from "@/components/landing/AdminQuickSettings";
 import { TopSellerBanner } from "@/components/landing/TopSellerBanner";
-import { DriverRecruitmentBanner } from "@/components/landing/DriverRecruitmentBanner";
 import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
@@ -64,8 +63,6 @@ async function LandingContent() {
           <p className="mt-3 text-sm text-foreground/60">{t("landing.guestTagline")}</p>
         )}
       </div>
-
-      {!isSignedIn ? <DriverRecruitmentBanner t={t} /> : null}
 
       <TopSellerBanner userTotals={data.userTotals} t={t} />
 
