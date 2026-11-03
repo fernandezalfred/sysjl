@@ -107,6 +107,7 @@ describe("createStockPurchase", () => {
       data: { product: "MILK", quantity: 50, unitCost: 6.5, createdById: "admin-1", forUserId: "driver-1" },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("rejects a MILK purchase with no driver selected", async () => {

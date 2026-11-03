@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/landing-data";
 import {
   buildAdjustedRevenueTotal,
+  milkCostKey,
   recordAdjustedRevenue,
   type MilkGrainsDeductions,
   type UnitCosts,
@@ -54,11 +55,11 @@ describe("recordAdjustedRevenue", () => {
 });
 
 describe("recordAdjustedRevenue with Milk/grains deductions", () => {
-  it("subtracts the driver's latest Milk purchase cost and the day's grains cost split across that day's records", () => {
+  it("subtracts the driver's same-day Milk purchase cost and the day's grains cost split across that day's records", () => {
     // Real-data regression: Daniel, 2026-11-01. Queso sold 150 @ margin 3 = 450;
     // Yogurt sold 22 @ margin 11 = 242; totalSold 2930 -> Milk & Mote 2930 - 1350 - 726 = 854.
     // Undeducted earned: 450 + 242 + 854 = 1546.
-    // Daniel's latest Milk purchase: 30 @ unitCost 6 = 180.
+    // Daniel's Milk purchase that same day: 30 @ unitCost 6 = 180.
     // That day's grains cost (105 + 306.20 = 411.20) split across 2 drivers (Daniel, Raul) = 205.60.
     // 1546 - 180 - 205.60 = 1160.40.
     const records = [
@@ -68,11 +69,25 @@ describe("recordAdjustedRevenue with Milk/grains deductions", () => {
     const [row] = buildDailyRecords(records);
 
     const deductions: MilkGrainsDeductions = {
-      milkCostByUserId: { daniel: 180 },
+      milkCostByUserDay: { [milkCostKey("daniel", "2026-11-01")]: 180 },
       grainsShareByDate: { "2026-11-01": 205.6 },
     };
 
     expect(recordAdjustedRevenue(row, unitCosts, deductions)).toBeCloseTo(1160.4, 5);
+  });
+
+  it("ignores the same driver's Milk purchases from other days", () => {
+    const records = [
+      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "A", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
+    ];
+    const [row] = buildDailyRecords(records);
+
+    const deductions: MilkGrainsDeductions = {
+      milkCostByUserDay: { [milkCostKey("u1", "2026-10-28")]: 180, [milkCostKey("u1", "2026-10-27")]: 210 },
+      grainsShareByDate: {},
+    };
+
+    expect(recordAdjustedRevenue(row, unitCosts, deductions)).toBe(recordAdjustedRevenue(row, unitCosts) - 210);
   });
 
   it("deducts nothing for a user/day with no matching purchase", () => {
@@ -81,7 +96,7 @@ describe("recordAdjustedRevenue with Milk/grains deductions", () => {
     ];
     const [row] = buildDailyRecords(records);
 
-    expect(recordAdjustedRevenue(row, unitCosts, { milkCostByUserId: {}, grainsShareByDate: {} })).toBe(
+    expect(recordAdjustedRevenue(row, unitCosts, { milkCostByUserDay: {}, grainsShareByDate: {} })).toBe(
       recordAdjustedRevenue(row, unitCosts),
     );
   });

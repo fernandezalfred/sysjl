@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
-    stockPurchase: { aggregate: vi.fn() },
+    stockPurchase: { aggregate: vi.fn(), findMany: vi.fn() },
     dailyWorkRecord: { aggregate: vi.fn() },
   },
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { getCurrentStock } from "@/lib/stock";
+import { getCurrentStock, getMilkCostByUserAndDay } from "@/lib/stock";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -89,5 +89,26 @@ describe("getCurrentStock", () => {
     const stock = await getCurrentStock("MILK");
 
     expect(stock).toBe(0);
+  });
+});
+
+describe("getMilkCostByUserAndDay", () => {
+  it("sums each driver's Milk cost per local day, keyed by driver and day", async () => {
+    prismaMock.stockPurchase.findMany.mockResolvedValue([
+      { quantity: 30, unitCost: 6, createdAt: new Date(2026, 9, 27, 14), forUserId: "daniel" },
+      { quantity: 30, unitCost: 7, createdAt: new Date(2026, 9, 27, 14), forUserId: "raul" },
+      { quantity: 10, unitCost: 6, createdAt: new Date(2026, 9, 27, 18), forUserId: "daniel" },
+      { quantity: 30, unitCost: 8, createdAt: new Date(2026, 9, 28, 14), forUserId: "daniel" },
+    ]);
+
+    expect(await getMilkCostByUserAndDay()).toEqual({
+      "daniel|2026-10-27": 240,
+      "raul|2026-10-27": 210,
+      "daniel|2026-10-28": 240,
+    });
+    expect(prismaMock.stockPurchase.findMany).toHaveBeenCalledWith({
+      where: { product: "MILK", forUserId: { not: null } },
+      select: { quantity: true, unitCost: true, createdAt: true, forUserId: true },
+    });
   });
 });

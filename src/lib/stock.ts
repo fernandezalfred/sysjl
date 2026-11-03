@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatDateKey } from "@/lib/dates";
+import { milkCostKey } from "@/lib/revenue";
 import type { Product } from "@prisma/client";
 
 const GRAIN_PRODUCTS: Product[] = ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"];
@@ -51,22 +52,23 @@ export async function getLatestUnitCost(product: Product): Promise<number> {
   return latest?.unitCost ?? 0;
 }
 
-// Each driver's most recent Milk purchase cost (quantity*unitCost) — a rough
-// per-driver deduction for the Earned figure, since Milk has no per-record sold
-// quantity to cost against directly (unlike Queso/Yogurt's taken/remaining fields).
-// 0 for a driver with no Milk purchase recorded "for" them yet.
-export async function getLatestMilkCostByUser(userIds: string[]): Promise<Record<string, number>> {
+// Each driver's Milk purchase cost (quantity*unitCost) per local calendar day,
+// keyed by milkCostKey(userId, YYYY-MM-DD) — so a sale record only deducts the
+// Milk bought for its own driver on its own day, never a later or earlier purchase.
+// Milk has no per-record sold quantity to cost against directly (unlike Queso/
+// Yogurt's taken/remaining fields). A driver/day with no Milk purchase has no key (0).
+export async function getMilkCostByUserAndDay(): Promise<Record<string, number>> {
+  const purchases = await prisma.stockPurchase.findMany({
+    where: { product: "MILK", forUserId: { not: null } },
+    select: { quantity: true, unitCost: true, createdAt: true, forUserId: true },
+  });
+
   const result: Record<string, number> = {};
-  await Promise.all(
-    userIds.map(async (userId) => {
-      const latest = await prisma.stockPurchase.findFirst({
-        where: { product: "MILK", forUserId: userId },
-        orderBy: { createdAt: "desc" },
-        select: { quantity: true, unitCost: true },
-      });
-      result[userId] = latest ? latest.quantity * latest.unitCost : 0;
-    }),
-  );
+  for (const purchase of purchases) {
+    if (!purchase.forUserId) continue;
+    const key = milkCostKey(purchase.forUserId, formatDateKey(purchase.createdAt));
+    result[key] = (result[key] ?? 0) + purchase.quantity * purchase.unitCost;
+  }
   return result;
 }
 

@@ -6,7 +6,7 @@ import { getLandingPageData } from "@/lib/landing-data";
 import { buildAdjustedRevenueTotal, type MilkGrainsDeductions } from "@/lib/revenue";
 import { getCurrentProductPrices } from "@/lib/product-prices";
 import { getProductInvestmentSummaries } from "@/lib/investment";
-import { getCurrentStock, getLatestUnitCost, getLatestMilkCostByUser, getGrainsCostByDay } from "@/lib/stock";
+import { getCurrentStock, getLatestUnitCost, getMilkCostByUserAndDay, getGrainsCostByDay } from "@/lib/stock";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SummaryCards } from "@/components/landing/SummaryCards";
@@ -49,13 +49,13 @@ async function DashboardContent() {
   const isAdmin = session?.user?.role === "ADMIN";
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
-  const [prices, investmentSummaries, quesoCost, yogurtCost, milkCostByUserId, grainsCostByDay] = isAdmin
+  const [prices, investmentSummaries, quesoCost, yogurtCost, milkCostByUserDay, grainsCostByDay] = isAdmin
     ? await Promise.all([
         getCurrentProductPrices(),
         getProductInvestmentSummaries(),
         getLatestUnitCost("QUESO"),
         getLatestUnitCost("YOGURT"),
-        getLatestMilkCostByUser(vehicleUsers.map((u) => u.id)),
+        getMilkCostByUserAndDay(),
         getGrainsCostByDay(),
       ])
     : [null, null, null, null, null, null];
@@ -67,7 +67,7 @@ async function DashboardContent() {
   // however many drivers actually have a work record that same day, so the full
   // day's grains cost isn't deducted multiple times when several drivers worked it.
   const deductions: MilkGrainsDeductions | null =
-    milkCostByUserId && grainsCostByDay
+    milkCostByUserDay && grainsCostByDay
       ? (() => {
           const recordCountByDate = new Map<string, number>();
           for (const r of data.dailyRecords) {
@@ -77,7 +77,7 @@ async function DashboardContent() {
           for (const [date, total] of Object.entries(grainsCostByDay)) {
             grainsShareByDate[date] = total / (recordCountByDate.get(date) ?? 1);
           }
-          return { milkCostByUserId, grainsShareByDate };
+          return { milkCostByUserDay, grainsShareByDate };
         })()
       : null;
 

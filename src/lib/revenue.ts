@@ -4,15 +4,21 @@ export type UnitCosts = Record<ProductCode, number>;
 
 // Per-driver/per-day deductions applied on top of the Queso/Yogurt/Milk&Mote profit
 // below. Milk and grains have no per-record sold-quantity tracking, so these are
-// approximations rather than exact per-unit costs: `milkCostByUserId` is each
-// driver's most recent Milk purchase cost (quantity*unitCost, from
-// getLatestMilkCostByUser in src/lib/stock.ts), and `grainsShareByDate` is a given
+// approximations rather than exact per-unit costs: `milkCostByUserDay` is a
+// driver's total Milk purchase cost (quantity*unitCost) on the record's own day,
+// keyed by milkCostKey(userId, date) (from getMilkCostByUserAndDay in
+// src/lib/stock.ts), and `grainsShareByDate` is a given
 // day's total grain purchase cost split evenly across that day's work records
 // (getGrainsCostByDay in src/lib/stock.ts, divided by that day's record count).
 // Both default to 0 for a user/day with no matching purchase.
 export interface MilkGrainsDeductions {
-  milkCostByUserId: Record<string, number>;
+  milkCostByUserDay: Record<string, number>;
   grainsShareByDate: Record<string, number>;
+}
+
+// Key for MilkGrainsDeductions.milkCostByUserDay: one driver on one YYYY-MM-DD day.
+export function milkCostKey(userId: string, date: string): string {
+  return `${userId}|${date}`;
 }
 
 // Profit actually earned on one record: for Queso and Yogurt, each sold unit's
@@ -35,7 +41,7 @@ export function recordAdjustedRevenue(
 ): number {
   const quesoProfit = row.queso.revenue - row.queso.sold * unitCosts.QUESO;
   const yogurtProfit = row.yogurt.revenue - row.yogurt.sold * unitCosts.YOGURT;
-  const milkCost = deductions?.milkCostByUserId[row.userId] ?? 0;
+  const milkCost = deductions?.milkCostByUserDay[milkCostKey(row.userId, row.date)] ?? 0;
   const grainsShare = deductions?.grainsShareByDate[row.date] ?? 0;
 
   return quesoProfit + yogurtProfit + row.milkMoteRevenue - milkCost - grainsShare;

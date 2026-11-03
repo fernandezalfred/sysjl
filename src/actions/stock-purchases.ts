@@ -94,6 +94,8 @@ export async function createStockPurchase(
     });
 
     revalidatePath(panelPathForProduct(parsed.data.product));
+    // Purchase costs feed Sale Records' Net profit on /dashboard.
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {
@@ -132,6 +134,8 @@ export async function updateStockPurchase(
     });
 
     revalidatePath(panelPathForProduct(existing.product));
+    // Purchase costs feed Sale Records' Net profit on /dashboard.
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {
@@ -153,6 +157,8 @@ export async function deleteStockPurchase(purchaseId: string): Promise<ActionSta
     await prisma.stockPurchase.delete({ where: { id: existing.id } });
 
     revalidatePath(panelPathForProduct(existing.product));
+    // Purchase costs feed Sale Records' Net profit on /dashboard.
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {
