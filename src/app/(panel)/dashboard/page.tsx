@@ -3,19 +3,16 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
-import { buildAdjustedRevenueTotal } from "@/lib/revenue";
 import { getNetProfitInputs } from "@/lib/net-profit";
+import { buildLastDayProductSales, buildUserSalesByPeriod, buildUserTrend } from "@/lib/sales-charts";
 import { getCurrentProductPrices } from "@/lib/product-prices";
-import { getProductInvestmentSummaries } from "@/lib/investment";
-import { getCurrentStock } from "@/lib/stock";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
-import { SummaryCards } from "@/components/landing/SummaryCards";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
-import { ProductInvestmentSection } from "@/components/landing/ProductInvestmentSection";
-import { SaleRecordsTrendSection } from "@/components/landing/SaleRecordsTrendSection";
+import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
 import { Skeleton } from "@/components/ui/Skeleton";
+import type { DailyRecordRow } from "@/types/landing";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function Dashboard() {
@@ -28,7 +25,7 @@ export default function Dashboard() {
 
 async function DashboardContent() {
   await connection();
-  const [data, session, vehicleUsers, { t, locale }, quesoStock, yogurtStock] = await Promise.all([
+  const [data, session, vehicleUsers, { t, locale }] = await Promise.all([
     getLandingPageData(),
     auth(),
     prisma.user.findMany({
@@ -37,37 +34,17 @@ async function DashboardContent() {
       orderBy: { name: "asc" },
     }),
     getT(),
-    getCurrentStock("QUESO"),
-    getCurrentStock("YOGURT"),
   ]);
-
-  // Current deposit stock (purchased minus sold, all-time) — not the same thing as
-  // each record's own "remaining" quantity summed, which only reflects what was left
-  // in vehicles at each day's end and isn't the actual stock figure. Must match
-  // /admin/cheese and /admin/yogurt, which already compute it this way.
-  const currentStock: Record<"QUESO" | "YOGURT", number> = { QUESO: quesoStock, YOGURT: yogurtStock };
 
   const isAdmin = session?.user?.role === "ADMIN";
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
-  const [prices, investmentSummaries, netProfitInputs] = isAdmin
-    ? await Promise.all([
-        getCurrentProductPrices(),
-        getProductInvestmentSummaries(),
-        getNetProfitInputs(data.dailyRecords),
-      ])
-    : [null, null, null];
+  const [prices, netProfitInputs] = isAdmin
+    ? await Promise.all([getCurrentProductPrices(), getNetProfitInputs(data.dailyRecords)])
+    : [null, null];
 
   const unitCosts = netProfitInputs?.unitCosts ?? null;
   const deductions = netProfitInputs?.deductions ?? null;
-
-  // Revenue isn't computed in investment.ts (no access to per-record sale-price
-  // history there) — merged in here from the already-computed, price-correct
-  // `ProductTotal.revenue`.
-  const investmentDetails = investmentSummaries?.map((summary) => ({
-    ...summary,
-    revenue: data.productTotals.find((p) => p.product === summary.product)?.revenue ?? 0,
-  }));
 
   return (
     <div className="flex flex-col gap-8">
@@ -82,9 +59,17 @@ async function DashboardContent() {
         </p>
       </header>
 
-      {isAdmin ? (
-        <SummaryCards productTotals={data.productTotals} currentStock={currentStock} t={t} />
-      ) : null}
+      <SalesChartsSection
+        userSalesByPeriod={buildUserSalesPeriods(data.dailyRecords)}
+        lastDayProductSales={buildLastDayProductSales(data.dailyRecords)}
+        userTrends={{
+          day: buildUserTrend(data.dailyRecords, "day"),
+          week: buildUserTrend(data.dailyRecords, "week"),
+          month: buildUserTrend(data.dailyRecords, "month"),
+        }}
+        t={t}
+        locale={locale}
+      />
 
       {isAdmin && prices ? (
         <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
@@ -112,19 +97,6 @@ async function DashboardContent() {
         </section>
       ) : null}
 
-      {isAdmin && investmentDetails ? (
-        <ProductInvestmentSection details={investmentDetails} t={t} locale={locale} />
-      ) : null}
-
-      {isAdmin && unitCosts ? (
-        <SaleRecordsTrendSection
-          items={data.dailyRecords.map((r) => ({ date: r.date, value: r.totalSold }))}
-          adjustedRevenueTotal={buildAdjustedRevenueTotal(data.dailyRecords, unitCosts, deductions ?? undefined)}
-          t={t}
-          locale={locale}
-        />
-      ) : null}
-
       <SaleRecordsSection
         dailyRecords={data.dailyRecords}
         currentUserId={session?.user?.id ?? null}
@@ -138,6 +110,13 @@ async function DashboardContent() {
   );
 }
 
+function buildUserSalesPeriods(records: DailyRecordRow[]) {
+  const day = buildUserSalesByPeriod(records, "day");
+  const week = buildUserSalesByPeriod(records, "week");
+  const month = buildUserSalesByPeriod(records, "month");
+  return day && week && month ? { day, week, month } : null;
+}
+
 function DashboardSkeleton({ t }: { t: TranslateFn }) {
   return (
     <div className="flex flex-col gap-8">
@@ -147,18 +126,14 @@ function DashboardSkeleton({ t }: { t: TranslateFn }) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-24" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-40 w-full" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
-        <Skeleton className="mt-4 h-4 w-32" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
 
       <div className="flex flex-col gap-3">

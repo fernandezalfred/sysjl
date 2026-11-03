@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/landing-data";
 import {
-  buildAdjustedRevenueTotal,
   buildGrainsShareByDate,
   milkCostKey,
   recordAdjustedRevenue,
@@ -100,23 +99,6 @@ describe("recordAdjustedRevenue with Milk/grains deductions", () => {
     expect(recordAdjustedRevenue(row, unitCosts, { milkCostByUserDay: {}, grainsShareByDate: {} })).toBe(
       recordAdjustedRevenue(row, unitCosts),
     );
-  });
-});
-
-describe("buildAdjustedRevenueTotal", () => {
-  it("sums across every record, not just one", () => {
-    const records = [
-      record({ id: "r1", date: "2026-10-30", userId: "u1", userName: "A", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
-      record({ id: "r2", date: "2026-10-29", userId: "u2", userName: "B", product: "QUESO", unitPrice: 9, quantityTaken: 5, quantityRemaining: 0, totalSold: 45 }),
-    ];
-
-    const total = buildAdjustedRevenueTotal(buildDailyRecords(records), unitCosts);
-
-    expect(total).toBe(45);
-  });
-
-  it("is zero for no records", () => {
-    expect(buildAdjustedRevenueTotal([], unitCosts)).toBe(0);
   });
 });
 

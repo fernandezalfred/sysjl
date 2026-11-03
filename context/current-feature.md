@@ -1,16 +1,26 @@
-# Current Feature
+# Current Feature: Dashboard Cleanup + Sales by User Charts
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What success looks like for the next feature -->
+- Remove the admin Quick Stats strip from the panel layout (component, `buildQuickStats` logic, test, translations).
+- Remove the Totales Vendidos / Stock Restante summary cards from `/dashboard`.
+- Add a "Ventas por Usuario" section to `/dashboard`: total sales per user (day/week/month), per-product sales and unsold for the latest work day, and a per-user Total sold + unsold trend — logic in `src/lib/sales-charts.ts` with unit tests.
+- Remove the "Tendencia de Ingresos por Ventas" section (total sales / total net profit cards + trend chart) from `/dashboard`.
+- Remove the "Investment & Stock (All-Time)" section from `/dashboard`.
+- Delete code left unused by these removals.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- "Ventas por Usuario" is visible to every signed-in user, vehicle users included. It shows sales revenue only (no cost or profit), and Sale Records already lists every driver's sales.
+- `useIsDarkMode` moved out of the old trend chart into a shared `src/hooks/useIsDarkMode.ts`.
+- Deleted as unused: `SaleRecordsTrendSection.tsx`, `SaleRecordsTrendChart.tsx`, `ProductInvestmentSection.tsx`, `src/lib/investment.ts` + test, `src/lib/date-buckets.test.ts` (only tested the removed `aggregateByPeriod`/`formatPeriodLabel`), `buildAdjustedRevenueTotal` + its tests in `src/lib/revenue.ts`, and the `investment.*` and unused `trend.*` translation keys. `trend.day/week/month/weekOf/noData` and `summaryCards.units` stay — the new charts use them.
+- All-time totals (total sales, total net profit, investment per product) are no longer shown anywhere on the dashboard. Deposit stock is still on `/admin/cheese` and `/admin/yogurt`.
+- Admin quick-settings dashboard link description updated to "Sales charts, sale records" / "Gráficos de ventas, registros de venta"; the `/dashboard` loading skeleton now includes placeholders for the sales charts section.
+- 127/127 tests, lint, build green. Not yet verified in a browser.
 
 ## History
 

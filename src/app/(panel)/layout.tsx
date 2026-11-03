@@ -1,15 +1,9 @@
 import { Suspense, type ReactNode } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
-import { getLandingPageData } from "@/lib/landing-data";
-import { getNetProfitInputs } from "@/lib/net-profit";
-import { buildQuickStats, type QuickStatsData } from "@/lib/quick-stats";
-import { getCurrentStock } from "@/lib/stock";
-import { formatDateKey } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { PanelShell } from "@/components/layout/PanelShell";
 import { Footer } from "@/components/layout/Footer";
-import { QuickStats } from "@/components/layout/QuickStats";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
@@ -26,28 +20,13 @@ async function PanelContent({ children }: { children: ReactNode }) {
   await connection();
   const [session, { t, locale }] = await Promise.all([auth(), getT()]);
   const isAdmin = session?.user?.role === "ADMIN";
-  const stats = isAdmin ? await getQuickStats() : null;
 
   return (
     <PanelShell isAdmin={isAdmin} userName={session?.user?.name} locale={locale}>
-      {stats ? <QuickStats stats={stats} t={t} locale={locale} /> : null}
       {children}
       <Footer t={t} />
     </PanelShell>
   );
-}
-
-// Admin-only: includes Net profit, which is cost/financial data.
-async function getQuickStats(): Promise<QuickStatsData> {
-  const [{ dailyRecords }, quesoStock, yogurtStock] = await Promise.all([
-    getLandingPageData(),
-    getCurrentStock("QUESO"),
-    getCurrentStock("YOGURT"),
-  ]);
-  const { unitCosts, deductions } = await getNetProfitInputs(dailyRecords);
-  const month = formatDateKey(new Date()).slice(0, 7);
-
-  return buildQuickStats(dailyRecords, unitCosts, deductions, month, { QUESO: quesoStock, YOGURT: yogurtStock });
 }
 
 function PanelSkeleton() {
