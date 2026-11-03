@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useRef, useState } from "react";
+import { EmphasizedText } from "@/components/landing/EmphasizedText";
+import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { formatShortDate } from "@/lib/dates";
 import { toEditableRecord } from "@/lib/records";
@@ -26,15 +28,23 @@ type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
 function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: TranslateFn }) {
   return (
     <>
-      <div className="font-medium">
-        {t("cell.soldWithRevenue", { sold: breakdown.sold, revenue: formatCurrency(breakdown.revenue) })}
+      <div className="text-xs text-foreground/60">
+        <EmphasizedText
+          template={t("cell.soldWithRevenue")}
+          values={{ sold: breakdown.sold, revenue: formatCurrency(breakdown.revenue) }}
+          emphasize={["revenue"]}
+        />
       </div>
       <div className="text-xs text-foreground/60">
-        {t("cell.takenLeft", {
-          taken: breakdown.taken,
-          remaining: breakdown.remaining,
-          remainingValue: formatCurrency(breakdown.remainingValue),
-        })}
+        <EmphasizedText
+          template={t("cell.takenLeft")}
+          values={{
+            taken: breakdown.taken,
+            remaining: breakdown.remaining,
+            remainingValue: formatCurrency(breakdown.remainingValue),
+          }}
+          emphasize={["remainingValue"]}
+        />
       </div>
     </>
   );
@@ -57,8 +67,8 @@ function TotalRevenueCell({
 
   return (
     <>
-      <div className="font-medium">
-        {t("cell.sold", { amount: formatCurrency(soldRevenue) })}
+      <div>
+        <LabeledAmount label={t("cell.sold")} amount={formatCurrency(soldRevenue)} />
         {row.isDailyWinner && (
           <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
             {row.winnerMargin !== null
@@ -68,16 +78,17 @@ function TotalRevenueCell({
         )}
       </div>
       <div className="text-xs text-foreground/60">
-        {t("cell.leftValue", {
-          left: formatCurrency(remainingValue),
-          total: formatCurrency(row.totalRevenue),
-        })}
+        <LabeledAmount label={t("cell.unsold")} amount={formatCurrency(remainingValue)} />
+      </div>
+      <div className="text-xs text-foreground/60">
+        <LabeledAmount label={t("cell.soldPlusUnsold")} amount={formatCurrency(row.totalRevenue)} />
       </div>
       {unitCosts ? (
         <div className="text-xs text-foreground/60">
-          {t("cell.earned", {
-            amount: formatCurrency(recordAdjustedRevenue(row, unitCosts, deductions ?? undefined)),
-          })}
+          <LabeledAmount
+            label={t("cell.earned")}
+            amount={formatCurrency(recordAdjustedRevenue(row, unitCosts, deductions ?? undefined))}
+          />
         </div>
       ) : null}
     </>
@@ -196,7 +207,7 @@ export function SaleRecordsSection({
                     <td className="px-4 py-2">
                       <ProductCell breakdown={row.yogurt} t={t} />
                     </td>
-                    <td className="px-4 py-2 font-medium">
+                    <td className="px-4 py-2 font-semibold">
                       {formatCurrency(row.milkMoteRevenue)}
                     </td>
                     <td
@@ -248,7 +259,7 @@ export function SaleRecordsSection({
                     </div>
                     <div>
                       <p className="text-xs text-foreground/60">{t("table.milkMote")}</p>
-                      <div className="font-medium">
+                      <div className="font-semibold">
                         {formatCurrency(row.milkMoteRevenue)}
                       </div>
                     </div>

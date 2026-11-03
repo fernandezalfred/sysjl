@@ -23,11 +23,11 @@ describe("translate", () => {
 
   it("substitutes multiple {placeholders} independently", () => {
     expect(
-      translate("en", "cell.leftValue", { left: "Bs 10,00", total: "Bs 50,00" }),
-    ).toBe("Bs 10,00 left, value Bs 50,00");
+      translate("en", "cell.soldWithRevenue", { sold: "5", revenue: "Bs 50,00" }),
+    ).toBe("5 sold Bs 50,00");
     expect(
-      translate("es", "cell.leftValue", { left: "Bs 10,00", total: "Bs 50,00" }),
-    ).toBe("Bs 10,00 restante, valor Bs 50,00");
+      translate("es", "cell.soldWithRevenue", { sold: "5", revenue: "Bs 50,00" }),
+    ).toBe("5 vendido Bs 50,00");
   });
 
   it("leaves a key with no vars argument untouched by interpolation", () => {
