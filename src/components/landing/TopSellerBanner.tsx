@@ -5,12 +5,14 @@ import type { UserTotal } from "@/types/landing";
 
 interface TopSellerBannerProps {
   userTotals: UserTotal[];
+  // Only admins see the winning margin; everyone else sees just who's leading.
+  isAdmin: boolean;
   t: TranslateFn;
 }
 
 // userTotals arrives sorted by date descending (see UserTotalsSection), so the
 // first entry's date is the most recent day with any records.
-export function TopSellerBanner({ userTotals, t }: TopSellerBannerProps) {
+export function TopSellerBanner({ userTotals, isAdmin, t }: TopSellerBannerProps) {
   const latestDate = userTotals[0]?.date;
   if (!latestDate) return null;
 
@@ -19,7 +21,7 @@ export function TopSellerBanner({ userTotals, t }: TopSellerBannerProps) {
 
   const isPlural = winners.length > 1;
   const names = winners.map((w) => w.userName).join(" & ");
-  const margin = winners[0]?.winnerMargin ?? null;
+  const margin = isAdmin ? (winners[0]?.winnerMargin ?? null) : null;
   const marginPart = margin !== null ? t("topSeller.byMargin", { margin: formatCurrency(margin) }) : "";
 
   return (

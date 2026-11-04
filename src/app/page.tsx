@@ -66,7 +66,7 @@ async function LandingContent() {
           )}
         </div>
 
-        <TopSellerBanner userTotals={data.userTotals} t={t} />
+        <TopSellerBanner userTotals={data.userTotals} isAdmin={isAdmin} t={t} />
 
         {isAdmin ? <AdminQuickSettings t={t} /> : null}
 

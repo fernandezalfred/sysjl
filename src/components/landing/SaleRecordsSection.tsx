@@ -57,11 +57,14 @@ function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: Transla
 function TotalRevenueCell({
   row,
   t,
+  isAdmin,
   unitCosts,
   deductions,
 }: {
   row: DailyRecordRow;
   t: TranslateFn;
+  // Only admins see the winner's margin; everyone else sees just "Winner".
+  isAdmin: boolean;
   unitCosts: UnitCosts | null;
   deductions: MilkGrainsDeductions | null;
 }) {
@@ -75,7 +78,7 @@ function TotalRevenueCell({
         <LabeledAmount label={t("cell.sold")} amount={formatCurrency(soldRevenue)} />
         {row.isDailyWinner && (
           <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
-            {row.winnerMargin !== null
+            {isAdmin && row.winnerMargin !== null
               ? t("cell.winnerMargin", { margin: formatCurrency(row.winnerMargin) })
               : t("cell.winner")}
           </span>
@@ -220,7 +223,7 @@ export function SaleRecordsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell row={row} t={t} unitCosts={unitCosts} deductions={deductions} />
+                      <TotalRevenueCell row={row} t={t} isAdmin={isAdmin} unitCosts={unitCosts} deductions={deductions} />
                     </td>
                     <td className="px-4 py-2 text-right">
                       {isAdmin || row.userId === currentUserId ? (
@@ -274,7 +277,7 @@ export function SaleRecordsSection({
                   >
                     <div>
                       <p className="text-xs text-foreground/60">{t("saleRecords.totalRevenue")}</p>
-                      <TotalRevenueCell row={row} t={t} unitCosts={unitCosts} deductions={deductions} />
+                      <TotalRevenueCell row={row} t={t} isAdmin={isAdmin} unitCosts={unitCosts} deductions={deductions} />
                     </div>
                     {isAdmin || row.userId === currentUserId ? (
                       <button

@@ -30,7 +30,8 @@ function soldRevenueOf(u: UserTotal): number {
 
 // Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
 // ("left") value and the full total (sold + left) as secondary text.
-function TotalRevenueCell({ u, t }: { u: UserTotal; t: TranslateFn }) {
+// Only admins see the winner's margin; everyone else sees just "Winner".
+function TotalRevenueCell({ u, t, isAdmin }: { u: UserTotal; t: TranslateFn; isAdmin: boolean }) {
   const soldRevenue = soldRevenueOf(u);
   const remainingValue = u.totalRevenue - soldRevenue;
 
@@ -40,7 +41,7 @@ function TotalRevenueCell({ u, t }: { u: UserTotal; t: TranslateFn }) {
         <LabeledAmount label={t("cell.sold")} amount={formatCurrency(soldRevenue)} />
         {u.isDailyWinner && (
           <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
-            {u.winnerMargin !== null
+            {isAdmin && u.winnerMargin !== null
               ? t("cell.winnerMargin", { margin: formatCurrency(u.winnerMargin) })
               : t("cell.winner")}
           </span>
@@ -163,7 +164,7 @@ export function UserTotalsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell u={u} t={t} />
+                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} />
                     </td>
                     {canEditAny ? (
                       <td className="px-4 py-2 text-right">
@@ -220,7 +221,7 @@ export function UserTotalsSection({
                       }
                     >
                       <p className="text-xs text-foreground/60">{t("table.totalRevenue")}</p>
-                      <TotalRevenueCell u={u} t={t} />
+                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} />
                     </div>
                     {isAdmin || u.userId === currentUserId ? (
                       <button
