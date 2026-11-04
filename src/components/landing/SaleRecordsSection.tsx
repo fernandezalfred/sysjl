@@ -108,15 +108,9 @@ function TotalRevenueCell({
 }
 
 function SellerPayLine({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
-  const pay = sellerPay(row.totalSold, row.isDailyWinner);
   return (
     <div className="text-xs text-foreground/60">
-      <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(pay.total)} />
-      {pay.bonus > 0 ? (
-        <span className="ml-1 text-green-700 dark:text-green-400">
-          {t("cell.sellerPayBonus", { bonus: formatCurrency(pay.bonus) })}
-        </span>
-      ) : null}
+      <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(sellerPay(row.totalSold))} />
     </div>
   );
 }
