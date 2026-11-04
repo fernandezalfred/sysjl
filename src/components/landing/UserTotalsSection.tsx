@@ -4,6 +4,7 @@ import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
+import { sellerPay } from "@/lib/seller-pay";
 import { toEditableRecord } from "@/lib/records";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
@@ -31,7 +32,19 @@ function soldRevenueOf(u: UserTotal): number {
 // Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
 // ("left") value and the full total (sold + left) as secondary text.
 // Only admins see the winner's margin; everyone else sees just "Winner".
-function TotalRevenueCell({ u, t, isAdmin }: { u: UserTotal; t: TranslateFn; isAdmin: boolean }) {
+// Seller pay (showPay) goes to admins on every row and to a seller on their own rows
+// only; guests never see it.
+function TotalRevenueCell({
+  u,
+  t,
+  isAdmin,
+  showPay,
+}: {
+  u: UserTotal;
+  t: TranslateFn;
+  isAdmin: boolean;
+  showPay: boolean;
+}) {
   const soldRevenue = soldRevenueOf(u);
   const remainingValue = u.totalRevenue - soldRevenue;
 
@@ -53,6 +66,11 @@ function TotalRevenueCell({ u, t, isAdmin }: { u: UserTotal; t: TranslateFn; isA
       <div className="text-xs text-foreground/60">
         <LabeledAmount label={t("cell.soldPlusUnsold")} amount={formatCurrency(u.totalRevenue)} />
       </div>
+      {showPay ? (
+        <div className="text-xs text-foreground/60">
+          <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(sellerPay(soldRevenue))} />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -164,7 +182,7 @@ export function UserTotalsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} />
+                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} showPay={isAdmin || u.userId === currentUserId} />
                     </td>
                     {canEditAny ? (
                       <td className="px-4 py-2 text-right">
@@ -221,7 +239,7 @@ export function UserTotalsSection({
                       }
                     >
                       <p className="text-xs text-foreground/60">{t("table.totalRevenue")}</p>
-                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} />
+                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} showPay={isAdmin || u.userId === currentUserId} />
                     </div>
                     {isAdmin || u.userId === currentUserId ? (
                       <button
