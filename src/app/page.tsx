@@ -28,11 +28,11 @@ export default function Home() {
 
 async function LandingContent() {
   await connection();
-  const [data, session, vehicleUsers, { t, locale }] = await Promise.all([
+  const [data, session, activeUsers, { t, locale }] = await Promise.all([
     getLandingPageData(),
     auth(),
     prisma.user.findMany({
-      where: { role: "VEHICLE_USER", isActive: true },
+      where: { isActive: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -77,7 +77,7 @@ async function LandingContent() {
         {isSignedIn ? (
           <CreateRecordButton
             isAdmin={isAdmin}
-            vehicleUsers={vehicleUsers}
+            activeUsers={activeUsers}
             currentUserName={session?.user?.name ?? null}
             locale={locale}
           />

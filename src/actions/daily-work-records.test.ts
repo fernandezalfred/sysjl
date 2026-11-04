@@ -193,20 +193,34 @@ describe("createDailyWorkRecord", () => {
     expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
   });
 
-  it("rejects an admin selecting a non-vehicle-user", async () => {
+  it("rejects an admin selecting a deactivated user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ id: "admin-2", role: "ADMIN" });
+    prismaMock.user.findUnique.mockResolvedValue({ id: "user-3", role: "VEHICLE_USER", isActive: false });
+    const result = await createDailyWorkRecord(
+      { success: false },
+      formData({ ...VALID_FIELDS, userId: "user-3" }),
+    );
+    expect(result).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
+  });
+
+  it("creates the record for an admin-selected active admin", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.user.findUnique.mockResolvedValue({ id: "admin-2", role: "ADMIN", isActive: true });
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
     const result = await createDailyWorkRecord(
       { success: false },
       formData({ ...VALID_FIELDS, userId: "admin-2" }),
     );
-    expect(result).toEqual({ success: false, error: "Selected user is not a vehicle user." });
-    expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ userId: "admin-2" }) }),
+    );
   });
 
   it("creates the record for the admin-selected vehicle user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ id: "user-2", role: "VEHICLE_USER" });
+    prismaMock.user.findUnique.mockResolvedValue({ id: "user-2", role: "VEHICLE_USER", isActive: true });
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
     const result = await createDailyWorkRecord(
       { success: false },

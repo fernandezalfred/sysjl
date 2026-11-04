@@ -54,11 +54,8 @@ async function resolveTargetUserId(
   }
 
   const target = await prisma.user.findUnique({ where: { id: raw } });
-  if (!target) {
+  if (!target || !target.isActive) {
     return { error: "User not found." };
-  }
-  if (target.role !== "VEHICLE_USER") {
-    return { error: "Selected user is not a vehicle user." };
   }
 
   return { userId: target.id };

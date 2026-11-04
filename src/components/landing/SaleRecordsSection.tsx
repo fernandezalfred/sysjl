@@ -21,7 +21,7 @@ interface SaleRecordsSectionProps {
   currentUserId: string | null;
   currentUserName: string | null;
   isAdmin: boolean;
-  vehicleUsers: { id: string; name: string }[];
+  activeUsers: { id: string; name: string }[];
   locale: Locale;
   unitCosts: UnitCosts | null;
   deductions: MilkGrainsDeductions | null;
@@ -127,7 +127,7 @@ export function SaleRecordsSection({
   currentUserId,
   currentUserName,
   isAdmin,
-  vehicleUsers,
+  activeUsers,
   locale,
   unitCosts,
   deductions,
@@ -314,7 +314,7 @@ export function SaleRecordsSection({
             onSaved={close}
             onCancel={close}
             isAdmin={isAdmin}
-            vehicleUsers={vehicleUsers}
+            activeUsers={activeUsers}
             currentUserName={currentUserName}
             t={t}
           />

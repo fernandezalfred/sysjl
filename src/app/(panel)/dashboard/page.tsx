@@ -24,11 +24,11 @@ export default function Dashboard() {
 
 async function DashboardContent() {
   await connection();
-  const [data, session, vehicleUsers, { t, locale }] = await Promise.all([
+  const [data, session, activeUsers, { t, locale }] = await Promise.all([
     getLandingPageData(),
     auth(),
     prisma.user.findMany({
-      where: { role: "VEHICLE_USER", isActive: true },
+      where: { isActive: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -91,7 +91,7 @@ async function DashboardContent() {
         currentUserId={session?.user?.id ?? null}
         currentUserName={session?.user?.name ?? null}
         isAdmin={isAdmin}
-        vehicleUsers={vehicleUsers}
+        activeUsers={activeUsers}
         locale={locale}
         unitCosts={unitCosts}
         deductions={deductions}

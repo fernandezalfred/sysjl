@@ -7,12 +7,12 @@ import { useBackdropClose } from "@/hooks/useBackdropClose";
 
 interface CreateRecordButtonProps {
   isAdmin: boolean;
-  vehicleUsers: { id: string; name: string }[];
+  activeUsers: { id: string; name: string }[];
   currentUserName: string | null;
   locale: Locale;
 }
 
-export function CreateRecordButton({ isAdmin, vehicleUsers, currentUserName, locale }: CreateRecordButtonProps) {
+export function CreateRecordButton({ isAdmin, activeUsers, currentUserName, locale }: CreateRecordButtonProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backdropClose = useBackdropClose();
@@ -53,7 +53,7 @@ export function CreateRecordButton({ isAdmin, vehicleUsers, currentUserName, loc
           onSaved={close}
           onCancel={close}
           isAdmin={isAdmin}
-          vehicleUsers={vehicleUsers}
+          activeUsers={activeUsers}
           currentUserName={currentUserName}
           t={t}
         />

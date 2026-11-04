@@ -25,14 +25,14 @@ interface CreateRecordFormProps {
   onSaved: () => void;
   onCancel: () => void;
   isAdmin: boolean;
-  vehicleUsers: { id: string; name: string }[];
+  activeUsers: { id: string; name: string }[];
   // Shown, locked, in the User field for a vehicle user — their record is always
   // their own (the server takes the user from the session, never from the form).
   currentUserName: string | null;
   t: TranslateFn;
 }
 
-export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, currentUserName, t }: CreateRecordFormProps) {
+export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, currentUserName, t }: CreateRecordFormProps) {
   const [state, formAction] = useActionState(createDailyWorkRecord, initialState);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, vehicleUsers, cur
             <option value="" disabled>
               {t("records.selectUser")}
             </option>
-            {vehicleUsers.map((user) => (
+            {activeUsers.map((user) => (
               <option key={user.id} value={user.id}>
                 {user.name}
               </option>
