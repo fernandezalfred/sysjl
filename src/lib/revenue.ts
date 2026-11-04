@@ -47,6 +47,15 @@ export function recordAdjustedRevenue(
   return quesoProfit + yogurtProfit + row.milkMoteRevenue - milkCost - grainsShare;
 }
 
+// Net profit summed across every record (all users, all days).
+export function buildAdjustedRevenueTotal(
+  records: DailyRecordRow[],
+  unitCosts: UnitCosts,
+  deductions?: MilkGrainsDeductions,
+): number {
+  return records.reduce((sum, r) => sum + recordAdjustedRevenue(r, unitCosts, deductions), 0);
+}
+
 // Grains cost is tracked per purchase day, not per driver — split evenly across
 // however many drivers actually have a work record that same day, so the full
 // day's grains cost isn't deducted multiple times when several drivers worked it.

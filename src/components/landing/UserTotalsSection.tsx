@@ -5,6 +5,7 @@ import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { sellerPay } from "@/lib/seller-pay";
+import { recordAdjustedRevenue, type UnitCosts, type MilkGrainsDeductions } from "@/lib/revenue";
 import { toEditableRecord } from "@/lib/records";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
@@ -19,6 +20,9 @@ interface UserTotalsSectionProps {
   dailyRecords: DailyRecordRow[];
   currentUserId: string | null;
   isAdmin: boolean;
+  // Admin-only cost inputs for the Net profit line; null for everyone else.
+  unitCosts: UnitCosts | null;
+  deductions: MilkGrainsDeductions | null;
   hideHeading?: boolean;
   locale: Locale;
 }
@@ -39,11 +43,13 @@ function TotalRevenueCell({
   t,
   isAdmin,
   showPay,
+  netProfit,
 }: {
   u: UserTotal;
   t: TranslateFn;
   isAdmin: boolean;
   showPay: boolean;
+  netProfit: number | null;
 }) {
   const soldRevenue = soldRevenueOf(u);
   const remainingValue = u.totalRevenue - soldRevenue;
@@ -69,6 +75,11 @@ function TotalRevenueCell({
       {showPay ? (
         <div className="text-xs text-foreground/60">
           <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(sellerPay(soldRevenue))} />
+        </div>
+      ) : null}
+      {netProfit !== null ? (
+        <div className="text-xs text-foreground/60">
+          <LabeledAmount label={t("cell.earned")} amount={formatCurrency(netProfit)} />
         </div>
       ) : null}
     </>
@@ -103,6 +114,8 @@ export function UserTotalsSection({
   dailyRecords,
   currentUserId,
   isAdmin,
+  unitCosts,
+  deductions,
   hideHeading = false,
   locale,
 }: UserTotalsSectionProps) {
@@ -124,6 +137,12 @@ export function UserTotalsSection({
   const dailyRecordsByKey = new Map(
     dailyRecords.map((row) => [`${row.date}|${row.userId}`, row]),
   );
+
+  function netProfitOf(u: UserTotal): number | null {
+    const row = dailyRecordsByKey.get(`${u.date}|${u.userId}`);
+    if (!unitCosts || !row) return null;
+    return recordAdjustedRevenue(row, unitCosts, deductions ?? undefined);
+  }
 
   function openEdit(u: UserTotal) {
     const row = dailyRecordsByKey.get(`${u.date}|${u.userId}`);
@@ -182,7 +201,13 @@ export function UserTotalsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} showPay={isAdmin || u.userId === currentUserId} />
+                      <TotalRevenueCell
+                        u={u}
+                        t={t}
+                        isAdmin={isAdmin}
+                        showPay={isAdmin || u.userId === currentUserId}
+                        netProfit={netProfitOf(u)}
+                      />
                     </td>
                     {canEditAny ? (
                       <td className="px-4 py-2 text-right">
@@ -239,7 +264,13 @@ export function UserTotalsSection({
                       }
                     >
                       <p className="text-xs text-foreground/60">{t("table.totalRevenue")}</p>
-                      <TotalRevenueCell u={u} t={t} isAdmin={isAdmin} showPay={isAdmin || u.userId === currentUserId} />
+                      <TotalRevenueCell
+                        u={u}
+                        t={t}
+                        isAdmin={isAdmin}
+                        showPay={isAdmin || u.userId === currentUserId}
+                        netProfit={netProfitOf(u)}
+                      />
                     </div>
                     {isAdmin || u.userId === currentUserId ? (
                       <button

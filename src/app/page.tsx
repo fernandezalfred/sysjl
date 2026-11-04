@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
+import { getNetProfitInputs } from "@/lib/net-profit";
 import { latestWorkDay } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
@@ -42,6 +43,8 @@ async function LandingContent() {
 
   const isAdmin = session?.user?.role === "ADMIN";
   const isSignedIn = Boolean(session?.user?.id);
+  // Net profit is cost/financial data per project-overview.md §3 — admin-only.
+  const netProfitInputs = isAdmin ? await getNetProfitInputs(data.dailyRecords) : null;
 
   return (
     <SelectedDayProvider defaultDay={latestWorkDay(data.dailyRecords)}>
@@ -91,6 +94,8 @@ async function LandingContent() {
           dailyRecords={data.dailyRecords}
           currentUserId={session?.user?.id ?? null}
           isAdmin={isAdmin}
+          unitCosts={netProfitInputs?.unitCosts ?? null}
+          deductions={netProfitInputs?.deductions ?? null}
           hideHeading
           locale={locale}
         />
