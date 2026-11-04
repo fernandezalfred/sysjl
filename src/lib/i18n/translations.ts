@@ -137,9 +137,6 @@ const en = {
   "trend.month": "Month",
   "trend.weekOf": "Week of {date}",
   "trend.noData": "No sale records yet.",
-  "allTimeTotals.heading": "All-time totals",
-  "allTimeTotals.sales": "Total sales (all records)",
-  "allTimeTotals.netProfit": "Total net profit (all records)",
 
   "sidebar.openMenu": "Open menu",
   "sidebar.closeMenu": "Close menu",
@@ -327,9 +324,6 @@ const es: Record<DictionaryKey, string> = {
   "trend.month": "Mes",
   "trend.weekOf": "Semana del {date}",
   "trend.noData": "Aún no hay registros de venta.",
-  "allTimeTotals.heading": "Totales generales",
-  "allTimeTotals.sales": "Total ventas (todos los registros)",
-  "allTimeTotals.netProfit": "Ganancia neta total (todos los registros)",
 
   "sidebar.openMenu": "Abrir menú",
   "sidebar.closeMenu": "Cerrar menú",

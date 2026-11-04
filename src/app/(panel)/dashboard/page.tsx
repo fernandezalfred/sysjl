@@ -4,13 +4,11 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
 import { getNetProfitInputs } from "@/lib/net-profit";
-import { buildAdjustedRevenueTotal } from "@/lib/revenue";
 import { latestWorkDay } from "@/lib/sales-charts";
 import { getCurrentProductPrices } from "@/lib/product-prices";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
-import { AllTimeTotals } from "@/components/landing/AllTimeTotals";
 import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { SelectedDayProvider } from "@/components/sales-charts/SelectedDayProvider";
 import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
@@ -63,14 +61,6 @@ async function DashboardContent() {
         </header>
 
         <SalesChartsSection dailyRecords={data.dailyRecords} locale={locale} />
-
-        {isAdmin && unitCosts ? (
-          <AllTimeTotals
-            totalSales={data.dailyRecords.reduce((sum, r) => sum + r.totalSold, 0)}
-            totalNetProfit={buildAdjustedRevenueTotal(data.dailyRecords, unitCosts, deductions ?? undefined)}
-            t={t}
-          />
-        ) : null}
 
         {isAdmin && prices ? (
           <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
