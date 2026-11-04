@@ -6,6 +6,7 @@ import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { toEditableRecord } from "@/lib/records";
+import { sellerPay } from "@/lib/seller-pay";
 import { recordAdjustedRevenue, type UnitCosts, type MilkGrainsDeductions } from "@/lib/revenue";
 import { CreateRecordForm } from "@/components/records/CreateRecordForm";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
@@ -58,6 +59,7 @@ function TotalRevenueCell({
   row,
   t,
   isAdmin,
+  showPay,
   unitCosts,
   deductions,
 }: {
@@ -65,6 +67,8 @@ function TotalRevenueCell({
   t: TranslateFn;
   // Only admins see the winner's margin; everyone else sees just "Winner".
   isAdmin: boolean;
+  // Seller pay is shown to admins on every row and to a seller on their own rows only.
+  showPay: boolean;
   unitCosts: UnitCosts | null;
   deductions: MilkGrainsDeductions | null;
 }) {
@@ -90,6 +94,7 @@ function TotalRevenueCell({
       <div className="text-xs text-foreground/60">
         <LabeledAmount label={t("cell.soldPlusUnsold")} amount={formatCurrency(row.totalRevenue)} />
       </div>
+      {showPay ? <SellerPayLine row={row} t={t} /> : null}
       {unitCosts ? (
         <div className="text-xs text-foreground/60">
           <LabeledAmount
@@ -99,6 +104,20 @@ function TotalRevenueCell({
         </div>
       ) : null}
     </>
+  );
+}
+
+function SellerPayLine({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
+  const pay = sellerPay(row.totalSold, row.isDailyWinner);
+  return (
+    <div className="text-xs text-foreground/60">
+      <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(pay.total)} />
+      {pay.bonus > 0 ? (
+        <span className="ml-1 text-green-700 dark:text-green-400">
+          {t("cell.sellerPayBonus", { bonus: formatCurrency(pay.bonus) })}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -223,7 +242,14 @@ export function SaleRecordsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell row={row} t={t} isAdmin={isAdmin} unitCosts={unitCosts} deductions={deductions} />
+                      <TotalRevenueCell
+                        row={row}
+                        t={t}
+                        isAdmin={isAdmin}
+                        showPay={isAdmin || row.userId === currentUserId}
+                        unitCosts={unitCosts}
+                        deductions={deductions}
+                      />
                     </td>
                     <td className="px-4 py-2 text-right">
                       {isAdmin || row.userId === currentUserId ? (
@@ -277,7 +303,14 @@ export function SaleRecordsSection({
                   >
                     <div>
                       <p className="text-xs text-foreground/60">{t("saleRecords.totalRevenue")}</p>
-                      <TotalRevenueCell row={row} t={t} isAdmin={isAdmin} unitCosts={unitCosts} deductions={deductions} />
+                      <TotalRevenueCell
+                        row={row}
+                        t={t}
+                        isAdmin={isAdmin}
+                        showPay={isAdmin || row.userId === currentUserId}
+                        unitCosts={unitCosts}
+                        deductions={deductions}
+                      />
                     </div>
                     {isAdmin || row.userId === currentUserId ? (
                       <button

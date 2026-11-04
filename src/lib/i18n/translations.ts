@@ -58,6 +58,8 @@ const en = {
   "cell.winner": "Winner",
   "cell.winnerMargin": "Winner (+{margin})",
   "cell.earned": "Net profit",
+  "cell.sellerPay": "Seller pay",
+  "cell.sellerPayBonus": "(includes {bonus} bonus)",
 
   "saleRecords.heading": "Sale Records",
   "saleRecords.newRecord": "New record",
@@ -244,6 +246,8 @@ const es: Record<DictionaryKey, string> = {
   "cell.winner": "Ganador",
   "cell.winnerMargin": "Ganador (+{margin})",
   "cell.earned": "Ganancia neta",
+  "cell.sellerPay": "Pago del vendedor",
+  "cell.sellerPayBonus": "(incluye bono de {bonus})",
 
   "saleRecords.heading": "Registros de Venta",
   "saleRecords.newRecord": "Nuevo registro",
