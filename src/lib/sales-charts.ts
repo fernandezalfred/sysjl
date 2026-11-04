@@ -46,15 +46,19 @@ export function latestWorkDay(records: Pick<DailyRecordRow, "date">[]): string |
 }
 
 // Each user's total sales (totalSold, Bs) and Total sold + unsold (totalRevenue, Bs)
-// in the day, week, or month that contains
-// the latest work day — so the chart always shows the period that has data, even
-// early in a new week or month. Sorted highest first; users with no record in the
-// period are left out.
-export function buildUserSalesByPeriod(records: DailyRecordRow[], granularity: Granularity): UserSalesPeriod | null {
-  const lastDay = latestWorkDay(records);
-  if (lastDay === null) return null;
+// in the day, week, or month that contains `day` (a day picked in the records list),
+// or the latest work day when none is given — so the chart always shows a period
+// that has data, even early in a new week or month. Sorted highest first; users with
+// no record in the period are left out.
+export function buildUserSalesByPeriod(
+  records: DailyRecordRow[],
+  granularity: Granularity,
+  day: string | null = null,
+): UserSalesPeriod | null {
+  const anchor = day ?? latestWorkDay(records);
+  if (anchor === null) return null;
 
-  const period = bucketKey(lastDay, granularity);
+  const period = bucketKey(anchor, granularity);
   const totals = new Map<string, UserSalesTotal>();
   for (const r of records) {
     if (bucketKey(r.date, granularity) !== period) continue;
@@ -68,15 +72,18 @@ export function buildUserSalesByPeriod(records: DailyRecordRow[], granularity: G
   return { period, users };
 }
 
-// What each user sold and had left over on the latest work day, per product, in Bs
-// (units × the record's own sale price). Milk and Mote are recorded together as one
-// figure and have no leftover tracking.
-export function buildLastDayProductSales(records: DailyRecordRow[]): { date: string; users: UserProductSales[] } | null {
-  const lastDay = latestWorkDay(records);
-  if (lastDay === null) return null;
+// What each user sold and had left over on `day`, or the latest work day when none
+// is given, per product, in Bs (units × the record's own sale price). Milk and Mote
+// are recorded together as one figure and have no leftover tracking.
+export function buildLastDayProductSales(
+  records: DailyRecordRow[],
+  day: string | null = null,
+): { date: string; users: UserProductSales[] } | null {
+  const anchor = day ?? latestWorkDay(records);
+  if (anchor === null) return null;
 
   const users = records
-    .filter((r) => r.date === lastDay)
+    .filter((r) => r.date === anchor)
     .map((r) => ({
       userId: r.userId,
       userName: r.userName,
@@ -88,7 +95,7 @@ export function buildLastDayProductSales(records: DailyRecordRow[]): { date: str
     }))
     .sort((a, b) => a.userName.localeCompare(b.userName));
 
-  return { date: lastDay, users };
+  return { date: anchor, users };
 }
 
 export interface UserTrendSeries {
@@ -129,15 +136,17 @@ export interface SalesChartsData {
 }
 
 // Everything the Sales by User charts need, from the same records Sale Records
-// shows — shared by the public landing page and /dashboard.
-export function buildSalesChartsData(records: DailyRecordRow[]): SalesChartsData {
-  const day = buildUserSalesByPeriod(records, "day");
-  const week = buildUserSalesByPeriod(records, "week");
-  const month = buildUserSalesByPeriod(records, "month");
+// shows — shared by the public landing page and /dashboard. `selectedDay` is the day
+// picked in the records list; null means the latest work day. The trend chart
+// always covers every record.
+export function buildSalesChartsData(records: DailyRecordRow[], selectedDay: string | null = null): SalesChartsData {
+  const day = buildUserSalesByPeriod(records, "day", selectedDay);
+  const week = buildUserSalesByPeriod(records, "week", selectedDay);
+  const month = buildUserSalesByPeriod(records, "month", selectedDay);
 
   return {
     userSalesByPeriod: day && week && month ? { day, week, month } : null,
-    lastDayProductSales: buildLastDayProductSales(records),
+    lastDayProductSales: buildLastDayProductSales(records, selectedDay),
     userTrends: {
       day: buildUserTrend(records, "day"),
       week: buildUserTrend(records, "week"),

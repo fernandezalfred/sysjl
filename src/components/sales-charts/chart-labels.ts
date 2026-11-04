@@ -68,7 +68,7 @@ function barColor(dataset: { backgroundColor?: unknown }, index: number, fallbac
 }
 
 // Horizontal bars: the bar's category name (e.g. the user) inside its start and its
-// series name with its amount ("Total venta: Bs 2.930") inside its end, both in
+// series name with its amount ("Ventas: Bs 2.930") inside its end, both in
 // white. If both don't fit, the name stays inside when it fits alone and the amount
 // moves to a label over the bar's end; on a bar too short for either, one label over
 // its end carries "name · series: amount".
@@ -90,8 +90,13 @@ export function horizontalBarLabels(theme: LabelTheme): Plugin<"bar"> {
           const nameWidth = ctx.measureText(name).width;
           const amountWidth = ctx.measureText(amount).width;
           const pillColors = { text: theme.ink, surface: theme.surface, border: barColor(dataset, index, theme.ink) };
-          const pillAtEnd = (text: string) =>
-            drawPill(ctx, text, x + (ctx.measureText(text).width + PILL_PAD_X * 2) / 2, y, pillColors);
+          // Starts at the bar's end, shifted left when it would run past the chart's
+          // right edge (narrow phone screens) so it's never cut off.
+          const pillAtEnd = (text: string) => {
+            const width = ctx.measureText(text).width + PILL_PAD_X * 2;
+            const left = Math.max(chart.chartArea.left, Math.min(x, chart.chartArea.right - width));
+            drawPill(ctx, text, left + width / 2, y, pillColors);
+          };
 
           ctx.fillStyle = INSIDE_COLOR;
           if (nameWidth + amountWidth + PADDING * 3 <= length) {

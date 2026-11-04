@@ -4,7 +4,7 @@ import { Fragment, useRef, useState } from "react";
 import { EmphasizedText } from "@/components/landing/EmphasizedText";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
-import { formatShortDate } from "@/lib/dates";
+import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { toEditableRecord } from "@/lib/records";
 import { recordAdjustedRevenue, type UnitCosts, type MilkGrainsDeductions } from "@/lib/revenue";
 import { CreateRecordForm } from "@/components/records/CreateRecordForm";
@@ -196,12 +196,9 @@ export function SaleRecordsSection({
           <tbody className="divide-y divide-foreground/10">
             {dayGroups.map((group) => (
               <Fragment key={group.date}>
-                <tr className="bg-foreground/10 dark:bg-foreground/15">
-                  <td
-                    colSpan={6}
-                    className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-foreground"
-                  >
-                    {formatShortDate(group.date)}
+                <tr>
+                  <td colSpan={6} className="p-0">
+                    <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="px-4 py-2" />
                   </td>
                 </tr>
                 {group.rows.map((row) => (
@@ -247,9 +244,7 @@ export function SaleRecordsSection({
       <div className="flex flex-col gap-3 md:hidden">
         {dayGroups.map((group) => (
           <div key={group.date} className="flex flex-col gap-2">
-            <p className="rounded-md bg-foreground/10 px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-foreground dark:bg-foreground/15">
-              {formatShortDate(group.date)}
-            </p>
+            <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="rounded-md px-3 py-1.5" />
             <ul className="flex flex-col gap-2">
               {group.rows.map((row) => (
                 <li key={row.id} className="rounded-lg border border-foreground/10 p-3">

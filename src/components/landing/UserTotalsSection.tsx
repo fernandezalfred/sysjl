@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useRef, useState } from "react";
-import { formatShortDate } from "@/lib/dates";
+import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { toEditableRecord } from "@/lib/records";
@@ -145,12 +145,9 @@ export function UserTotalsSection({
           <tbody className="divide-y divide-foreground/10">
             {dayGroups.map((group) => (
               <Fragment key={group.date}>
-                <tr className="bg-foreground/10 dark:bg-foreground/15">
-                  <td
-                    colSpan={columnCount}
-                    className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-foreground"
-                  >
-                    {formatShortDate(group.date)}
+                <tr>
+                  <td colSpan={columnCount} className="p-0">
+                    <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="px-4 py-2" />
                   </td>
                 </tr>
                 {group.totals.map((u) => (
@@ -192,9 +189,7 @@ export function UserTotalsSection({
       <div className="flex flex-col gap-3 md:hidden">
         {dayGroups.map((group) => (
           <div key={group.date} className="flex flex-col gap-2">
-            <p className="rounded-md bg-foreground/10 px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-foreground dark:bg-foreground/15">
-              {formatShortDate(group.date)}
-            </p>
+            <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="rounded-md px-3 py-1.5" />
             <ul className="flex flex-col gap-2">
               {group.totals.map((u) => (
                 <li

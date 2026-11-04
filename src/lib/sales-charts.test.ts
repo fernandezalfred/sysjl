@@ -67,6 +67,15 @@ describe("buildUserSalesByPeriod", () => {
     expect(buildUserSalesByPeriod(rows, "month")?.users.map((u) => u.total)).toEqual([900, 300]);
   });
 
+  it("uses the given day instead of the latest work day", () => {
+    expect(buildUserSalesByPeriod(rows, "day", "2026-10-27")).toEqual({
+      period: "2026-10-27",
+      users: [{ userId: "u1", userName: "Daniel", total: 500, totalWithUnsold: 500 }],
+    });
+    expect(buildUserSalesByPeriod(rows, "week", "2026-10-20")?.period).toBe("2026-10-19");
+    expect(buildUserSalesByPeriod(rows, "month", "2026-10-20")?.users.map((u) => u.total)).toEqual([1500, 700]);
+  });
+
   it("is null with no records", () => {
     expect(buildUserSalesByPeriod([], "day")).toBeNull();
   });
@@ -101,6 +110,12 @@ describe("buildLastDayProductSales", () => {
         totalRevenue: 1230,
       },
     ]);
+  });
+
+  it("uses the given day instead of the latest work day", () => {
+    const result = buildLastDayProductSales(rows, "2026-10-31");
+    expect(result?.date).toBe("2026-10-31");
+    expect(result?.users.map((u) => u.userName)).toEqual(["Raul"]);
   });
 
   it("is null with no records", () => {
@@ -150,6 +165,13 @@ describe("buildSalesChartsData", () => {
     });
     expect(data.lastDayProductSales).toEqual(buildLastDayProductSales(rows));
     expect(data.userTrends.week).toEqual(buildUserTrend(rows, "week"));
+  });
+
+  it("anchors the period and product data on the selected day", () => {
+    const data = buildSalesChartsData(rows, "2026-10-27");
+    expect(data.userSalesByPeriod?.day).toEqual(buildUserSalesByPeriod(rows, "day", "2026-10-27"));
+    expect(data.lastDayProductSales).toEqual(buildLastDayProductSales(rows, "2026-10-27"));
+    expect(data.userTrends.day).toEqual(buildUserTrend(rows, "day"));
   });
 
   it("has no period or latest-day data with no records", () => {

@@ -28,7 +28,7 @@ interface UserSalesChartProps {
   locale: Locale;
 }
 
-// Two bars per user — Total venta and Total sold + unsold (Bs) — in the latest work
+// Two bars per user — Ventas and Vendidos + no vendidos (Bs) — in the selected
 // day, its week, or its month. Each bar has the user's name and its amount written
 // inside it; the legend names the two colors.
 export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
@@ -100,14 +100,14 @@ export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
             labels: users.map((u) => u.userName),
             datasets: [
               {
-                label: t("cell.sold"),
+                label: t("salesCharts.sales"),
                 data: users.map((u) => u.total),
                 backgroundColor: CHART_COLORS.userSales[mode],
                 borderRadius: 4,
                 maxBarThickness: 24,
               },
               {
-                label: t("cell.soldPlusUnsold"),
+                label: t("salesCharts.soldPlusUnsold"),
                 data: users.map((u) => u.totalWithUnsold),
                 backgroundColor: CHART_COLORS.userSalesWithUnsold[mode],
                 borderRadius: 4,

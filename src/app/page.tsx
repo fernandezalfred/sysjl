@@ -3,13 +3,14 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLandingPageData } from "@/lib/landing-data";
-import { buildSalesChartsData } from "@/lib/sales-charts";
+import { latestWorkDay } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
 import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
 import { AdminQuickSettings } from "@/components/landing/AdminQuickSettings";
 import { TopSellerBanner } from "@/components/landing/TopSellerBanner";
 import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
+import { SelectedDayProvider } from "@/components/sales-charts/SelectedDayProvider";
 import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { CreateRecordButton } from "@/components/records/CreateRecordButton";
@@ -43,58 +44,60 @@ async function LandingContent() {
   const isSignedIn = Boolean(session?.user?.id);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
-        <AppHeader
-          title="Daily Sales & Stock"
-          generatedAt={data.generatedAt}
-          userName={session?.user?.name}
-          isAdmin={isAdmin}
-          isSignedIn={isSignedIn}
-          activePage="home"
-          locale={locale}
-          t={t}
-        />
-        {isSignedIn ? (
-          <p className="mt-3 text-sm text-foreground/60">
-            {t("landing.welcomeBack", { name: session?.user?.name ?? "" })}
-          </p>
-        ) : (
-          <p className="mt-3 text-sm text-foreground/60">{t("landing.guestTagline")}</p>
-        )}
-      </div>
-
-      <TopSellerBanner userTotals={data.userTotals} t={t} />
-
-      {isAdmin ? <AdminQuickSettings t={t} /> : null}
-
-      <SalesChartsSection {...buildSalesChartsData(data.dailyRecords)} t={t} locale={locale} />
-
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/60">
-          {t("landing.totalsByUser")}
-        </h2>
-        {isSignedIn ? (
-          <CreateRecordButton
+    <SelectedDayProvider defaultDay={latestWorkDay(data.dailyRecords)}>
+      <div className="flex flex-col gap-8">
+        <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
+          <AppHeader
+            title="Daily Sales & Stock"
+            generatedAt={data.generatedAt}
+            userName={session?.user?.name}
             isAdmin={isAdmin}
-            activeUsers={activeUsers}
-            currentUserName={session?.user?.name ?? null}
+            isSignedIn={isSignedIn}
+            activePage="home"
             locale={locale}
+            t={t}
           />
-        ) : null}
+          {isSignedIn ? (
+            <p className="mt-3 text-sm text-foreground/60">
+              {t("landing.welcomeBack", { name: session?.user?.name ?? "" })}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-foreground/60">{t("landing.guestTagline")}</p>
+          )}
+        </div>
+
+        <TopSellerBanner userTotals={data.userTotals} t={t} />
+
+        {isAdmin ? <AdminQuickSettings t={t} /> : null}
+
+        <SalesChartsSection dailyRecords={data.dailyRecords} locale={locale} />
+
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+            {t("landing.totalsByUser")}
+          </h2>
+          {isSignedIn ? (
+            <CreateRecordButton
+              isAdmin={isAdmin}
+              activeUsers={activeUsers}
+              currentUserName={session?.user?.name ?? null}
+              locale={locale}
+            />
+          ) : null}
+        </div>
+
+        <UserTotalsSection
+          userTotals={data.userTotals}
+          dailyRecords={data.dailyRecords}
+          currentUserId={session?.user?.id ?? null}
+          isAdmin={isAdmin}
+          hideHeading
+          locale={locale}
+        />
+
+        <Footer t={t} />
       </div>
-
-      <UserTotalsSection
-        userTotals={data.userTotals}
-        dailyRecords={data.dailyRecords}
-        currentUserId={session?.user?.id ?? null}
-        isAdmin={isAdmin}
-        hideHeading
-        locale={locale}
-      />
-
-      <Footer t={t} />
-    </div>
+    </SelectedDayProvider>
   );
 }
 
