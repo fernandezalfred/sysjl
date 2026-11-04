@@ -59,6 +59,19 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <input type="hidden" name="recordId" value={record.id} />
+      {/* Disabled: a record's seller can't be changed on edit, and a disabled field is never submitted. */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="edit-record-user" className="text-xs font-medium text-foreground/60">
+          {t("records.userLabel")}
+        </label>
+        <input
+          id="edit-record-user"
+          type="text"
+          value={record.userName}
+          disabled
+          className="cursor-not-allowed rounded-md border border-foreground/10 bg-foreground/10 px-3 py-2 text-base text-foreground/50"
+        />
+      </div>
       <RecordFormFields defaultValues={record} t={t} />
 
       {state.error ? (

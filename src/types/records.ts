@@ -1,5 +1,6 @@
 export interface DailyWorkRecordRow {
   id: string;
+  userName: string;
   date: string;
   quesoTaken: number;
   quesoRemaining: number;

@@ -4,6 +4,7 @@ import type { DailyWorkRecordRow } from "@/types/records";
 export function toEditableRecord(row: DailyRecordRow): DailyWorkRecordRow {
   return {
     id: row.workRecordId,
+    userName: row.userName,
     date: row.date,
     quesoTaken: row.queso.taken,
     quesoRemaining: row.queso.remaining,
