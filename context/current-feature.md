@@ -2,21 +2,11 @@
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Any signed-in user (vehicle user or admin) can change their own password from a new "My account" page (`/account`) in the panel.
-- The form asks for the current password, the new password, and its confirmation.
-- The user's email is shown at the top of the form as a disabled, muted field (read fresh from the database, not the session), since users can't change their own email.
-- The server resolves the user from the session (never from a submitted id), checks the account still exists and is active, verifies the current password, and requires the new one to be at least 8 characters, different from the current one, and matching the confirmation.
-- Sidebar link and breadcrumb for the page, English and Spanish strings.
-- Unit tests for the new server action.
-
 ## Notes
-
-- Admins can still reset anyone's password from `/admin/users`; this is for the user's own password.
-- JWT sessions aren't revoked on password change (same known limitation as deactivation).
 
 ## History
 
@@ -58,3 +48,4 @@ In Progress
 - **Restore Net Profit Totals + Net Profit in Totals by User** — On `feature/restore-net-profit`, from a direct request without `/feature load`. The user noticed net profit was gone; the per-record "Ganancia neta" in Sale Records had never been removed, so they were asked which removed piece to bring back and chose two: (1) an admin-only "Totales generales" section on `/dashboard`, below the Sales by User charts, with "Total ventas (todos los registros)" and "Ganancia neta total (todos los registros)" cards (`AllTimeTotals`, new `allTimeTotals.*` keys); the old trend chart was not restored; `buildAdjustedRevenueTotal` and its tests came back in `src/lib/revenue.ts`. (2) A "Ganancia neta" line in each Totals by User row on `/`, below Pago del vendedor, admin-only — the landing page loads `getNetProfitInputs` only for admins, so cost data never reaches guests or sellers; computed with `recordAdjustedRevenue` on the matching day record, same as Sale Records. Quick Stats were not restored. 150/150 tests, lint, build green; not verified in a browser.
 - **Remove All-Time Totals from Dashboard** — On `chore/remove-all-time-totals`, from a direct request without `/feature load`. Removed the admin-only "Totales generales" section (Total ventas / Ganancia neta total, all records) from `/dashboard` that the previous entry had restored, and deleted what only it used: `AllTimeTotals.tsx`, `buildAdjustedRevenueTotal` and its tests, and the `allTimeTotals.*` keys. The Ganancia neta line stays in Totals by User (`/`) and Sale Records. 148/148 tests, lint, build green; not verified in a browser.
 - **Show the Seller in the Edit Record Modal** — On `feature/edit-record-show-seller`, from direct requests without `/feature load`. The Edit record modal (Sale Records on `/dashboard`, Totals by User on `/`) now shows a "Usuario" / "User" field with the record's seller at the top, so it's clear whose record is being edited. At a follow-up request it's a `disabled` input (grayed background, muted text, not-allowed cursor) so it reads as unchangeable; disabled fields aren't submitted, so the seller still can't change on edit. `userName` was added to `DailyWorkRecordRow` and filled in `toEditableRecord`. 148/148 tests, lint, build green; not verified in a browser.
+- **Change Own Password (My Account)** — On `feature/change-password`, from direct requests without `/feature load`. Any signed-in user (vehicle user or admin) can change their own password at a new `/account` page ("Mi cuenta" / "My account", sidebar link under Overview plus breadcrumb). The form shows the user's email as a disabled, muted field (read from the database, not the session, so an admin's email change shows right away; not submitted), then current password, new password and confirmation; fields reset on success. `changeOwnPassword` in `src/actions/account.ts` takes the user from the session (never a submitted id), rejects guests and deactivated/missing accounts, verifies the current password, and requires the new one to be 8+ characters, match the confirmation and differ from the current one; 7 unit tests in `account.test.ts`. Admins can still reset anyone's password from `/admin/users`. Server error messages are English-only (existing pattern); open JWT sessions aren't revoked on a password change. 155/155 tests, lint, build green; not verified in a browser.
