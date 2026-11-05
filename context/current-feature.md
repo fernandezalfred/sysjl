@@ -2,15 +2,21 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What success looks like for the next feature -->
+- Any signed-in user (vehicle user or admin) can change their own password from a new "My account" page (`/account`) in the panel.
+- The form asks for the current password, the new password, and its confirmation.
+- The user's email is shown at the top of the form as a disabled, muted field (read fresh from the database, not the session), since users can't change their own email.
+- The server resolves the user from the session (never from a submitted id), checks the account still exists and is active, verifies the current password, and requires the new one to be at least 8 characters, different from the current one, and matching the confirmation.
+- Sidebar link and breadcrumb for the page, English and Spanish strings.
+- Unit tests for the new server action.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Admins can still reset anyone's password from `/admin/users`; this is for the user's own password.
+- JWT sessions aren't revoked on password change (same known limitation as deactivation).
 
 ## History
 

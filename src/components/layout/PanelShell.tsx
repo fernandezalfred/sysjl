@@ -30,6 +30,12 @@ function isNavItemActive(pathname: string, href: string): boolean {
 }
 
 function getBreadcrumbs(pathname: string, t: TranslateFn): NavItem[] {
+  if (pathname.startsWith("/account")) {
+    return [
+      { href: "/account", label: t("sidebar.overview") },
+      { href: "/account", label: t("header.account") },
+    ];
+  }
   if (pathname.startsWith("/admin/users")) {
     return [
       { href: "/admin/users", label: t("sidebar.administration") },
@@ -72,7 +78,13 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   const groups: NavGroup[] = [
-    { label: t("sidebar.overview"), items: [{ href: "/dashboard", label: t("header.dashboard") }] },
+    {
+      label: t("sidebar.overview"),
+      items: [
+        { href: "/dashboard", label: t("header.dashboard") },
+        { href: "/account", label: t("header.account") },
+      ],
+    },
     ...(isAdmin
       ? [
           {
