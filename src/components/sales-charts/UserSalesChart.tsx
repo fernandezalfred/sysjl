@@ -81,14 +81,14 @@ export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
               aria-pressed={granularity === g}
               onClick={() => setGranularity(g)}
               className={`rounded-md px-3 py-1 text-sm ${
-                granularity === g ? "bg-foreground/10 font-medium text-foreground" : "text-foreground/60"
+                granularity === g ? "bg-foreground/10 font-medium text-foreground" : "text-foreground/70"
               }`}
             >
               {t(`trend.${g}`)}
             </button>
           ))}
         </div>
-        <p className="text-sm text-foreground/60">{periodLabel}</p>
+        <p className="text-sm text-foreground/70">{periodLabel}</p>
       </div>
 
       <div className={chartHeightClass(users.length * 2)}>

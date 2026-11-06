@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[96rem] flex-1 px-4 py-8 sm:px-6 lg:px-8">
       <Suspense fallback={<PanelSkeleton />}>
         <PanelContent>{children}</PanelContent>
       </Suspense>

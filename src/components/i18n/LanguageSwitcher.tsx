@@ -7,7 +7,7 @@ interface LanguageSwitcherProps {
 
 export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
   return (
-    <form action={setLocale} className="flex items-center gap-1 text-xs text-foreground/50">
+    <form action={setLocale} className="flex items-center gap-1 text-xs text-foreground/60">
       <button
         type="submit"
         name="locale"

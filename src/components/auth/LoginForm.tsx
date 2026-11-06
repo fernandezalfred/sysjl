@@ -1,15 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
 import { login, type LoginState } from "@/actions/auth";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
 
 const initialState: LoginState = { success: false };
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
-
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -27,10 +26,11 @@ interface LoginFormProps {
 
 export function LoginForm({ locale }: LoginFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const [state, formAction] = useActionState(login, initialState);
+  const [state, formAction, pending] = useActionState(login, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
 
   return (
-    <form action={formAction} className="flex w-full max-w-sm flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="email" className="text-sm font-medium">
           {t("login.email")}
@@ -61,11 +61,11 @@ export function LoginForm({ locale }: LoginFormProps) {
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {state.error}
+          {localizeError(t, state.error)}
         </p>
       ) : null}
 
-      <SubmitButton t={t} />
+      <SubmitButton t={t} pending={pending} />
     </form>
   );
 }

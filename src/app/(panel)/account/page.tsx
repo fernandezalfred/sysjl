@@ -25,7 +25,7 @@ async function AccountContent() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{t("account.heading")}</h1>
-        <p className="text-sm text-foreground/60">{t("account.subheading")}</p>
+        <p className="text-sm text-foreground/70">{t("account.subheading")}</p>
       </header>
       <ChangePasswordForm email={user?.email ?? ""} locale={locale} />
     </div>

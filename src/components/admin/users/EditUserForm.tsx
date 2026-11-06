@@ -1,16 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect, useRef } from "react";
 import { updateUser, type ActionState } from "@/actions/admin-users";
 import { EditUserFields } from "@/components/admin/users/EditUserFields";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
 
 const initialState: ActionState = { success: false };
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -29,10 +29,17 @@ interface EditUserFormProps {
 
 export function EditUserForm({ user, locale }: EditUserFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const [state, formAction] = useActionState(updateUser, initialState);
+  const [state, formAction, pending] = useActionState(updateUser, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Clear the fields only after a successful save; on an error they keep what was typed.
+  useEffect(() => {
+    if (state.success) formRef.current?.reset();
+  }, [state]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input type="hidden" name="userId" value={user.id} />
 
       {/* Keyed on the user's data so these uncontrolled inputs' defaultValue
@@ -43,7 +50,7 @@ export function EditUserForm({ user, locale }: EditUserFormProps) {
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {state.error}
+          {localizeError(t, state.error)}
         </p>
       ) : null}
       {state.success ? (
@@ -51,7 +58,7 @@ export function EditUserForm({ user, locale }: EditUserFormProps) {
       ) : null}
 
       <div>
-        <SubmitButton t={t} />
+        <SubmitButton t={t} pending={pending} />
       </div>
     </form>
   );

@@ -51,7 +51,7 @@ async function DashboardContent() {
       <div className="flex flex-col gap-8">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">{t("header.dashboard")}</h1>
-          <p className="text-sm text-foreground/60">
+          <p className="text-sm text-foreground/70">
             {t("header.updated")}{" "}
             {new Date(data.generatedAt).toLocaleString("es-BO", {
               dateStyle: "medium",
@@ -66,11 +66,11 @@ async function DashboardContent() {
           <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
             <h2
               id="sale-prices-heading"
-              className="text-sm font-medium uppercase tracking-wide text-foreground/60"
+              className="text-sm font-medium uppercase tracking-wide text-foreground/70"
             >
               {t("adminProducts.heading")}
             </h2>
-            <p className="text-sm text-foreground/60">{t("adminProducts.subheading")}</p>
+            <p className="text-sm text-foreground/70">{t("adminProducts.subheading")}</p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <SetProductPriceForm
                 key={`QUESO-${prices.QUESO.updatedAt}`}
@@ -124,7 +124,7 @@ function DashboardSkeleton({ t }: { t: TranslateFn }) {
 
       <div className="flex flex-col gap-3">
         <Skeleton className="h-4 w-28" />
-        <TableSkeleton rows={2} t={t} />
+        <TableSkeleton rows={2} t={t} tableFrom="2xl" />
       </div>
     </div>
   );

@@ -92,7 +92,7 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
             aria-pressed={granularity === g}
             onClick={() => setGranularity(g)}
             className={`rounded-md px-3 py-1 text-sm ${
-              granularity === g ? "bg-foreground/10 font-medium text-foreground" : "text-foreground/60"
+              granularity === g ? "bg-foreground/10 font-medium text-foreground" : "text-foreground/70"
             }`}
           >
             {t(`trend.${g}`)}

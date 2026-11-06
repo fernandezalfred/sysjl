@@ -11,6 +11,7 @@ import type { StockPurchaseRow } from "@/types/admin";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/ui/Pagination";
+import { EditButton } from "@/components/ui/EditButton";
 
 interface MilkPurchasesSectionProps {
   purchases: StockPurchaseRow[];
@@ -87,7 +88,7 @@ export function MilkPurchasesSection({ purchases, activeUsers, locale }: MilkPur
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2
           id="milk-purchases-heading"
-          className="text-sm font-medium uppercase tracking-wide text-foreground/60"
+          className="text-sm font-medium uppercase tracking-wide text-foreground/70"
         >
           {t("stock.purchaseHistory")}
         </h2>
@@ -104,12 +105,12 @@ export function MilkPurchasesSection({ purchases, activeUsers, locale }: MilkPur
       </div>
 
       {purchases.length === 0 ? (
-        <p className="text-sm text-foreground/60">{t("stock.noPurchases")}</p>
+        <p className="text-sm text-foreground/70">{t("stock.noPurchases")}</p>
       ) : (
         <>
           <div className="hidden overflow-x-auto rounded-lg border border-foreground/10 md:block">
             <table className="w-full text-sm">
-              <thead className="bg-foreground/[0.03] text-left text-foreground/60">
+              <thead className="bg-foreground/[0.03] text-left text-foreground/70">
                 <tr>
                   <th className="px-4 py-2 font-medium">{quantityLabel}</th>
                   <th className="px-4 py-2 font-medium">{unitCostLabel}</th>
@@ -145,13 +146,7 @@ export function MilkPurchasesSection({ purchases, activeUsers, locale }: MilkPur
                         <td className="px-4 py-2">{purchase.createdByName}</td>
                         <td className="px-4 py-2">{purchase.forUserName ?? "—"}</td>
                         <td className="px-4 py-2 text-right">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(purchase)}
-                            className="text-sm text-foreground/60 underline hover:text-foreground"
-                          >
-                            {t("table.edit")}
-                          </button>
+                          <EditButton onClick={() => openEdit(purchase)} label={t("table.edit")} />
                         </td>
                       </tr>
                     ))}
@@ -176,23 +171,17 @@ export function MilkPurchasesSection({ purchases, activeUsers, locale }: MilkPur
                           <p className="font-medium">
                             {t("stock.quantityUnitLiters", { quantity: purchase.quantity })}
                           </p>
-                          <p className="text-xs text-foreground/60">
+                          <p className="text-xs text-foreground/70">
                             {unitCostLabel}: {formatCurrency(purchase.unitCost)}
                           </p>
-                          <p className="text-xs text-foreground/60">
+                          <p className="text-xs text-foreground/70">
                             {t("adminProducts.setBy")}: {purchase.createdByName}
                           </p>
-                          <p className="text-xs text-foreground/60">
+                          <p className="text-xs text-foreground/70">
                             {t("milk.forDriver")}: {purchase.forUserName ?? "—"}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(purchase)}
-                          className="-m-2 p-2 text-sm text-foreground/60 underline hover:text-foreground"
-                        >
-                          {t("table.edit")}
-                        </button>
+                        <EditButton onClick={() => openEdit(purchase)} label={t("table.edit")} />
                       </div>
                     </li>
                   ))}

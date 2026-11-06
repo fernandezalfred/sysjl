@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect, useRef } from "react";
 import { createUser, type ActionState } from "@/actions/admin-users";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
 
 const initialState: ActionState = { success: false };
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -26,15 +26,22 @@ interface CreateUserFormProps {
 
 export function CreateUserForm({ locale }: CreateUserFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const [state, formAction] = useActionState(createUser, initialState);
+  const [state, formAction, pending] = useActionState(createUser, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Clear the fields only after a successful save; on an error they keep what was typed.
+  useEffect(() => {
+    if (state.success) formRef.current?.reset();
+  }, [state]);
 
   return (
     <details className="rounded-lg border border-foreground/10 p-4">
       <summary className="cursor-pointer text-sm font-medium">{t("adminUsers.createNew")}</summary>
-      <form action={formAction} className="mt-4 flex flex-col gap-3">
+      <form ref={formRef} onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label htmlFor="new-name" className="text-xs font-medium text-foreground/60">
+            <label htmlFor="new-name" className="text-xs font-medium text-foreground/70">
               {t("adminUsers.name")}
             </label>
             <input
@@ -46,7 +53,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="new-email" className="text-xs font-medium text-foreground/60">
+            <label htmlFor="new-email" className="text-xs font-medium text-foreground/70">
               {t("adminUsers.email")}
             </label>
             <input
@@ -59,7 +66,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="new-password" className="text-xs font-medium text-foreground/60">
+            <label htmlFor="new-password" className="text-xs font-medium text-foreground/70">
               {t("adminUsers.password")}
             </label>
             <input
@@ -74,7 +81,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="new-role" className="text-xs font-medium text-foreground/60">
+            <label htmlFor="new-role" className="text-xs font-medium text-foreground/70">
               {t("adminUsers.role")}
             </label>
             <select
@@ -91,7 +98,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
 
         {state.error ? (
           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {state.error}
+            {localizeError(t, state.error)}
           </p>
         ) : null}
         {state.success ? (
@@ -99,7 +106,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
         ) : null}
 
         <div>
-          <SubmitButton t={t} />
+          <SubmitButton t={t} pending={pending} />
         </div>
       </form>
     </details>

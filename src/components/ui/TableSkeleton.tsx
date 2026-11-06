@@ -6,9 +6,17 @@ const COLUMN_KEYS = ["table.queso", "table.yogurt", "table.milkMote", "table.tot
 interface TableSkeletonProps {
   rows?: number;
   t: TranslateFn;
+  // Breakpoint where the real section switches from cards to a table: Sale Records
+  // (/dashboard) switches on its own width (~1440px screens and up), approximated
+  // here by 2xl; Totals by User (/) uses md.
+  tableFrom?: "md" | "2xl";
 }
 
-export function TableSkeleton({ rows = 2, t }: TableSkeletonProps) {
+// Static class strings so Tailwind can see them.
+const TABLE_CLASS = { md: "hidden w-full text-sm md:table", "2xl": "hidden w-full text-sm 2xl:table" };
+const LIST_CLASS = { md: "divide-y divide-foreground/10 md:hidden", "2xl": "divide-y divide-foreground/10 2xl:hidden" };
+
+export function TableSkeleton({ rows = 2, t, tableFrom = "md" }: TableSkeletonProps) {
   const columns = COLUMN_KEYS.map((key) => t(key));
 
   return (
@@ -17,8 +25,8 @@ export function TableSkeleton({ rows = 2, t }: TableSkeletonProps) {
         <Skeleton className="h-3.5 w-24 bg-foreground/20" />
       </div>
 
-      <table className="hidden w-full text-sm md:table">
-        <thead className="bg-foreground/[0.03] text-left text-foreground/60">
+      <table className={TABLE_CLASS[tableFrom]}>
+        <thead className="bg-foreground/[0.03] text-left text-foreground/70">
           <tr>
             <th className="px-4 py-2 font-medium">{t("table.user")}</th>
             {columns.map((c) => (
@@ -49,7 +57,7 @@ export function TableSkeleton({ rows = 2, t }: TableSkeletonProps) {
         </tbody>
       </table>
 
-      <ul className="divide-y divide-foreground/10 md:hidden">
+      <ul className={LIST_CLASS[tableFrom]}>
         {Array.from({ length: rows }).map((_, i) => (
           <li key={i} className="flex flex-col gap-3 p-4">
             <Skeleton className="h-4 w-24" />

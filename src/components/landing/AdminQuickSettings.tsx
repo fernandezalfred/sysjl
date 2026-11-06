@@ -23,7 +23,7 @@ export function AdminQuickSettings({ t }: AdminQuickSettingsProps) {
     <section aria-labelledby="admin-settings-heading" className="flex flex-col gap-3">
       <h2
         id="admin-settings-heading"
-        className="text-sm font-medium uppercase tracking-wide text-foreground/60"
+        className="text-sm font-medium uppercase tracking-wide text-foreground/70"
       >
         {t("adminSettings.title")}
       </h2>
@@ -35,7 +35,7 @@ export function AdminQuickSettings({ t }: AdminQuickSettingsProps) {
             className="group rounded-lg border border-foreground/10 p-4 transition hover:border-foreground/30 hover:bg-foreground/[0.03]"
           >
             <p className="font-medium group-hover:underline">{link.label}</p>
-            <p className="mt-1 text-xs text-foreground/60">{link.description}</p>
+            <p className="mt-1 text-xs text-foreground/70">{link.description}</p>
           </Link>
         ))}
       </div>

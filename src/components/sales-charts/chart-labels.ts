@@ -1,3 +1,4 @@
+import { formatCurrency } from "@/lib/pricing";
 import type { Plugin } from "chart.js";
 
 // Amounts drawn directly on every bar and point so the charts read at a glance
@@ -16,11 +17,9 @@ const INSIDE_COLOR = "#ffffff";
 const PILL_PAD_X = 4;
 const PILL_HEIGHT = 16;
 
-const NUMBER_FORMAT = new Intl.NumberFormat("es-BO", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-
-// Compact Bs amount, decimals only when present: 3194 -> "Bs 3.194", 1160.4 -> "Bs 1.160,4".
+// Chart labels use the app-wide whole-boliviano format: 1160.4 -> "Bs 1.160".
 export function formatAmount(value: number): string {
-  return `Bs ${NUMBER_FORMAT.format(value)}`;
+  return formatCurrency(value);
 }
 
 export interface LabelTheme {

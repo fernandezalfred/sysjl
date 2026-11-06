@@ -125,7 +125,7 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
                 type="button"
                 onClick={() => setIsNavOpen(false)}
                 aria-label={t("sidebar.closeMenu")}
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground/60 hover:text-foreground"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground/70 hover:text-foreground"
               >
                 ✕
               </button>
@@ -159,7 +159,9 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
         </div>
       </nav>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-8">
+      {/* --sticky-offset: height of the pinned header bar below (lg+), so pinned table
+          headers inside the page sit just under it instead of behind it. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-8 lg:[--sticky-offset:5.75rem]">
         <div className="sticky top-0 z-20 hidden flex-col gap-3 bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:flex">
           <div className="flex items-center justify-end gap-3">
             <LanguageSwitcher locale={locale} />
@@ -185,7 +187,7 @@ function Breadcrumbs({ items, label }: { items: NavItem[]; label: string }) {
             </span>
           ) : null}
           <span
-            className={index === items.length - 1 ? "font-medium text-foreground" : "text-foreground/50"}
+            className={index === items.length - 1 ? "font-medium text-foreground" : "text-foreground/60"}
           >
             {crumb.label}
           </span>
@@ -238,7 +240,7 @@ function PanelNavLink({
       className={`rounded-md px-2 py-1.5 text-sm ${
         isActive
           ? "bg-foreground/10 font-medium text-foreground"
-          : "text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
+          : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
       }`}
     >
       {item.label}

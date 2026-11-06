@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 import {
   deleteStockPurchase,
   updateStockPurchase,
@@ -10,11 +9,14 @@ import {
 import { StockPurchaseFormFields } from "@/components/admin/stock-purchases/StockPurchaseFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow } from "@/types/admin";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
+import { useToast } from "@/components/ui/ToastProvider";
 
 const initialState: ActionState = { success: false };
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -43,7 +45,10 @@ export function EditStockPurchaseForm({
   onCancel,
   t,
 }: EditStockPurchaseFormProps) {
-  const [state, formAction] = useActionState(updateStockPurchase, initialState);
+  const [state, formAction, pending] = useActionState(updateStockPurchase, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("toast.purchaseUpdated"));
+  const { showToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
 
@@ -58,6 +63,7 @@ export function EditStockPurchaseForm({
     setDeleteError(undefined);
     const result = await deleteStockPurchase(purchase.id);
     if (result.success) {
+      showToast(t("toast.purchaseDeleted"));
       onSaved();
       return;
     }
@@ -66,18 +72,18 @@ export function EditStockPurchaseForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input type="hidden" name="purchaseId" value={purchase.id} />
       <StockPurchaseFormFields defaultValues={purchase} quantityLabel={quantityLabel} unitCostLabel={unitCostLabel} />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {state.error}
+          {localizeError(t, state.error)}
         </p>
       ) : null}
       {deleteError ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {deleteError}
+          {localizeError(t, deleteError)}
         </p>
       ) : null}
 
@@ -99,7 +105,7 @@ export function EditStockPurchaseForm({
           >
             {t("stock.cancel")}
           </button>
-          <SubmitButton t={t} />
+          <SubmitButton t={t} pending={pending} />
         </div>
       </div>
     </form>

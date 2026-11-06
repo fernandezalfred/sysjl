@@ -19,7 +19,7 @@ export function Pagination({ page, pageCount, setPage, t }: PaginationProps) {
       <button type="button" onClick={() => setPage(page - 1)} disabled={page <= 1} className={buttonClass}>
         {t("pagination.previous")}
       </button>
-      <p className="text-sm text-foreground/60">{t("pagination.pageOf", { page, pageCount })}</p>
+      <p className="text-sm text-foreground/70">{t("pagination.pageOf", { page, pageCount })}</p>
       <button type="button" onClick={() => setPage(page + 1)} disabled={page >= pageCount} className={buttonClass}>
         {t("pagination.next")}
       </button>

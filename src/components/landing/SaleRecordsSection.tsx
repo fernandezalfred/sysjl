@@ -1,13 +1,19 @@
 "use client";
 
+import { WinnerBadge } from "@/components/landing/WinnerBadge";
 import { Fragment, useRef, useState } from "react";
-import { EmphasizedText } from "@/components/landing/EmphasizedText";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { toEditableRecord } from "@/lib/records";
-import { sellerPay } from "@/lib/seller-pay";
-import { recordAdjustedRevenue, type UnitCosts, type MilkGrainsDeductions } from "@/lib/revenue";
+import { NetProfitLine } from "@/components/landing/NetProfitLine";
+import { SellerPayLine } from "@/components/landing/SellerPayLine";
+import {
+  buildNetProfitByDate,
+  recordAdjustedRevenue,
+  type UnitCosts,
+  type MilkGrainsDeductions,
+} from "@/lib/revenue";
 import { CreateRecordForm } from "@/components/records/CreateRecordForm";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
@@ -16,6 +22,7 @@ import type { DailyWorkRecordRow } from "@/types/records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/ui/Pagination";
+import { EditButton } from "@/components/ui/EditButton";
 
 interface SaleRecordsSectionProps {
   dailyRecords: DailyRecordRow[];
@@ -33,22 +40,13 @@ type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
 function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: TranslateFn }) {
   return (
     <>
-      <div className="text-xs text-foreground/60">
-        <EmphasizedText
-          template={t("cell.soldWithRevenue")}
-          values={{ sold: breakdown.sold, revenue: formatCurrency(breakdown.revenue) }}
-          emphasize={["revenue"]}
-        />
+      <div className="text-xs text-foreground/70">
+        <LabeledAmount label={t("cell.soldCount", { sold: breakdown.sold })} amount={formatCurrency(breakdown.revenue)} />
       </div>
-      <div className="text-xs text-foreground/60">
-        <EmphasizedText
-          template={t("cell.takenLeft")}
-          values={{
-            taken: breakdown.taken,
-            remaining: breakdown.remaining,
-            remainingValue: formatCurrency(breakdown.remainingValue),
-          }}
-          emphasize={["remainingValue"]}
+      <div className="text-xs text-foreground/70">
+        <LabeledAmount
+          label={t("cell.takenLeftCount", { taken: breakdown.taken, remaining: breakdown.remaining })}
+          amount={formatCurrency(breakdown.remainingValue)}
         />
       </div>
     </>
@@ -58,17 +56,11 @@ function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: Transla
 function TotalRevenueCell({
   row,
   t,
-  isAdmin,
-  showPay,
   unitCosts,
   deductions,
 }: {
   row: DailyRecordRow;
   t: TranslateFn;
-  // Only admins see the winner's margin; everyone else sees just "Winner".
-  isAdmin: boolean;
-  // Seller pay is shown to admins on every row and to a seller on their own rows only.
-  showPay: boolean;
   unitCosts: UnitCosts | null;
   deductions: MilkGrainsDeductions | null;
 }) {
@@ -80,38 +72,25 @@ function TotalRevenueCell({
     <>
       <div>
         <LabeledAmount label={t("cell.sold")} amount={formatCurrency(soldRevenue)} />
-        {row.isDailyWinner && (
-          <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
-            {isAdmin && row.winnerMargin !== null
-              ? t("cell.winnerMargin", { margin: formatCurrency(row.winnerMargin) })
-              : t("cell.winner")}
-          </span>
-        )}
       </div>
-      <div className="text-xs text-foreground/60">
-        <LabeledAmount label={t("cell.unsold")} amount={formatCurrency(remainingValue)} />
+      <div className="text-xs text-foreground/70">
+        <LabeledAmount label={t("cell.unsold")} amount={formatCurrency(remainingValue)} prefix="+" />
       </div>
-      <div className="text-xs text-foreground/60">
-        <LabeledAmount label={t("cell.soldPlusUnsold")} amount={formatCurrency(row.totalRevenue)} />
+      {/* Written like a sum on paper: Total venta, "+" No vendidos, a line under the
+          amounts, and the result below it. The label stays as tooltip / screen-reader text. */}
+      <div
+        title={t("cell.soldPlusUnsold")}
+        aria-label={`${t("cell.soldPlusUnsold")}: ${formatCurrency(soldRevenue + remainingValue)}`}
+        className="flex justify-end"
+      >
+        <span className="text-amount mt-0.5 border-t-2 border-foreground/70 pt-0.5 pl-8 text-right font-bold whitespace-nowrap tabular-nums text-amber-700 dark:text-amber-400">
+          {formatCurrency(soldRevenue + remainingValue)}
+        </span>
       </div>
-      {showPay ? <SellerPayLine row={row} t={t} /> : null}
       {unitCosts ? (
-        <div className="text-xs text-foreground/60">
-          <LabeledAmount
-            label={t("cell.earned")}
-            amount={formatCurrency(recordAdjustedRevenue(row, unitCosts, deductions ?? undefined))}
-          />
-        </div>
+        <NetProfitLine amount={recordAdjustedRevenue(row, unitCosts, deductions ?? undefined)} t={t} />
       ) : null}
     </>
-  );
-}
-
-function SellerPayLine({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
-  return (
-    <div className="text-xs text-foreground/60">
-      <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(sellerPay(row.totalSold))} />
-    </div>
   );
 }
 
@@ -161,6 +140,16 @@ export function SaleRecordsSection({
   const [formKey, setFormKey] = useState(0);
   const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(dailyRecords), "rows");
 
+  // The day's total Net profit for its header — admins only (unitCosts is null for
+  // everyone else). Computed from every record, not just the current page, so a
+  // day split across pages still shows its full total.
+  const netProfitByDate = unitCosts ? buildNetProfitByDate(dailyRecords, unitCosts, deductions ?? undefined) : null;
+  function dayNetProfit(date: string) {
+    const amount = netProfitByDate?.[date];
+    if (amount === undefined) return null;
+    return `${t("cell.earned")}: ${formatCurrency(amount)}`;
+  }
+
   function openCreate() {
     setMode({ type: "create" });
     setFormKey((k) => k + 1);
@@ -178,11 +167,14 @@ export function SaleRecordsSection({
   }
 
   return (
-    <section aria-labelledby="records-heading" className="flex flex-col gap-3">
+    <section aria-labelledby="records-heading" className="@container/records flex flex-col gap-3">
+      {/* A named size container: table vs cards, and one vs two card columns, follow the
+          width this section actually has (the panel sidebar takes part of the screen),
+          not the screen width. */}
       <div className="flex items-center justify-between">
         <h2
           id="records-heading"
-          className="text-sm font-medium uppercase tracking-wide text-foreground/60"
+          className="text-sm font-medium uppercase tracking-wide text-foreground/70"
         >
           {t("saleRecords.heading")}
         </h2>
@@ -197,16 +189,21 @@ export function SaleRecordsSection({
         ) : null}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border border-foreground/10 md:block">
+      {/* Full table only when the section is at least 70rem (1120px) wide: six columns
+          kept on one line at the larger text sizes need about that much. */}
+      <div className="fluid-text fluid-text-wide hidden overflow-clip rounded-lg border border-foreground/10 @min-[70rem]/records:block">
         <table className="w-full text-sm">
-          <thead className="bg-foreground/[0.03] text-left text-foreground/60">
-            <tr>
-              <th className="px-4 py-2 font-medium">{t("table.user")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.queso")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.yogurt")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.milkMote")}</th>
-              <th className="px-4 py-2 font-medium">{t("saleRecords.totalRevenue")}</th>
-              <th className="px-4 py-2 font-medium" />
+          {/* Header cells are pinned (sticky) under the panel bar while scrolling, so every
+            column stays labeled; the wrapper uses overflow-clip, which keeps sticky working. */}
+          <thead className="bg-foreground text-left text-xs uppercase tracking-wide text-background">
+            {/* Vertical lines between columns (header and rows) so it's clear where each one ends. */}
+            <tr className="divide-x divide-background/25">
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.user")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.queso")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.yogurt")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.milkMote")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("saleRecords.totalRevenue")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold" />
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">
@@ -214,20 +211,36 @@ export function SaleRecordsSection({
               <Fragment key={group.date}>
                 <tr>
                   <td colSpan={6} className="p-0">
-                    <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="px-4 py-2" />
+                    <DayHeaderButton
+                      date={group.date}
+                      title={t("salesCharts.showDay")}
+                      className="px-4 py-2"
+                      trailing={dayNetProfit(group.date)}
+                    />
                   </td>
                 </tr>
                 {group.rows.map((row) => (
-                  <tr key={row.id}>
-                    <td className="px-4 py-2 font-medium">{row.userName}</td>
+                  <tr key={row.id} className="divide-x divide-foreground/15 align-top">
+                    <td className="px-4 py-2">
+                      <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{row.userName}</div>
+                      {isAdmin || row.userId === currentUserId ? (
+                        <SellerPayLine totalSold={row.totalSold} t={t} />
+                      ) : null}
+                    </td>
                     <td className="px-4 py-2">
                       <ProductCell breakdown={row.queso} t={t} />
                     </td>
                     <td className="px-4 py-2">
                       <ProductCell breakdown={row.yogurt} t={t} />
                     </td>
-                    <td className="px-4 py-2 font-semibold">
-                      {formatCurrency(row.milkMoteRevenue)}
+                    <td className="px-4 py-2">
+                      <div className="text-amount whitespace-nowrap font-semibold">{formatCurrency(row.milkMoteRevenue)}</div>
+                      <WinnerBadge
+                        isDailyWinner={row.isDailyWinner}
+                        winnerMargin={row.winnerMargin}
+                        isAdmin={isAdmin}
+                        t={t}
+                      />
                     </td>
                     <td
                       className={
@@ -239,21 +252,13 @@ export function SaleRecordsSection({
                       <TotalRevenueCell
                         row={row}
                         t={t}
-                        isAdmin={isAdmin}
-                        showPay={isAdmin || row.userId === currentUserId}
                         unitCosts={unitCosts}
                         deductions={deductions}
                       />
                     </td>
                     <td className="px-4 py-2 text-right">
                       {isAdmin || row.userId === currentUserId ? (
-                        <button
-                          type="button"
-                          onClick={() => openEdit(row)}
-                          className="text-sm text-foreground/60 underline hover:text-foreground"
-                        >
-                          {t("table.edit")}
-                        </button>
+                        <EditButton onClick={() => openEdit(row)} label={t("table.edit")} />
                       ) : null}
                     </td>
                   </tr>
@@ -264,57 +269,73 @@ export function SaleRecordsSection({
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 md:hidden">
+      {/* Cards when the table doesn't fit: one column, two once the section is 44rem
+          (704px) wide so each card still has ~350px. */}
+      <div className="flex flex-col gap-3 @min-[70rem]/records:hidden">
         {dayGroups.map((group) => (
-          <div key={group.date} className="flex flex-col gap-2">
-            <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="rounded-md px-3 py-1.5" />
-            <ul className="flex flex-col gap-2">
+          <div key={group.date} className="fluid-text flex flex-col gap-2">
+            <DayHeaderButton
+              date={group.date}
+              title={t("salesCharts.showDay")}
+              className="rounded-md px-3 py-1.5"
+              trailing={dayNetProfit(group.date)}
+            />
+            <ul className="grid grid-cols-1 gap-2 @min-[44rem]/records:grid-cols-2">
               {group.rows.map((row) => (
-                <li key={row.id} className="rounded-lg border border-foreground/10 p-3">
-                  <div className="font-medium">{row.userName}</div>
-                  <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-foreground/60">{t("table.queso")}</p>
-                      <ProductCell breakdown={row.queso} t={t} />
+                <li key={row.id} className="fluid-text @container rounded-lg border border-foreground/10 p-3">
+                  {/* One column, capped at max-w-sm, so every amount on the card lines up at
+                      the same right edge and never drifts far from its label. */}
+                  <div className="max-w-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{row.userName}</div>
+                      {isAdmin || row.userId === currentUserId ? (
+                        <EditButton onClick={() => openEdit(row)} label={t("table.edit")} />
+                      ) : null}
                     </div>
-                    <div>
-                      <p className="text-xs text-foreground/60">{t("table.yogurt")}</p>
-                      <ProductCell breakdown={row.yogurt} t={t} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-foreground/60">{t("table.milkMote")}</p>
-                      <div className="font-semibold">
-                        {formatCurrency(row.milkMoteRevenue)}
+                    {isAdmin || row.userId === currentUserId ? (
+                      <SellerPayLine totalSold={row.totalSold} t={t} />
+                    ) : null}
+                    <div className="mt-2 flex flex-col gap-3 text-sm">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.queso")}</p>
+                        <ProductCell breakdown={row.queso} t={t} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.yogurt")}</p>
+                        <ProductCell breakdown={row.yogurt} t={t} />
+                      </div>
+                      <div>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
+                          <div className="text-amount whitespace-nowrap font-semibold tabular-nums">
+                            {formatCurrency(row.milkMoteRevenue)}
+                          </div>
+                        </div>
+                        <WinnerBadge
+                          isDailyWinner={row.isDailyWinner}
+                          winnerMargin={row.winnerMargin}
+                          isAdmin={isAdmin}
+                          t={t}
+                        />
                       </div>
                     </div>
-                  </div>
-                  <div
-                    className={
-                      row.isDailyWinner
-                        ? "mt-2 flex items-end justify-between rounded-md border-t border-foreground/10 bg-green-50 p-2 pt-2 text-sm dark:bg-green-950/40"
-                        : "mt-2 flex items-end justify-between border-t border-foreground/10 pt-2 text-sm"
-                    }
-                  >
-                    <div>
-                      <p className="text-xs text-foreground/60">{t("saleRecords.totalRevenue")}</p>
+                    {/* The winner's green background bleeds 8px past the column (-mx-2 px-2)
+                        so its amounts stay aligned with the rows above. */}
+                    <div
+                      className={
+                        row.isDailyWinner
+                          ? "-mx-2 mt-2 rounded-md border-t border-foreground/10 bg-green-50 px-2 py-2 text-sm dark:bg-green-950/40"
+                          : "mt-2 border-t border-foreground/10 pt-2 text-sm"
+                      }
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("saleRecords.totalRevenue")}</p>
                       <TotalRevenueCell
                         row={row}
                         t={t}
-                        isAdmin={isAdmin}
-                        showPay={isAdmin || row.userId === currentUserId}
                         unitCosts={unitCosts}
                         deductions={deductions}
                       />
                     </div>
-                    {isAdmin || row.userId === currentUserId ? (
-                      <button
-                        type="button"
-                        onClick={() => openEdit(row)}
-                        className="-m-2 p-2 text-sm text-foreground/60 underline hover:text-foreground"
-                      >
-                        {t("table.edit")}
-                      </button>
-                    ) : null}
                   </div>
                 </li>
               ))}

@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/server";
 import { formatBusinessDateKey } from "@/lib/dates";
 import { GrainPurchasesSection } from "@/components/admin/grain-purchases/GrainPurchasesSection";
 import type { GrainProduct, StockPurchaseRow } from "@/types/admin";
+import { defaultT } from "@/lib/i18n/translations";
 
 const GRAIN_PRODUCTS: GrainProduct[] = ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"];
 
@@ -43,7 +44,7 @@ async function AdminGrainsContent() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{t("grains.heading")}</h1>
-        <p className="text-sm text-foreground/60">{t("grains.subheading")}</p>
+        <p className="text-sm text-foreground/70">{t("grains.subheading")}</p>
       </header>
 
       <GrainPurchasesSection purchases={purchases} locale={locale} />
@@ -52,5 +53,5 @@ async function AdminGrainsContent() {
 }
 
 function AdminGrainsSkeleton() {
-  return <div className="animate-pulse text-sm text-foreground/50">Loading…</div>;
+  return <div className="animate-pulse text-sm text-foreground/60">{defaultT("common.loading")}</div>;
 }

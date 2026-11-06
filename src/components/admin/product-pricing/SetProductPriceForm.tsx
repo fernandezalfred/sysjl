@@ -1,17 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
 import { setProductPrice, type ActionState } from "@/actions/product-prices";
 import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { PricedProduct } from "@prisma/client";
 import type { ProductPriceInfo } from "@/lib/product-prices";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
 
 const initialState: ActionState = { success: false };
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -31,12 +31,13 @@ interface SetProductPriceFormProps {
 
 export function SetProductPriceForm({ product, current, locale }: SetProductPriceFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const [state, formAction] = useActionState(setProductPrice, initialState);
+  const [state, formAction, pending] = useActionState(setProductPrice, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
 
   return (
     <div className="rounded-lg border border-foreground/10 p-4">
       <h3 className="text-sm font-medium">{t(PRODUCT_LABEL_KEYS[product])}</h3>
-      <p className="mt-1 text-xs text-foreground/60">
+      <p className="mt-1 text-xs text-foreground/70">
         {t("adminProducts.currentInfo", {
           sale: formatCurrency(current.salePrice),
           cost: formatCurrency(current.purchaseCost),
@@ -49,10 +50,10 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
           : t("adminProducts.notSetYet")}
       </p>
 
-      <form action={formAction} className="mt-3 flex flex-col gap-3">
+      <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
         <input type="hidden" name="product" value={product} />
         <div className="flex flex-col gap-1">
-          <label htmlFor={`${product}-sale`} className="text-xs font-medium text-foreground/60">
+          <label htmlFor={`${product}-sale`} className="text-xs font-medium text-foreground/70">
             {t("adminProducts.salePriceBs")}
           </label>
           <input
@@ -67,7 +68,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor={`${product}-cost`} className="text-xs font-medium text-foreground/60">
+          <label htmlFor={`${product}-cost`} className="text-xs font-medium text-foreground/70">
             {t("adminProducts.purchaseCostBs")}
           </label>
           <input
@@ -84,7 +85,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
 
         {state.error ? (
           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {state.error}
+            {localizeError(t, state.error)}
           </p>
         ) : null}
         {state.success ? (
@@ -92,7 +93,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
         ) : null}
 
         <div>
-          <SubmitButton t={t} />
+          <SubmitButton t={t} pending={pending} />
         </div>
       </form>
     </div>

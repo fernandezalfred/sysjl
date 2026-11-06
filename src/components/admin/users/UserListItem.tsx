@@ -19,9 +19,9 @@ export function UserListItem({ user, locale }: UserListItemProps) {
         <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">
           <div>
             <span className="font-medium">{user.name}</span>{" "}
-            <span className="text-sm text-foreground/60">{user.email}</span>
+            <span className="text-sm text-foreground/70">{user.email}</span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-foreground/60">
+          <div className="flex items-center gap-3 text-xs text-foreground/70">
             <span>{roleLabel}</span>
             <span className={user.isActive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
               {user.isActive ? t("adminUsers.active") : t("adminUsers.inactive")}
@@ -33,7 +33,7 @@ export function UserListItem({ user, locale }: UserListItemProps) {
           <EditUserForm user={user} locale={locale} />
 
           <form action={toggleActive}>
-            <button type="submit" className="text-sm text-foreground/60 underline hover:text-foreground">
+            <button type="submit" className="text-sm text-foreground/70 underline hover:text-foreground">
               {user.isActive ? t("adminUsers.deactivate") : t("adminUsers.reactivate")}
             </button>
           </form>

@@ -64,3 +64,19 @@ export function buildGrainsShareByDate(
   }
   return result;
 }
+
+// A day's total Net profit: the sum of recordAdjustedRevenue over that day's
+// records, keyed by YYYY-MM-DD. Shown in each day header of Sale Records and
+// Totals by User (admin-only, like every Net profit figure). Since grains are
+// split evenly across the day's records, the sum deducts the day's full grains cost.
+export function buildNetProfitByDate(
+  rows: DailyRecordRow[],
+  unitCosts: UnitCosts,
+  deductions?: MilkGrainsDeductions,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const row of rows) {
+    result[row.date] = (result[row.date] ?? 0) + recordAdjustedRevenue(row, unitCosts, deductions);
+  }
+  return result;
+}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { CreateUserForm } from "@/components/admin/users/CreateUserForm";
 import { UserList } from "@/components/admin/users/UserList";
 import { getT } from "@/lib/i18n/server";
+import { defaultT } from "@/lib/i18n/translations";
 
 export default function AdminUsersPage() {
   return (
@@ -25,7 +26,7 @@ async function AdminUsersContent() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{t("adminUsers.heading")}</h1>
-        <p className="text-sm text-foreground/60">{t("adminUsers.subheading")}</p>
+        <p className="text-sm text-foreground/70">{t("adminUsers.subheading")}</p>
       </header>
 
       <CreateUserForm locale={locale} />
@@ -45,5 +46,5 @@ async function AdminUsersContent() {
 }
 
 function AdminUsersSkeleton() {
-  return <div className="animate-pulse text-sm text-foreground/50">Loading users…</div>;
+  return <div className="animate-pulse text-sm text-foreground/60">{defaultT("adminUsers.loading")}</div>;
 }

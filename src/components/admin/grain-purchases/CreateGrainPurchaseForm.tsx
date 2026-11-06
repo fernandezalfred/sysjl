@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { useFormStatus } from "react-dom";
 import { createStockPurchase, type ActionState } from "@/actions/stock-purchases";
 import { StockPurchaseFormFields } from "@/components/admin/stock-purchases/StockPurchaseFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { GrainProduct } from "@/types/admin";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
 
 const initialState: ActionState = { success: false };
 
@@ -15,8 +17,7 @@ const GRAIN_OPTIONS: { value: GrainProduct; labelKey: string }[] = [
   { value: "HABA", labelKey: "product.haba" },
 ];
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -43,16 +44,18 @@ export function CreateGrainPurchaseForm({
   onCancel,
   t,
 }: CreateGrainPurchaseFormProps) {
-  const [state, formAction] = useActionState(createStockPurchase, initialState);
+  const [state, formAction, pending] = useActionState(createStockPurchase, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("toast.purchaseCreated"));
 
   useEffect(() => {
     if (state.success) onSaved();
   }, [state, onSaved]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <label htmlFor="grain-product" className="text-xs font-medium text-foreground/60">
+        <label htmlFor="grain-product" className="text-xs font-medium text-foreground/70">
           {t("grains.item")}
         </label>
         <select
@@ -77,7 +80,7 @@ export function CreateGrainPurchaseForm({
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {state.error}
+          {localizeError(t, state.error)}
         </p>
       ) : null}
 
@@ -89,7 +92,7 @@ export function CreateGrainPurchaseForm({
         >
           {t("stock.cancel")}
         </button>
-        <SubmitButton t={t} />
+        <SubmitButton t={t} pending={pending} />
       </div>
     </form>
   );

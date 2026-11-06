@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 import {
   deleteDailyWorkRecord,
   updateDailyWorkRecord,
@@ -10,11 +9,14 @@ import {
 import { RecordFormFields } from "@/components/records/RecordFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { DailyWorkRecordRow } from "@/types/records";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
+import { useToast } from "@/components/ui/ToastProvider";
 
 const initialState: RecordActionState = { success: false };
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -34,7 +36,10 @@ interface EditRecordFormProps {
 }
 
 export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormProps) {
-  const [state, formAction] = useActionState(updateDailyWorkRecord, initialState);
+  const [state, formAction, pending] = useActionState(updateDailyWorkRecord, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("toast.recordUpdated"));
+  const { showToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
 
@@ -49,6 +54,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
     setDeleteError(undefined);
     const result = await deleteDailyWorkRecord(record.id);
     if (result.success) {
+      showToast(t("toast.recordDeleted"));
       onSaved();
       return;
     }
@@ -57,11 +63,11 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input type="hidden" name="recordId" value={record.id} />
       {/* Disabled: a record's seller can't be changed on edit, and a disabled field is never submitted. */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="edit-record-user" className="text-xs font-medium text-foreground/60">
+        <label htmlFor="edit-record-user" className="text-xs font-medium text-foreground/70">
           {t("records.userLabel")}
         </label>
         <input
@@ -69,19 +75,19 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
           type="text"
           value={record.userName}
           disabled
-          className="cursor-not-allowed rounded-md border border-foreground/10 bg-foreground/10 px-3 py-2 text-base text-foreground/50"
+          className="cursor-not-allowed rounded-md border border-foreground/10 bg-foreground/10 px-3 py-2 text-base text-foreground/60"
         />
       </div>
       <RecordFormFields defaultValues={record} t={t} />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {state.error}
+          {localizeError(t, state.error)}
         </p>
       ) : null}
       {deleteError ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {deleteError}
+          {localizeError(t, deleteError)}
         </p>
       ) : null}
 
@@ -103,7 +109,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
           >
             {t("records.cancel")}
           </button>
-          <SubmitButton t={t} />
+          <SubmitButton t={t} pending={pending} />
         </div>
       </div>
     </form>

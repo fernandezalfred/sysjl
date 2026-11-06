@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useFormStatus } from "react-dom";
 import { changeOwnPassword, type ChangePasswordState } from "@/actions/account";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
+import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
+import { localizeError } from "@/lib/i18n/errors";
 
 const initialState: ChangePasswordState = { success: false };
 
@@ -14,8 +15,7 @@ interface ChangePasswordFormProps {
   locale: Locale;
 }
 
-function SubmitButton({ t }: { t: TranslateFn }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -38,7 +38,7 @@ interface PasswordFieldProps {
 function PasswordField({ id, name, label, autoComplete, minLength }: PasswordFieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-foreground/60">
+      <label htmlFor={id} className="text-xs font-medium text-foreground/70">
         {label}
       </label>
       <input
@@ -56,7 +56,8 @@ function PasswordField({ id, name, label, autoComplete, minLength }: PasswordFie
 
 export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const [state, formAction] = useActionState(changeOwnPassword, initialState);
+  const [state, formAction, pending] = useActionState(changeOwnPassword, initialState);
+  const handleSubmit = useSubmitWithoutReset(formAction);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -66,13 +67,13 @@ export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
   return (
     <form
       ref={formRef}
-      action={formAction}
+      onSubmit={handleSubmit}
       className="flex max-w-md flex-col gap-3 rounded-lg border border-foreground/10 p-4"
     >
       <h2 className="text-sm font-medium">{t("account.passwordHeading")}</h2>
       {/* Disabled: users can't change their own email, and a disabled field is never submitted. */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="account-email" className="text-xs font-medium text-foreground/60">
+        <label htmlFor="account-email" className="text-xs font-medium text-foreground/70">
           {t("account.email")}
         </label>
         <input
@@ -81,7 +82,7 @@ export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
           value={email}
           disabled
           autoComplete="username"
-          className="cursor-not-allowed rounded-md border border-foreground/10 bg-foreground/10 px-3 py-2 text-base text-foreground/50"
+          className="cursor-not-allowed rounded-md border border-foreground/10 bg-foreground/10 px-3 py-2 text-base text-foreground/60"
         />
       </div>
       <PasswordField
@@ -107,7 +108,7 @@ export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {state.error}
+          {localizeError(t, state.error)}
         </p>
       ) : null}
       {state.success ? (
@@ -115,7 +116,7 @@ export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
       ) : null}
 
       <div>
-        <SubmitButton t={t} />
+        <SubmitButton t={t} pending={pending} />
       </div>
     </form>
   );

@@ -31,10 +31,10 @@ export function SalesChartsSection({ dailyRecords, locale }: SalesChartsSectionP
   return (
     <section id={SALES_CHARTS_SECTION_ID} aria-labelledby="sales-charts-heading" className="flex scroll-mt-20 flex-col gap-6">
       <div>
-        <h2 id="sales-charts-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+        <h2 id="sales-charts-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/70">
           {t("salesCharts.heading")}
         </h2>
-        <p className="text-sm text-foreground/60">{t("salesCharts.subheading")}</p>
+        <p className="text-sm text-foreground/70">{t("salesCharts.subheading")}</p>
       </div>
 
       {userSalesByPeriod && lastDayProductSales ? (
@@ -57,7 +57,7 @@ export function SalesChartsSection({ dailyRecords, locale }: SalesChartsSectionP
           </div>
         </>
       ) : (
-        <p className="text-sm text-foreground/60">{t("trend.noData")}</p>
+        <p className="text-sm text-foreground/70">{t("trend.noData")}</p>
       )}
     </section>
   );

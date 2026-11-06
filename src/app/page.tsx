@@ -61,11 +61,11 @@ async function LandingContent() {
             t={t}
           />
           {isSignedIn ? (
-            <p className="mt-3 text-sm text-foreground/60">
+            <p className="mt-3 text-sm text-foreground/70">
               {t("landing.welcomeBack", { name: session?.user?.name ?? "" })}
             </p>
           ) : (
-            <p className="mt-3 text-sm text-foreground/60">{t("landing.guestTagline")}</p>
+            <p className="mt-3 text-sm text-foreground/70">{t("landing.guestTagline")}</p>
           )}
         </div>
 
@@ -76,7 +76,7 @@ async function LandingContent() {
         <SalesChartsSection dailyRecords={data.dailyRecords} locale={locale} />
 
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/70">
             {t("landing.totalsByUser")}
           </h2>
           {isSignedIn ? (

@@ -12,7 +12,7 @@ export function UserList({ users, locale }: UserListProps) {
 
   return (
     <section aria-labelledby="users-heading" className="flex flex-col gap-3">
-      <h2 id="users-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+      <h2 id="users-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/70">
         {t("adminUsers.usersHeading")}
       </h2>
       <ul className="flex flex-col gap-2">

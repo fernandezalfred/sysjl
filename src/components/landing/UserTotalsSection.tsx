@@ -1,11 +1,18 @@
 "use client";
 
+import { WinnerBadge } from "@/components/landing/WinnerBadge";
 import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
-import { sellerPay } from "@/lib/seller-pay";
-import { recordAdjustedRevenue, type UnitCosts, type MilkGrainsDeductions } from "@/lib/revenue";
+import { NetProfitLine } from "@/components/landing/NetProfitLine";
+import { SellerPayLine } from "@/components/landing/SellerPayLine";
+import {
+  buildNetProfitByDate,
+  recordAdjustedRevenue,
+  type UnitCosts,
+  type MilkGrainsDeductions,
+} from "@/lib/revenue";
 import { toEditableRecord } from "@/lib/records";
 import { EditRecordForm } from "@/components/records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
@@ -14,6 +21,7 @@ import type { DailyWorkRecordRow } from "@/types/records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/ui/Pagination";
+import { EditButton } from "@/components/ui/EditButton";
 
 interface UserTotalsSectionProps {
   userTotals: UserTotal[];
@@ -35,20 +43,13 @@ function soldRevenueOf(u: UserTotal): number {
 
 // Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
 // ("left") value and the full total (sold + left) as secondary text.
-// Only admins see the winner's margin; everyone else sees just "Winner".
-// Seller pay (showPay) goes to admins on every row and to a seller on their own rows
-// only; guests never see it.
 function TotalRevenueCell({
   u,
   t,
-  isAdmin,
-  showPay,
   netProfit,
 }: {
   u: UserTotal;
   t: TranslateFn;
-  isAdmin: boolean;
-  showPay: boolean;
   netProfit: number | null;
 }) {
   const soldRevenue = soldRevenueOf(u);
@@ -58,29 +59,23 @@ function TotalRevenueCell({
     <>
       <div>
         <LabeledAmount label={t("cell.sold")} amount={formatCurrency(soldRevenue)} />
-        {u.isDailyWinner && (
-          <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">
-            {isAdmin && u.winnerMargin !== null
-              ? t("cell.winnerMargin", { margin: formatCurrency(u.winnerMargin) })
-              : t("cell.winner")}
-          </span>
-        )}
       </div>
-      <div className="text-xs text-foreground/60">
-        <LabeledAmount label={t("cell.unsold")} amount={formatCurrency(remainingValue)} />
+      <div className="text-xs text-foreground/70">
+        <LabeledAmount label={t("cell.unsold")} amount={formatCurrency(remainingValue)} prefix="+" />
       </div>
-      <div className="text-xs text-foreground/60">
-        <LabeledAmount label={t("cell.soldPlusUnsold")} amount={formatCurrency(u.totalRevenue)} />
+      {/* Written like a sum on paper: Total venta, "+" No vendidos, a line under the
+          amounts, and the result below it. The label stays as tooltip / screen-reader text. */}
+      <div
+        title={t("cell.soldPlusUnsold")}
+        aria-label={`${t("cell.soldPlusUnsold")}: ${formatCurrency(soldRevenue + remainingValue)}`}
+        className="flex justify-end"
+      >
+        <span className="text-amount mt-0.5 border-t-2 border-foreground/70 pt-0.5 pl-8 text-right font-bold whitespace-nowrap tabular-nums text-amber-700 dark:text-amber-400">
+          {formatCurrency(soldRevenue + remainingValue)}
+        </span>
       </div>
-      {showPay ? (
-        <div className="text-xs text-foreground/60">
-          <LabeledAmount label={t("cell.sellerPay")} amount={formatCurrency(sellerPay(soldRevenue))} />
-        </div>
-      ) : null}
       {netProfit !== null ? (
-        <div className="text-xs text-foreground/60">
-          <LabeledAmount label={t("cell.earned")} amount={formatCurrency(netProfit)} />
-        </div>
+        <NetProfitLine amount={netProfit} t={t} />
       ) : null}
     </>
   );
@@ -121,6 +116,16 @@ export function UserTotalsSection({
 }: UserTotalsSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(userTotals), "totals");
+
+  // The day's total Net profit for its header — admins only (unitCosts is null for
+  // everyone else). Computed from every record, not just the current page, so a
+  // day split across pages still shows its full total.
+  const netProfitByDate = unitCosts ? buildNetProfitByDate(dailyRecords, unitCosts, deductions ?? undefined) : null;
+  function dayNetProfit(date: string) {
+    const amount = netProfitByDate?.[date];
+    if (amount === undefined) return null;
+    return `${t("cell.earned")}: ${formatCurrency(amount)}`;
+  }
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backdropClose = useBackdropClose();
   const [editing, setEditing] = useState<DailyWorkRecordRow | null>(null);
@@ -163,21 +168,24 @@ export function UserTotalsSection({
           {t("landing.totalsByUser")}
         </h2>
       ) : (
-        <h2 id="user-totals-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/60">
+        <h2 id="user-totals-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/70">
           {t("landing.totalsByUser")}
         </h2>
       )}
 
-      <div className="hidden overflow-hidden rounded-lg border border-foreground/10 md:block">
+      <div className="hidden overflow-clip rounded-lg border border-foreground/10 md:block">
         <table className="w-full text-sm">
-          <thead className="bg-foreground/[0.03] text-left text-foreground/60">
-            <tr>
-              <th className="px-4 py-2 font-medium">{t("table.user")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.queso")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.yogurt")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.milkMote")}</th>
-              <th className="px-4 py-2 font-medium">{t("table.totalRevenue")}</th>
-              {canEditAny ? <th className="px-4 py-2 font-medium" /> : null}
+          {/* Header cells are pinned (sticky) under the panel bar while scrolling, so every
+            column stays labeled; the wrapper uses overflow-clip, which keeps sticky working. */}
+          <thead className="bg-foreground text-left text-xs uppercase tracking-wide text-background">
+            {/* Vertical lines between columns (header and rows) so it's clear where each one ends. */}
+            <tr className="divide-x divide-background/25">
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.user")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.queso")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.yogurt")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.milkMote")}</th>
+              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.totalRevenue")}</th>
+              {canEditAny ? <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold" /> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">
@@ -185,15 +193,28 @@ export function UserTotalsSection({
               <Fragment key={group.date}>
                 <tr>
                   <td colSpan={columnCount} className="p-0">
-                    <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="px-4 py-2" />
+                    <DayHeaderButton
+                      date={group.date}
+                      title={t("salesCharts.showDay")}
+                      className="px-4 py-2"
+                      trailing={dayNetProfit(group.date)}
+                    />
                   </td>
                 </tr>
                 {group.totals.map((u) => (
-                  <tr key={`${u.date}-${u.userId}`}>
-                    <td className="px-4 py-2 font-medium">{u.userName}</td>
+                  <tr key={`${u.date}-${u.userId}`} className="divide-x divide-foreground/15">
+                    <td className="px-4 py-2">
+                      <div className="font-medium uppercase text-sky-700 dark:text-sky-400">{u.userName}</div>
+                      {isAdmin || u.userId === currentUserId ? (
+                        <SellerPayLine totalSold={soldRevenueOf(u)} t={t} />
+                      ) : null}
+                    </td>
                     <td className="px-4 py-2 font-semibold">{formatCurrency(u.quesoRevenue)}</td>
                     <td className="px-4 py-2 font-semibold">{formatCurrency(u.yogurtRevenue)}</td>
-                    <td className="px-4 py-2 font-semibold">{formatCurrency(u.milkMoteRevenue)}</td>
+                    <td className="px-4 py-2">
+                      <div className="font-semibold">{formatCurrency(u.milkMoteRevenue)}</div>
+                      <WinnerBadge isDailyWinner={u.isDailyWinner} winnerMargin={u.winnerMargin} isAdmin={isAdmin} t={t} />
+                    </td>
                     <td
                       className={
                         u.isDailyWinner
@@ -204,21 +225,13 @@ export function UserTotalsSection({
                       <TotalRevenueCell
                         u={u}
                         t={t}
-                        isAdmin={isAdmin}
-                        showPay={isAdmin || u.userId === currentUserId}
                         netProfit={netProfitOf(u)}
                       />
                     </td>
                     {canEditAny ? (
                       <td className="px-4 py-2 text-right">
                         {isAdmin || u.userId === currentUserId ? (
-                          <button
-                            type="button"
-                            onClick={() => openEdit(u)}
-                            className="text-sm text-foreground/60 underline hover:text-foreground"
-                          >
-                            {t("table.edit")}
-                          </button>
+                          <EditButton onClick={() => openEdit(u)} label={t("table.edit")} />
                         ) : null}
                       </td>
                     ) : null}
@@ -233,26 +246,35 @@ export function UserTotalsSection({
       <div className="flex flex-col gap-3 md:hidden">
         {dayGroups.map((group) => (
           <div key={group.date} className="flex flex-col gap-2">
-            <DayHeaderButton date={group.date} title={t("salesCharts.showDay")} className="rounded-md px-3 py-1.5" />
+            <DayHeaderButton
+              date={group.date}
+              title={t("salesCharts.showDay")}
+              className="rounded-md px-3 py-1.5"
+              trailing={dayNetProfit(group.date)}
+            />
             <ul className="flex flex-col gap-2">
               {group.totals.map((u) => (
                 <li
                   key={`${u.date}-${u.userId}`}
                   className="rounded-lg border border-foreground/10 p-3"
                 >
-                  <div className="font-medium">{u.userName}</div>
+                  <div className="font-medium uppercase text-sky-700 dark:text-sky-400">{u.userName}</div>
+                  {isAdmin || u.userId === currentUserId ? (
+                    <SellerPayLine totalSold={soldRevenueOf(u)} t={t} />
+                  ) : null}
                   <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-xs text-foreground/60">{t("table.queso")}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.queso")}</p>
                       <div className="font-semibold">{formatCurrency(u.quesoRevenue)}</div>
                     </div>
                     <div>
-                      <p className="text-xs text-foreground/60">{t("table.yogurt")}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.yogurt")}</p>
                       <div className="font-semibold">{formatCurrency(u.yogurtRevenue)}</div>
                     </div>
                     <div>
-                      <p className="text-xs text-foreground/60">{t("table.milkMote")}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
                       <div className="font-semibold">{formatCurrency(u.milkMoteRevenue)}</div>
+                      <WinnerBadge isDailyWinner={u.isDailyWinner} winnerMargin={u.winnerMargin} isAdmin={isAdmin} t={t} />
                     </div>
                   </div>
                   <div className="mt-2 flex items-end justify-between gap-2">
@@ -263,23 +285,15 @@ export function UserTotalsSection({
                           : "flex-1 border-t border-foreground/10 pt-2 text-sm"
                       }
                     >
-                      <p className="text-xs text-foreground/60">{t("table.totalRevenue")}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.totalRevenue")}</p>
                       <TotalRevenueCell
                         u={u}
                         t={t}
-                        isAdmin={isAdmin}
-                        showPay={isAdmin || u.userId === currentUserId}
                         netProfit={netProfitOf(u)}
                       />
                     </div>
                     {isAdmin || u.userId === currentUserId ? (
-                      <button
-                        type="button"
-                        onClick={() => openEdit(u)}
-                        className="-m-2 p-2 text-sm text-foreground/60 underline hover:text-foreground"
-                      >
-                        {t("table.edit")}
-                      </button>
+                      <EditButton onClick={() => openEdit(u)} label={t("table.edit")} />
                     ) : null}
                   </div>
                 </li>

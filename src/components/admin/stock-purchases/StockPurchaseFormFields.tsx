@@ -8,7 +8,7 @@ interface StockPurchaseFormFieldsProps {
 }
 
 const inputClass = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
-const labelClass = "text-xs font-medium text-foreground/60";
+const labelClass = "text-xs font-medium text-foreground/70";
 
 export function StockPurchaseFormFields({
   defaultValues,

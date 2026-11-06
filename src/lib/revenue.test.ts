@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/landing-data";
 import {
   buildGrainsShareByDate,
+  buildNetProfitByDate,
   milkCostKey,
   recordAdjustedRevenue,
   type MilkGrainsDeductions,
@@ -114,5 +115,31 @@ describe("buildGrainsShareByDate", () => {
 
   it("keeps the full cost for a purchase day with no sale records", () => {
     expect(buildGrainsShareByDate({ "2026-10-20": 100 }, [])).toEqual({ "2026-10-20": 100 });
+  });
+});
+
+describe("buildNetProfitByDate", () => {
+  it("sums each day's records' Net profit, deducting the day's full grains cost once", () => {
+    // Day 1: A sells 10 Queso (margin 3 each = 30), B sells 2 Yogurt (margin 11 each = 22).
+    // Grains 40 that day, split 20 + 20; A also has 5 of Milk. 30 + 22 - 40 - 5 = 7.
+    // Day 2: A sells 4 Queso = 12, no deductions.
+    const rows = buildDailyRecords([
+      record({ id: "r1", date: "2026-11-01", userId: "a", product: "QUESO", quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
+      record({ id: "r2", date: "2026-11-01", userId: "b", product: "YOGURT", unitPrice: 33, quantityTaken: 2, quantityRemaining: 0, totalSold: 66 }),
+      record({ id: "r3", date: "2026-11-02", userId: "a", product: "QUESO", quantityTaken: 4, quantityRemaining: 0, totalSold: 36 }),
+    ]);
+    const deductions: MilkGrainsDeductions = {
+      milkCostByUserDay: { [milkCostKey("a", "2026-11-01")]: 5 },
+      grainsShareByDate: buildGrainsShareByDate({ "2026-11-01": 40 }, rows),
+    };
+
+    const byDate = buildNetProfitByDate(rows, unitCosts, deductions);
+
+    expect(byDate["2026-11-01"]).toBeCloseTo(7, 5);
+    expect(byDate["2026-11-02"]).toBeCloseTo(12, 5);
+  });
+
+  it("is empty when there are no records", () => {
+    expect(buildNetProfitByDate([], unitCosts)).toEqual({});
   });
 });

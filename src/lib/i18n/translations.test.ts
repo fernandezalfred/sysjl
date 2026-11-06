@@ -15,7 +15,7 @@ describe("translate", () => {
   });
 
   it("substitutes a single {placeholder}", () => {
-    expect(translate("en", "records.totalSold")).toBe("Total sold");
+    expect(translate("en", "records.totalSold")).toBe("Day's total sales, all products (Bs)");
     expect(translate("en", "footer.rights", { year: 2026 })).toBe(
       "© 2026 SysJL. All rights reserved.",
     );
@@ -23,11 +23,11 @@ describe("translate", () => {
 
   it("substitutes multiple {placeholders} independently", () => {
     expect(
-      translate("en", "cell.soldWithRevenue", { sold: "5", revenue: "Bs 50,00" }),
-    ).toBe("5 sold Bs 50,00");
+      translate("en", "cell.takenLeftCount", { taken: "8", remaining: "3" }),
+    ).toBe("Took 8 · Left over 3");
     expect(
-      translate("es", "cell.soldWithRevenue", { sold: "5", revenue: "Bs 50,00" }),
-    ).toBe("5 vendido Bs 50,00");
+      translate("es", "cell.takenLeftCount", { taken: "8", remaining: "3" }),
+    ).toBe("Sacó 8 · Sobró 3");
   });
 
   it("leaves a key with no vars argument untouched by interpolation", () => {

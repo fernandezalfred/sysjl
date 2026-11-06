@@ -47,3 +47,63 @@ html:has(dialog:modal) body {
 dialog:modal {
   overscroll-behavior: contain;
 }
+
+/* Tailwind v4 gives buttons the default arrow cursor; show the hand on everything
+   clickable, and a "not allowed" cursor while a button is disabled. */
+@layer base {
+  button:not(:disabled),
+  [role="button"],
+  select:not(:disabled),
+  summary,
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  input:disabled {
+    cursor: not-allowed;
+  }
+
+  /* A clear focus ring for keyboard users (Tab), not shown on mouse clicks.
+     Blue to match the user names and the selected day. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+  }
+}
+
+/* Amount size: --fluid-num inside a .fluid-text block, 14px elsewhere (e.g. the
+   Totals by User table on /). Used by every Bs amount in the records lists. */
+.text-amount {
+  font-size: var(--fluid-num, 0.875rem);
+}
+
+/* Fluid text for the Sale Records cards and table: inside a .fluid-text block, the
+   text-sm / text-xs sizes shrink with the block's own width (container query units)
+   instead of staying fixed, so long lines still fit on narrow screens — within a
+   readable minimum and the normal size as maximum. Unlayered on purpose so it
+   overrides Tailwind's fixed-size utilities only inside these blocks. */
+.fluid-text {
+  container-type: inline-size;
+  --fluid-sm: clamp(0.875rem, 4.2cqi, 1rem);
+  --fluid-xs: clamp(0.75rem, 3.6cqi, 0.875rem);
+  /* Amounts (Bs), one step bigger than their labels so they read at a glance. */
+  --fluid-num: clamp(0.9375rem, 5cqi, 1.125rem);
+}
+
+/* The full table is much wider than a card, so it scales on a gentler slope. */
+.fluid-text-wide {
+  --fluid-sm: clamp(0.875rem, 1.45cqi, 1rem);
+  --fluid-xs: clamp(0.75rem, 1.25cqi, 0.875rem);
+  --fluid-num: clamp(0.9375rem, 1.7cqi, 1.125rem);
+}
+
+.fluid-text .text-sm {
+  font-size: var(--fluid-sm);
+}
+
+.fluid-text .text-xs {
+  font-size: var(--fluid-xs);
+}

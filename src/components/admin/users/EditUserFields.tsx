@@ -10,7 +10,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="flex flex-col gap-1">
-        <label htmlFor={`name-${user.id}`} className="text-xs font-medium text-foreground/60">
+        <label htmlFor={`name-${user.id}`} className="text-xs font-medium text-foreground/70">
           {t("adminUsers.name")}
         </label>
         <input
@@ -23,7 +23,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor={`email-${user.id}`} className="text-xs font-medium text-foreground/60">
+        <label htmlFor={`email-${user.id}`} className="text-xs font-medium text-foreground/70">
           {t("adminUsers.email")}
         </label>
         <input
@@ -37,7 +37,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor={`role-${user.id}`} className="text-xs font-medium text-foreground/60">
+        <label htmlFor={`role-${user.id}`} className="text-xs font-medium text-foreground/70">
           {t("adminUsers.role")}
         </label>
         <select
@@ -52,7 +52,7 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
       </div>
 
       <div className="flex flex-col gap-1 sm:col-span-2">
-        <label htmlFor={`newPassword-${user.id}`} className="text-xs font-medium text-foreground/60">
+        <label htmlFor={`newPassword-${user.id}`} className="text-xs font-medium text-foreground/70">
           {t("adminUsers.newPassword")}
         </label>
         <input

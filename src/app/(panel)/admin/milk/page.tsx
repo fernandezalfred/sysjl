@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/server";
 import { formatBusinessDateKey } from "@/lib/dates";
 import { MilkPurchasesSection } from "@/components/admin/milk-purchases/MilkPurchasesSection";
 import type { StockPurchaseRow } from "@/types/admin";
+import { defaultT } from "@/lib/i18n/translations";
 
 export default function AdminMilkPage() {
   return (
@@ -51,7 +52,7 @@ async function AdminMilkContent() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{label}</h1>
-        <p className="text-sm text-foreground/60">{t("stock.subheadingPurchaseOnly", { product: label })}</p>
+        <p className="text-sm text-foreground/70">{t("stock.subheadingPurchaseOnly", { product: label })}</p>
       </header>
 
       <MilkPurchasesSection purchases={purchases} activeUsers={activeUsers} locale={locale} />
@@ -60,5 +61,5 @@ async function AdminMilkContent() {
 }
 
 function AdminMilkSkeleton() {
-  return <div className="animate-pulse text-sm text-foreground/50">Loading…</div>;
+  return <div className="animate-pulse text-sm text-foreground/60">{defaultT("common.loading")}</div>;
 }

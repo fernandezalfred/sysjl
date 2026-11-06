@@ -29,7 +29,7 @@ export function AppHeader({
     <header className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-sm text-foreground/60">
+        <p className="text-sm text-foreground/70">
           {t("header.updated")}{" "}
           {new Date(generatedAt).toLocaleString("es-BO", {
             dateStyle: "medium",
@@ -42,17 +42,17 @@ export function AppHeader({
         {isSignedIn ? (
           <>
             {activePage === "dashboard" ? (
-              <Link href="/" className="text-sm text-foreground/60 underline hover:text-foreground">
+              <Link href="/" className="text-sm text-foreground/70 underline hover:text-foreground">
                 {t("header.home")}
               </Link>
             ) : (
-              <Link href="/dashboard" className="text-sm text-foreground/60 underline hover:text-foreground">
+              <Link href="/dashboard" className="text-sm text-foreground/70 underline hover:text-foreground">
                 {t("header.dashboard")}
               </Link>
             )}
             <span className="max-w-[9rem] truncate text-sm text-foreground/70">{userName}</span>
             {isAdmin ? (
-              <Link href="/admin/users" className="text-sm text-foreground/60 underline hover:text-foreground">
+              <Link href="/admin/users" className="text-sm text-foreground/70 underline hover:text-foreground">
                 {t("header.manageUsers")}
               </Link>
             ) : null}
