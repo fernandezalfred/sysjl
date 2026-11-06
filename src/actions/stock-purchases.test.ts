@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
@@ -8,9 +8,13 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      createMany: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
     },
   },
   revalidatePathMock: vi.fn(),
@@ -20,7 +24,12 @@ vi.mock("@/auth", () => ({ auth: authMock }));
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 
-import { createStockPurchase, deleteStockPurchase, updateStockPurchase } from "@/actions/stock-purchases";
+import {
+  createStockPurchase,
+  deleteStockPurchase,
+  repeatLastDayPurchases,
+  updateStockPurchase,
+} from "@/actions/stock-purchases";
 
 const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN" } };
 const VEHICLE_SESSION = { user: { id: "user-1", role: "VEHICLE_USER" } };
@@ -300,5 +309,87 @@ describe("deleteStockPurchase", () => {
     prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p4", product: "MAIZ_CASCARA" });
     await deleteStockPurchase("p4");
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
+  });
+});
+
+describe("repeatLastDayPurchases", () => {
+  // 2026-11-06 10:00 in Bolivia.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-06T14:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const LAST_DAY_MILK = [
+    { product: "MILK", quantity: 30, unitCost: 7, createdAt: new Date("2026-11-06T00:17:19Z"), forUserId: "raul" },
+    { product: "MILK", quantity: 26, unitCost: 7, createdAt: new Date("2026-11-06T00:17:39Z"), forUserId: "daniel" },
+  ];
+
+  it("rejects a non-admin session without touching the database", async () => {
+    authMock.mockResolvedValue(VEHICLE_SESSION);
+    expect(await repeatLastDayPurchases("MILK")).toEqual({ success: false, error: "notAuthorized" });
+    expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
+  });
+
+  it("copies the last day's Milk into today for each active user, entered by the current admin", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.stockPurchase.findFirst.mockResolvedValue({ createdAt: LAST_DAY_MILK[1].createdAt });
+    prismaMock.stockPurchase.findMany.mockResolvedValue(LAST_DAY_MILK);
+    prismaMock.user.findMany.mockResolvedValue([{ id: "raul" }, { id: "daniel" }]);
+
+    expect(await repeatLastDayPurchases("MILK")).toEqual({ success: true, count: 2 });
+    expect(prismaMock.stockPurchase.createMany).toHaveBeenCalledWith({
+      data: [
+        { product: "MILK", quantity: 30, unitCost: 7, createdById: "admin-1", forUserId: "raul" },
+        { product: "MILK", quantity: 26, unitCost: 7, createdById: "admin-1", forUserId: "daniel" },
+      ],
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+  });
+
+  it("copies every grain item of the last day", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const grains = [
+      { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdAt: new Date("2026-11-06T00:16:41Z"), forUserId: null },
+      { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdAt: new Date("2026-11-06T00:17:03Z"), forUserId: null },
+    ];
+    prismaMock.stockPurchase.findFirst.mockResolvedValue({ createdAt: grains[1].createdAt });
+    prismaMock.stockPurchase.findMany.mockResolvedValue(grains);
+
+    expect(await repeatLastDayPurchases("GRAINS")).toEqual({ success: true, count: 2 });
+    expect(prismaMock.stockPurchase.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ product: { in: ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"] } }) }),
+    );
+    expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.stockPurchase.createMany).toHaveBeenCalledWith({
+      data: [
+        { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdById: "admin-1", forUserId: null },
+        { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdById: "admin-1", forUserId: null },
+      ],
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
+  });
+
+  it("refuses when today already has purchases", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const today = [{ ...LAST_DAY_MILK[0], createdAt: new Date("2026-11-06T13:00:00Z") }];
+    prismaMock.stockPurchase.findFirst.mockResolvedValue({ createdAt: today[0].createdAt });
+    prismaMock.stockPurchase.findMany.mockResolvedValue(today);
+    prismaMock.user.findMany.mockResolvedValue([{ id: "raul" }]);
+
+    expect(await repeatLastDayPurchases("MILK")).toEqual({ success: false, error: "alreadyToday" });
+    expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses when there are no purchases yet", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.stockPurchase.findFirst.mockResolvedValue(null);
+
+    expect(await repeatLastDayPurchases("GRAINS")).toEqual({ success: false, error: "nothingToCopy" });
+    expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
   });
 });

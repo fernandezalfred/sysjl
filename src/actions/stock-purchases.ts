@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, NotAuthorizedError } from "@/lib/require-admin";
+import { formatBusinessDateKey } from "@/lib/dates";
+import { planRepeatLastDay, REPEAT_PRODUCTS, type RepeatError, type RepeatKind } from "@/lib/repeat-purchases";
 import type { Product } from "@prisma/client";
 
 export interface ActionState {
@@ -162,6 +164,74 @@ export async function deleteStockPurchase(purchaseId: string): Promise<ActionSta
   } catch (error) {
     if (error instanceof NotAuthorizedError) {
       return { success: false, error: error.message };
+    }
+    throw error;
+  }
+}
+
+export interface RepeatActionState {
+  success: boolean;
+  error?: RepeatError | "notAuthorized";
+  count?: number;
+}
+
+const repeatKindSchema = z.enum(["MILK", "GRAINS"]);
+
+// No purchase day spans more than 24h, so this window before the latest purchase
+// always covers that whole day.
+const LAST_DAY_WINDOW_MS = 36 * 60 * 60 * 1000;
+
+// Copies every Milk or grain purchase from the most recent purchase day into today
+// (same item, quantity, unit cost and — for Milk — user), so the admin doesn't
+// re-enter an unchanged day by hand. Refuses if today already has purchases.
+export async function repeatLastDayPurchases(kind: RepeatKind): Promise<RepeatActionState> {
+  try {
+    const session = await requireAdminSession();
+    const parsedKind = repeatKindSchema.parse(kind);
+    const products = REPEAT_PRODUCTS[parsedKind];
+
+    const latest = await prisma.stockPurchase.findFirst({
+      where: { product: { in: products } },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+    if (!latest) return { success: false, error: "nothingToCopy" };
+
+    const recent = await prisma.stockPurchase.findMany({
+      where: {
+        product: { in: products },
+        createdAt: { gte: new Date(latest.createdAt.getTime() - LAST_DAY_WINDOW_MS) },
+      },
+      orderBy: { createdAt: "asc" },
+      select: { product: true, quantity: true, unitCost: true, createdAt: true, forUserId: true },
+    });
+
+    let activeUserIds: Set<string> | undefined;
+    if (parsedKind === "MILK") {
+      const users = await prisma.user.findMany({ where: { isActive: true }, select: { id: true } });
+      activeUserIds = new Set(users.map((u) => u.id));
+    }
+
+    const plan = planRepeatLastDay(recent, formatBusinessDateKey(new Date()), activeUserIds);
+    if (!plan.ok) return { success: false, error: plan.reason };
+
+    await prisma.stockPurchase.createMany({
+      data: plan.purchases.map((p) => ({
+        product: p.product,
+        quantity: p.quantity,
+        unitCost: p.unitCost,
+        createdById: session.user.id,
+        forUserId: p.forUserId,
+      })),
+    });
+
+    revalidatePath(parsedKind === "MILK" ? "/admin/milk" : "/admin/grains");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    return { success: true, count: plan.purchases.length };
+  } catch (error) {
+    if (error instanceof NotAuthorizedError) {
+      return { success: false, error: "notAuthorized" };
     }
     throw error;
   }

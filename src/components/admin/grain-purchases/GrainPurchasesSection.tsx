@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/pricing";
 import { formatShortDate } from "@/lib/dates";
 import { CreateGrainPurchaseForm } from "@/components/admin/grain-purchases/CreateGrainPurchaseForm";
 import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditStockPurchaseForm";
+import { RepeatLastDayButton } from "@/components/admin/stock-purchases/RepeatLastDayButton";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { GrainProduct, StockPurchaseRow } from "@/types/admin";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
@@ -93,20 +94,23 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
 
   return (
     <section aria-labelledby="grain-purchases-heading" className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2
           id="grain-purchases-heading"
           className="text-sm font-medium uppercase tracking-wide text-foreground/60"
         >
           {t("stock.purchaseHistory")}
         </h2>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background"
-        >
-          {t("stock.newPurchase")}
-        </button>
+        <div className="flex items-start gap-2">
+          <RepeatLastDayButton kind="GRAINS" t={t} />
+          <button
+            type="button"
+            onClick={openCreate}
+            className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background"
+          >
+            {t("stock.newPurchase")}
+          </button>
+        </div>
       </div>
 
       {purchases.length === 0 ? (
