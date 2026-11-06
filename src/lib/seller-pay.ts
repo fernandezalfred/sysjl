@@ -1,5 +1,6 @@
 // A seller's pay for one day's Sale Record, from its Total venta (Bs). Display-only:
-// it isn't subtracted from any other figure.
+// it's shown subtracted from Ganancia neta under the seller's name, but no stored or
+// other computed figure (day totals, charts) changes because of it.
 export const SELLER_BASE_PAY = 150;
 export const SELLER_BASE_PAY_THRESHOLD = 2500;
 export const SELLER_HIGH_TIER_THRESHOLD = 3000;
@@ -17,4 +18,10 @@ export function sellerPay(totalSold: number): number {
   const lowSteps = Math.min(steps, lowTierMax);
   const highSteps = steps - lowSteps;
   return SELLER_BASE_PAY + lowSteps * SELLER_PAY_STEP_AMOUNT + highSteps * SELLER_HIGH_TIER_STEP_AMOUNT;
+}
+
+// Ganancia neta minus the seller's pay for the same record, as written under the
+// seller's name ("1.368 − 180 = 1.188").
+export function netProfitAfterPay(netProfit: number, totalSold: number): number {
+  return netProfit - sellerPay(totalSold);
 }

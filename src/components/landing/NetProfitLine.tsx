@@ -7,19 +7,15 @@ interface NetProfitLineProps {
   t: TranslateFn;
 }
 
-// "Ganancia neta: Bs …" in Sale Records and Totals by User, with the amount bold,
-// larger and in purple so it stands out (and isn't confused with the winner's green).
-// Always one line: in a table the cell widens to fit it; in a Sale Records card the
-// .fluid-text sizes shrink it to the card's width instead of wrapping.
+// "Ganancia neta … Bs", the first line of the subtraction under the seller's name
+// (SellerPayLine) in Sale Records and Totals by User; bold in the regular text color, since
+// the purple highlight goes to the result. Always one line: in a table the User cell
+// widens to fit it; in a Sale Records card the .fluid-text sizes shrink it instead.
 // Admin-only: callers render it only when cost data is available.
 export function NetProfitLine({ amount, t }: NetProfitLineProps) {
   return (
     <div className="whitespace-nowrap text-xs text-foreground/70">
-      <LabeledAmount
-        label={t("cell.earned")}
-        amount={formatCurrency(amount)}
-        amountClassName="text-amount font-bold text-purple-700 dark:text-purple-400"
-      />
+      <LabeledAmount label={t("cell.earned")} amount={formatCurrency(amount)} />
     </div>
   );
 }

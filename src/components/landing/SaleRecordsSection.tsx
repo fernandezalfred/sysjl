@@ -6,7 +6,6 @@ import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { toEditableRecord } from "@/lib/records";
-import { NetProfitLine } from "@/components/landing/NetProfitLine";
 import { SellerPayLine } from "@/components/landing/SellerPayLine";
 import {
   buildNetProfitByDate,
@@ -53,17 +52,11 @@ function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: Transla
   );
 }
 
-function TotalRevenueCell({
-  row,
-  t,
-  unitCosts,
-  deductions,
-}: {
-  row: DailyRecordRow;
-  t: TranslateFn;
-  unitCosts: UnitCosts | null;
-  deductions: MilkGrainsDeductions | null;
-}) {
+function UserName({ name }: { name: string }) {
+  return <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{name}</div>;
+}
+
+function TotalRevenueCell({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
   const soldRevenue =
     row.queso.revenue + row.yogurt.revenue + row.milkMoteRevenue;
   const remainingValue = row.queso.remainingValue + row.yogurt.remainingValue;
@@ -87,9 +80,6 @@ function TotalRevenueCell({
           {formatCurrency(soldRevenue + remainingValue)}
         </span>
       </div>
-      {unitCosts ? (
-        <NetProfitLine amount={recordAdjustedRevenue(row, unitCosts, deductions ?? undefined)} t={t} />
-      ) : null}
     </>
   );
 }
@@ -148,6 +138,10 @@ export function SaleRecordsSection({
     const amount = netProfitByDate?.[date];
     if (amount === undefined) return null;
     return `${t("cell.earned")}: ${formatCurrency(amount)}`;
+  }
+
+  function netProfitOf(row: DailyRecordRow): number | null {
+    return unitCosts ? recordAdjustedRevenue(row, unitCosts, deductions ?? undefined) : null;
   }
 
   function openCreate() {
@@ -222,10 +216,16 @@ export function SaleRecordsSection({
                 {group.rows.map((row) => (
                   <tr key={row.id} className="divide-x divide-foreground/15 align-top">
                     <td className="px-4 py-2">
-                      <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{row.userName}</div>
                       {isAdmin || row.userId === currentUserId ? (
-                        <SellerPayLine totalSold={row.totalSold} t={t} />
-                      ) : null}
+                        <SellerPayLine
+                          name={<UserName name={row.userName} />}
+                          totalSold={row.totalSold}
+                          netProfit={netProfitOf(row)}
+                          t={t}
+                        />
+                      ) : (
+                        <UserName name={row.userName} />
+                      )}
                     </td>
                     <td className="px-4 py-2">
                       <ProductCell breakdown={row.queso} t={t} />
@@ -249,12 +249,7 @@ export function SaleRecordsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell
-                        row={row}
-                        t={t}
-                        unitCosts={unitCosts}
-                        deductions={deductions}
-                      />
+                      <TotalRevenueCell row={row} t={t} />
                     </td>
                     <td className="px-4 py-2 text-right">
                       {isAdmin || row.userId === currentUserId ? (
@@ -286,15 +281,21 @@ export function SaleRecordsSection({
                   {/* One column, capped at max-w-sm, so every amount on the card lines up at
                       the same right edge and never drifts far from its label. */}
                   <div className="max-w-sm">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{row.userName}</div>
-                      {isAdmin || row.userId === currentUserId ? (
-                        <EditButton onClick={() => openEdit(row)} label={t("table.edit")} />
-                      ) : null}
-                    </div>
                     {isAdmin || row.userId === currentUserId ? (
-                      <SellerPayLine totalSold={row.totalSold} t={t} />
-                    ) : null}
+                      <SellerPayLine
+                        name={
+                          <div className="flex items-start gap-2">
+                            <UserName name={row.userName} />
+                            <EditButton onClick={() => openEdit(row)} label={t("table.edit")} />
+                          </div>
+                        }
+                        totalSold={row.totalSold}
+                        netProfit={netProfitOf(row)}
+                        t={t}
+                      />
+                    ) : (
+                      <UserName name={row.userName} />
+                    )}
                     <div className="mt-2 flex flex-col gap-3 text-sm">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.queso")}</p>
@@ -329,12 +330,7 @@ export function SaleRecordsSection({
                       }
                     >
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("saleRecords.totalRevenue")}</p>
-                      <TotalRevenueCell
-                        row={row}
-                        t={t}
-                        unitCosts={unitCosts}
-                        deductions={deductions}
-                      />
+                      <TotalRevenueCell row={row} t={t} />
                     </div>
                   </div>
                 </li>

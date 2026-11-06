@@ -5,7 +5,6 @@ import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/landing/LabeledAmount";
 import { formatCurrency } from "@/lib/pricing";
-import { NetProfitLine } from "@/components/landing/NetProfitLine";
 import { SellerPayLine } from "@/components/landing/SellerPayLine";
 import {
   buildNetProfitByDate,
@@ -43,15 +42,11 @@ function soldRevenueOf(u: UserTotal): number {
 
 // Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
 // ("left") value and the full total (sold + left) as secondary text.
-function TotalRevenueCell({
-  u,
-  t,
-  netProfit,
-}: {
-  u: UserTotal;
-  t: TranslateFn;
-  netProfit: number | null;
-}) {
+function UserName({ name }: { name: string }) {
+  return <div className="font-medium break-words uppercase text-sky-700 dark:text-sky-400">{name}</div>;
+}
+
+function TotalRevenueCell({ u, t }: { u: UserTotal; t: TranslateFn }) {
   const soldRevenue = soldRevenueOf(u);
   const remainingValue = u.totalRevenue - soldRevenue;
 
@@ -74,9 +69,6 @@ function TotalRevenueCell({
           {formatCurrency(soldRevenue + remainingValue)}
         </span>
       </div>
-      {netProfit !== null ? (
-        <NetProfitLine amount={netProfit} t={t} />
-      ) : null}
     </>
   );
 }
@@ -204,10 +196,16 @@ export function UserTotalsSection({
                 {group.totals.map((u) => (
                   <tr key={`${u.date}-${u.userId}`} className="divide-x divide-foreground/15">
                     <td className="px-4 py-2">
-                      <div className="font-medium uppercase text-sky-700 dark:text-sky-400">{u.userName}</div>
                       {isAdmin || u.userId === currentUserId ? (
-                        <SellerPayLine totalSold={soldRevenueOf(u)} t={t} />
-                      ) : null}
+                        <SellerPayLine
+                          name={<UserName name={u.userName} />}
+                          totalSold={soldRevenueOf(u)}
+                          netProfit={netProfitOf(u)}
+                          t={t}
+                        />
+                      ) : (
+                        <UserName name={u.userName} />
+                      )}
                     </td>
                     <td className="px-4 py-2 font-semibold">{formatCurrency(u.quesoRevenue)}</td>
                     <td className="px-4 py-2 font-semibold">{formatCurrency(u.yogurtRevenue)}</td>
@@ -222,11 +220,7 @@ export function UserTotalsSection({
                           : "px-4 py-2"
                       }
                     >
-                      <TotalRevenueCell
-                        u={u}
-                        t={t}
-                        netProfit={netProfitOf(u)}
-                      />
+                      <TotalRevenueCell u={u} t={t} />
                     </td>
                     {canEditAny ? (
                       <td className="px-4 py-2 text-right">
@@ -258,10 +252,16 @@ export function UserTotalsSection({
                   key={`${u.date}-${u.userId}`}
                   className="rounded-lg border border-foreground/10 p-3"
                 >
-                  <div className="font-medium uppercase text-sky-700 dark:text-sky-400">{u.userName}</div>
                   {isAdmin || u.userId === currentUserId ? (
-                    <SellerPayLine totalSold={soldRevenueOf(u)} t={t} />
-                  ) : null}
+                    <SellerPayLine
+                      name={<UserName name={u.userName} />}
+                      totalSold={soldRevenueOf(u)}
+                      netProfit={netProfitOf(u)}
+                      t={t}
+                    />
+                  ) : (
+                    <UserName name={u.userName} />
+                  )}
                   <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.queso")}</p>
@@ -286,11 +286,7 @@ export function UserTotalsSection({
                       }
                     >
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.totalRevenue")}</p>
-                      <TotalRevenueCell
-                        u={u}
-                        t={t}
-                        netProfit={netProfitOf(u)}
-                      />
+                      <TotalRevenueCell u={u} t={t} />
                     </div>
                     {isAdmin || u.userId === currentUserId ? (
                       <EditButton onClick={() => openEdit(u)} label={t("table.edit")} />

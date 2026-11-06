@@ -1,12 +1,21 @@
-# Current Feature
+# Current Feature: Net Profit minus Seller Pay under the Name
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- In Sale Records (`/dashboard`) and Totals by User (`/`), desktop and mobile, "Ganancia neta" moves from the Total cell to the User column, written as a subtraction like the Total venta + No vendidos sum: Ganancia neta, "−" Pago, a 2px line, and the result (Ganancia neta − Pago) below it — only the result is purple (bold, `text-purple-700` / dark `text-purple-400`), the rest in the regular text color (follow-up: "el pintado de morado debe ser al resultado lo demas texto blanco"); label "Ganancia neta menos pago" kept as tooltip / `aria-label`.
+- Admins only (net profit is cost data). A seller viewing their own row still sees only the "Pago" line; guests see neither.
+- New unit-tested `netProfitAfterPay` in `src/lib/seller-pay.ts`.
+
 ## Notes
+
+- From a direct request: "esa ganancia neta muevelo a usuario y hace lo mismo que la suma pero en este caso sera resta de 1368 - 180 que es el pago para usuario por su servicio".
+- Display only: the day header's Ganancia neta (sum over the day) and the charts are unchanged and don't subtract pay.
+- Follow-up: "el nombre del usuario ponlo en la misma linea del resultado de la resta". With net profit (admins) the seller's name sits on the result's row, name left and result right; `SellerPayLine` now takes a `name` node and renders it (a local `UserName` in each table). In Sale Records cards the Edit pencil sits right next to the name. Without net profit (a seller's own row) the name stays on top with Pago below; guests see only the name.
+- `SellerPayLine` gained a `netProfit` prop (null → just the Pago line); `TotalRevenueCell` in both tables no longer shows net profit.
 
 ## History
 

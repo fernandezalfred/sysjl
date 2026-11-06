@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sellerPay } from "@/lib/seller-pay";
+import { netProfitAfterPay, sellerPay } from "@/lib/seller-pay";
 
 describe("sellerPay", () => {
   it("is 150 for sales up to 2500", () => {
@@ -23,5 +23,16 @@ describe("sellerPay", () => {
     expect(sellerPay(3100)).toBe(220);
     expect(sellerPay(3200)).toBe(240);
     expect(sellerPay(3524)).toBe(300);
+  });
+});
+
+describe("netProfitAfterPay", () => {
+  it("subtracts the seller pay for the record's Total venta from its net profit", () => {
+    expect(netProfitAfterPay(1368, 2827)).toBe(1188);
+    expect(netProfitAfterPay(1000, 2500)).toBe(850);
+  });
+
+  it("can go negative when the pay exceeds the net profit", () => {
+    expect(netProfitAfterPay(100, 1800)).toBe(-50);
   });
 });

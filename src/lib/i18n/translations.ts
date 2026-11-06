@@ -57,6 +57,7 @@ const en = {
   "cell.winnerMargin": "Winner (+{margin})",
   "cell.earned": "Net profit",
   "cell.pay": "Pay",
+  "cell.netProfitAfterPay": "Net profit minus pay",
 
   "saleRecords.heading": "Sale Records",
   "saleRecords.newRecord": "New record",
@@ -297,6 +298,7 @@ const es: Record<DictionaryKey, string> = {
   "cell.winnerMargin": "Ganador (+{margin})",
   "cell.earned": "Ganancia neta",
   "cell.pay": "Pago",
+  "cell.netProfitAfterPay": "Ganancia neta menos pago",
 
   "saleRecords.heading": "Registros de Venta",
   "saleRecords.newRecord": "Nuevo registro",
