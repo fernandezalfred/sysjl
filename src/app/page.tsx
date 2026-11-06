@@ -2,19 +2,19 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getLandingPageData } from "@/lib/landing-data";
-import { getNetProfitInputs } from "@/lib/net-profit";
+import { getDailyRecordsData } from "@/lib/daily-records";
+import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { latestWorkDay } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
-import { UserTotalsSection } from "@/components/landing/UserTotalsSection";
-import { AdminQuickSettings } from "@/components/landing/AdminQuickSettings";
-import { TopSellerBanner } from "@/components/landing/TopSellerBanner";
+import { UserTotalsSection } from "@/components/home/UserTotalsSection";
+import { AdminQuickSettings } from "@/components/home/AdminQuickSettings";
+import { TopSellerBanner } from "@/components/home/TopSellerBanner";
 import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { SelectedDayProvider } from "@/components/sales-charts/SelectedDayProvider";
 import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
-import { CreateRecordButton } from "@/components/records/CreateRecordButton";
+import { CreateRecordButton } from "@/components/sale-records/CreateRecordButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
@@ -31,7 +31,7 @@ export default function Home() {
 async function LandingContent() {
   await connection();
   const [data, session, activeUsers, { t, locale }] = await Promise.all([
-    getLandingPageData(),
+    getDailyRecordsData(),
     auth(),
     prisma.user.findMany({
       where: { isActive: true },
@@ -62,10 +62,10 @@ async function LandingContent() {
           />
           {isSignedIn ? (
             <p className="mt-3 text-sm text-foreground/70">
-              {t("landing.welcomeBack", { name: session?.user?.name ?? "" })}
+              {t("home.welcomeBack", { name: session?.user?.name ?? "" })}
             </p>
           ) : (
-            <p className="mt-3 text-sm text-foreground/70">{t("landing.guestTagline")}</p>
+            <p className="mt-3 text-sm text-foreground/70">{t("home.guestTagline")}</p>
           )}
         </div>
 
@@ -77,7 +77,7 @@ async function LandingContent() {
 
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/70">
-            {t("landing.totalsByUser")}
+            {t("home.totalsByUser")}
           </h2>
           {isSignedIn ? (
             <CreateRecordButton

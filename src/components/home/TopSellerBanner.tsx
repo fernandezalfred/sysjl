@@ -1,7 +1,7 @@
 import { formatShortDate } from "@/lib/dates";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 import type { TranslateFn } from "@/lib/i18n/translations";
-import type { UserTotal } from "@/types/landing";
+import type { UserTotal } from "@/types/daily-records";
 
 interface TopSellerBannerProps {
   userTotals: UserTotal[];

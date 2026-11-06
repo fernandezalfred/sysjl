@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatBusinessDateKey } from "@/lib/dates";
-import { milkCostKey } from "@/lib/revenue";
+import { milkCostKey } from "@/lib/money/revenue";
 import type { Product } from "@prisma/client";
 
 const GRAIN_PRODUCTS: Product[] = ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"];

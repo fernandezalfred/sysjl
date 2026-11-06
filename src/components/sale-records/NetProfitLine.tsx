@@ -1,5 +1,5 @@
-import { LabeledAmount } from "@/components/landing/LabeledAmount";
-import { formatCurrency } from "@/lib/pricing";
+import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
+import { formatCurrency } from "@/lib/money/pricing";
 import type { TranslateFn } from "@/lib/i18n/translations";
 
 interface NetProfitLineProps {
@@ -8,7 +8,7 @@ interface NetProfitLineProps {
 }
 
 // "Ganancia neta … Bs", the first line of the subtraction under the seller's name
-// (SellerPayLine) in Sale Records and Totals by User; bold in the regular text color, since
+// (UserCell) in Sale Records and Totals by User; bold in the regular text color, since
 // the purple highlight goes to the result. Always one line: in a table the User cell
 // widens to fit it; in a Sale Records card the .fluid-text sizes shrink it instead.
 // Admin-only: callers render it only when cost data is available.

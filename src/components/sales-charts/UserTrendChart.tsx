@@ -12,7 +12,7 @@ import {
   type ChartOptions,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { Granularity } from "@/lib/date-buckets";
 import type { UserTrend } from "@/lib/sales-charts";

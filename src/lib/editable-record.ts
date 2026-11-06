@@ -1,5 +1,4 @@
-import type { DailyRecordRow } from "@/types/landing";
-import type { DailyWorkRecordRow } from "@/types/records";
+import type { DailyRecordRow, DailyWorkRecordRow } from "@/types/daily-records";
 
 export function toEditableRecord(row: DailyRecordRow): DailyWorkRecordRow {
   return {

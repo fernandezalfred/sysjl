@@ -14,7 +14,7 @@ const { authMock, prismaMock, hashPasswordMock, verifyPasswordMock } = vi.hoiste
 
 vi.mock("@/auth", () => ({ auth: authMock }));
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
-vi.mock("@/lib/password", () => ({
+vi.mock("@/lib/auth/password", () => ({
   hashPassword: hashPasswordMock,
   verifyPassword: verifyPasswordMock,
 }));

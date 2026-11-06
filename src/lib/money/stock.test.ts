@@ -8,7 +8,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { getGrainsCostByDay, getMilkCostByUserAndDay } from "@/lib/stock";
+import { getGrainsCostByDay, getMilkCostByUserAndDay } from "@/lib/money/stock";
 
 beforeEach(() => {
   vi.clearAllMocks();

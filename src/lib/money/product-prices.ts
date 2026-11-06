@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { CURRENT_UNIT_PRICE } from "@/lib/pricing";
-import { getLatestUnitCost } from "@/lib/stock";
+import { CURRENT_UNIT_PRICE } from "@/lib/money/pricing";
+import { getLatestUnitCost } from "@/lib/money/stock";
 import { PricedProduct } from "@prisma/client";
 
 const PRODUCTS: PricedProduct[] = [PricedProduct.QUESO, PricedProduct.YOGURT];

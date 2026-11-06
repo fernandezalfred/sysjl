@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { netProfitAfterPay, sellerPay } from "@/lib/seller-pay";
+import { netProfitAfterPay, sellerPay } from "@/lib/money/seller-pay";
 
 describe("sellerPay", () => {
   it("is 150 for sales up to 2500", () => {

@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { LabeledAmount } from "@/components/landing/LabeledAmount";
-import { NetProfitLine } from "@/components/landing/NetProfitLine";
-import { formatCurrency } from "@/lib/pricing";
-import { netProfitAfterPay, sellerPay } from "@/lib/seller-pay";
+import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
+import { NetProfitLine } from "@/components/sale-records/NetProfitLine";
+import { formatCurrency } from "@/lib/money/pricing";
+import { netProfitAfterPay, sellerPay } from "@/lib/money/seller-pay";
 import type { TranslateFn } from "@/lib/i18n/translations";
 
-interface SellerPayLineProps {
+interface UserCellProps {
   // The seller's name (with any controls next to it, like the card's Edit button).
   name: ReactNode;
   // The record's Total venta (sold revenue), which seller pay is computed from.
@@ -20,7 +20,7 @@ interface SellerPayLineProps {
 // the seller's name on the left and the result in bold purple on the right (label kept as
 // tooltip / screen-reader text). Without it: the name, then just the "Pago" line.
 // Callers use it for admins on every row and for a seller on their own rows only.
-export function SellerPayLine({ name, totalSold, netProfit, t }: SellerPayLineProps) {
+export function UserCell({ name, totalSold, netProfit, t }: UserCellProps) {
   const pay = sellerPay(totalSold);
   if (netProfit === null) {
     return (

@@ -2,9 +2,9 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, verifyPassword } from "@/lib/password";
-import { NotAuthorizedError } from "@/lib/require-admin";
-import { requireUserSession } from "@/lib/require-session";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { NotAuthorizedError } from "@/lib/auth/require-admin";
+import { requireUserSession } from "@/lib/auth/require-session";
 
 export interface ChangePasswordState {
   success: boolean;

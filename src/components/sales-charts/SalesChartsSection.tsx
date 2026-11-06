@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { buildSalesChartsData } from "@/lib/sales-charts";
-import type { DailyRecordRow } from "@/types/landing";
+import type { DailyRecordRow } from "@/types/daily-records";
 import { UserSalesChart } from "@/components/sales-charts/UserSalesChart";
 import { LastDayProductCharts } from "@/components/sales-charts/LastDayProductCharts";
 import { UserTrendChart } from "@/components/sales-charts/UserTrendChart";

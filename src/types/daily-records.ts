@@ -50,8 +50,18 @@ export interface DailyRecordRow {
   winnerMargin: number | null;
 }
 
-export interface LandingPageData {
+export interface DailyRecordsData {
   dailyRecords: DailyRecordRow[];
   userTotals: UserTotal[];
   generatedAt: string;
+}
+export interface DailyWorkRecordRow {
+  id: string;
+  userName: string;
+  date: string;
+  quesoTaken: number;
+  quesoRemaining: number;
+  yogurtTaken: number;
+  yogurtRemaining: number;
+  totalSold: number;
 }

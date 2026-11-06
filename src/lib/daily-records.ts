@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type {
   DailyRecordRow,
-  LandingPageData,
+  DailyRecordsData,
   ProductBreakdown,
   SaleRecord,
   UserTotal,
-} from "@/types/landing";
+} from "@/types/daily-records";
 
 export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
   // One row per user per day, reusing buildDailyRecords' totalRevenue (which already
@@ -127,7 +127,7 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
   return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function getLandingPageData(): Promise<LandingPageData> {
+export async function getDailyRecordsData(): Promise<DailyRecordsData> {
   const workRecords = await prisma.dailyWorkRecord.findMany({
     include: { user: true },
   });

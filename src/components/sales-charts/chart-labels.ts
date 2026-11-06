@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 import type { Plugin } from "chart.js";
 
 // Amounts drawn directly on every bar and point so the charts read at a glance

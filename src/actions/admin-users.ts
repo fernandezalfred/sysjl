@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/password";
-import { requireAdminSession, NotAuthorizedError } from "@/lib/require-admin";
+import { hashPassword } from "@/lib/auth/password";
+import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
 
 export interface ActionState {
   success: boolean;

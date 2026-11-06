@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 import type { TranslateFn } from "@/lib/i18n/translations";
 
 interface WinnerBadgeProps {

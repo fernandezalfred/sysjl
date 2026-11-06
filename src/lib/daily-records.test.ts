@@ -6,8 +6,8 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { buildDailyRecords, buildUserTotals, getLandingPageData } from "@/lib/landing-data";
-import type { SaleRecord } from "@/types/landing";
+import { buildDailyRecords, buildUserTotals, getDailyRecordsData } from "@/lib/daily-records";
+import type { SaleRecord } from "@/types/daily-records";
 
 const MOCK_WORK_RECORDS = [
   {
@@ -249,9 +249,9 @@ describe("buildDailyRecords", () => {
   });
 });
 
-describe("getLandingPageData", () => {
+describe("getDailyRecordsData", () => {
   it("builds one user total per user per day from every work record", async () => {
-    const data = await getLandingPageData();
+    const data = await getDailyRecordsData();
 
     const sumOfUserRevenue = data.userTotals.reduce((sum, u) => sum + u.quesoRevenue + u.yogurtRevenue, 0);
     expect(data.userTotals).toHaveLength(2);
@@ -263,7 +263,7 @@ describe("getLandingPageData", () => {
       { ...MOCK_WORK_RECORDS[0], quesoSalePrice: 15, yogurtSalePrice: 40 },
     ]);
 
-    const data = await getLandingPageData();
+    const data = await getDailyRecordsData();
     const row = data.dailyRecords.find((r) => r.userId === "u1")!;
 
     expect(row.queso.revenue).toBe((80 - 12) * 15);

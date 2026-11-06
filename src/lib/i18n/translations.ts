@@ -20,10 +20,10 @@ const en = {
   "footer.tagline": "SysJL — Daily Sales, Stock & Revenue Tracker",
   "footer.rights": "© {year} SysJL. All rights reserved.",
 
-  "landing.welcomeBack": "Welcome back, {name}.",
-  "landing.guestTagline":
+  "home.welcomeBack": "Welcome back, {name}.",
+  "home.guestTagline":
     "Track daily sales, stock, and revenue across our delivery fleet — live, every day.",
-  "landing.totalsByUser": "Totals by User",
+  "home.totalsByUser": "Totals by User",
 
 
   "topSeller.badge": "Top Seller",
@@ -260,10 +260,10 @@ const es: Record<DictionaryKey, string> = {
   "footer.tagline": "SysJL — Control de Ventas, Stock e Ingresos",
   "footer.rights": "© {year} SysJL. Todos los derechos reservados.",
 
-  "landing.welcomeBack": "Bienvenido de nuevo, {name}.",
-  "landing.guestTagline":
+  "home.welcomeBack": "Bienvenido de nuevo, {name}.",
+  "home.guestTagline":
     "Sigue las ventas, el stock y los ingresos de nuestra flota de reparto — en vivo, todos los días.",
-  "landing.totalsByUser": "Totales por Usuario",
+  "home.totalsByUser": "Totales por Usuario",
 
 
   "topSeller.badge": "Mejor Vendedor",

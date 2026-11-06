@@ -2,7 +2,7 @@
 
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip, type ChartOptions } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/pricing";
+import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/money/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { ProductDaySales, UserProductSales } from "@/lib/sales-charts";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";

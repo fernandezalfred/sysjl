@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { createDailyWorkRecord, type RecordActionState } from "@/actions/daily-work-records";
-import { RecordFormFields } from "@/components/records/RecordFormFields";
+import { RecordFormFields } from "@/components/sale-records/RecordFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";

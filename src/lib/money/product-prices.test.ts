@@ -9,7 +9,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { getCurrentPurchaseCosts, getCurrentSalePrices } from "@/lib/product-prices";
+import { getCurrentPurchaseCosts, getCurrentSalePrices } from "@/lib/money/product-prices";
 
 const UPDATED_AT = new Date("2026-11-06T14:00:00Z");
 

@@ -1,22 +1,21 @@
 "use client";
 
-import { WinnerBadge } from "@/components/landing/WinnerBadge";
+import { WinnerBadge } from "@/components/sale-records/WinnerBadge";
 import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
-import { LabeledAmount } from "@/components/landing/LabeledAmount";
-import { formatCurrency } from "@/lib/pricing";
-import { SellerPayLine } from "@/components/landing/SellerPayLine";
+import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
+import { formatCurrency } from "@/lib/money/pricing";
+import { UserCell } from "@/components/sale-records/UserCell";
 import {
   buildNetProfitByDate,
   recordAdjustedRevenue,
   type UnitCosts,
   type MilkGrainsDeductions,
-} from "@/lib/revenue";
-import { toEditableRecord } from "@/lib/records";
-import { EditRecordForm } from "@/components/records/EditRecordForm";
+} from "@/lib/money/revenue";
+import { toEditableRecord } from "@/lib/editable-record";
+import { EditRecordForm } from "@/components/sale-records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
-import type { DailyRecordRow, UserTotal } from "@/types/landing";
-import type { DailyWorkRecordRow } from "@/types/records";
+import type { DailyRecordRow, DailyWorkRecordRow, UserTotal } from "@/types/daily-records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/ui/Pagination";
@@ -157,11 +156,11 @@ export function UserTotalsSection({
     <section aria-labelledby="user-totals-heading" className="flex flex-col gap-3">
       {hideHeading ? (
         <h2 id="user-totals-heading" className="sr-only">
-          {t("landing.totalsByUser")}
+          {t("home.totalsByUser")}
         </h2>
       ) : (
         <h2 id="user-totals-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/70">
-          {t("landing.totalsByUser")}
+          {t("home.totalsByUser")}
         </h2>
       )}
 
@@ -197,7 +196,7 @@ export function UserTotalsSection({
                   <tr key={`${u.date}-${u.userId}`} className="divide-x divide-foreground/15">
                     <td className="px-4 py-2">
                       {isAdmin || u.userId === currentUserId ? (
-                        <SellerPayLine
+                        <UserCell
                           name={<UserName name={u.userName} />}
                           totalSold={soldRevenueOf(u)}
                           netProfit={netProfitOf(u)}
@@ -253,7 +252,7 @@ export function UserTotalsSection({
                   className="rounded-lg border border-foreground/10 p-3"
                 >
                   {isAdmin || u.userId === currentUserId ? (
-                    <SellerPayLine
+                    <UserCell
                       name={<UserName name={u.userName} />}
                       totalSold={soldRevenueOf(u)}
                       netProfit={netProfitOf(u)}

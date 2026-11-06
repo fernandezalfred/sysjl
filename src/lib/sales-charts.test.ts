@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDailyRecords } from "@/lib/landing-data";
+import { buildDailyRecords } from "@/lib/daily-records";
 import {
   buildLastDayProductSales,
   buildSalesChartsData,
@@ -7,7 +7,7 @@ import {
   buildUserTrend,
   latestWorkDay,
 } from "@/lib/sales-charts";
-import type { SaleRecord } from "@/types/landing";
+import type { SaleRecord } from "@/types/daily-records";
 
 const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   id: "r1",

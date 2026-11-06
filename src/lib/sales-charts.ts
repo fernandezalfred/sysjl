@@ -1,5 +1,5 @@
 import { bucketKey, type Granularity } from "@/lib/date-buckets";
-import type { DailyRecordRow } from "@/types/landing";
+import type { DailyRecordRow } from "@/types/daily-records";
 
 export interface UserSalesTotal {
   userId: string;

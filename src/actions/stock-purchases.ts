@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdminSession, NotAuthorizedError } from "@/lib/require-admin";
+import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
 import { formatBusinessDateKey } from "@/lib/dates";
 import { planRepeatLastDay, REPEAT_PRODUCTS, type RepeatError, type RepeatKind } from "@/lib/repeat-purchases";
 import type { Product } from "@prisma/client";

@@ -6,9 +6,9 @@ import {
   updateDailyWorkRecord,
   type RecordActionState,
 } from "@/actions/daily-work-records";
-import { RecordFormFields } from "@/components/records/RecordFormFields";
+import { RecordFormFields } from "@/components/sale-records/RecordFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
-import type { DailyWorkRecordRow } from "@/types/records";
+import type { DailyWorkRecordRow } from "@/types/daily-records";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";

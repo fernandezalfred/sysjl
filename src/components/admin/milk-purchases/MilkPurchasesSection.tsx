@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useRef, useState } from "react";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 import { formatShortDate } from "@/lib/dates";
 import { CreateMilkPurchaseForm } from "@/components/admin/milk-purchases/CreateMilkPurchaseForm";
 import { EditStockPurchaseForm } from "@/components/admin/stock-purchases/EditStockPurchaseForm";

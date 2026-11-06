@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/lib/password";
+import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 

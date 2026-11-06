@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { PricedProduct } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireAdminSession, NotAuthorizedError } from "@/lib/require-admin";
+import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
 
 export interface ActionState {
   success: boolean;

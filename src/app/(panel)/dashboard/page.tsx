@@ -2,13 +2,13 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getLandingPageData } from "@/lib/landing-data";
-import { getNetProfitInputs } from "@/lib/net-profit";
+import { getDailyRecordsData } from "@/lib/daily-records";
+import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { latestWorkDay } from "@/lib/sales-charts";
-import { getCurrentProductPrices } from "@/lib/product-prices";
+import { getCurrentProductPrices } from "@/lib/money/product-prices";
 import { getT } from "@/lib/i18n/server";
 import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
-import { SaleRecordsSection } from "@/components/landing/SaleRecordsSection";
+import { SaleRecordsSection } from "@/components/sale-records/SaleRecordsSection";
 import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
 import { SelectedDayProvider } from "@/components/sales-charts/SelectedDayProvider";
 import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
@@ -26,7 +26,7 @@ export default function Dashboard() {
 async function DashboardContent() {
   await connection();
   const [data, session, activeUsers, { t, locale }] = await Promise.all([
-    getLandingPageData(),
+    getDailyRecordsData(),
     auth(),
     prisma.user.findMany({
       where: { isActive: true },

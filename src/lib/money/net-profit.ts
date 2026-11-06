@@ -1,7 +1,7 @@
-import { buildGrainsShareByDate, type MilkGrainsDeductions, type UnitCosts } from "@/lib/revenue";
-import { getCurrentPurchaseCosts } from "@/lib/product-prices";
-import { getGrainsCostByDay, getMilkCostByUserAndDay } from "@/lib/stock";
-import type { DailyRecordRow } from "@/types/landing";
+import { buildGrainsShareByDate, type MilkGrainsDeductions, type UnitCosts } from "@/lib/money/revenue";
+import { getCurrentPurchaseCosts } from "@/lib/money/product-prices";
+import { getGrainsCostByDay, getMilkCostByUserAndDay } from "@/lib/money/stock";
+import type { DailyRecordRow } from "@/types/daily-records";
 
 export interface NetProfitInputs {
   unitCosts: UnitCosts;

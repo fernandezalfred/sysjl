@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserSession } from "@/lib/require-session";
-import { NotAuthorizedError } from "@/lib/require-admin";
-import { getCurrentSalePrices } from "@/lib/product-prices";
+import { requireUserSession } from "@/lib/auth/require-session";
+import { NotAuthorizedError } from "@/lib/auth/require-admin";
+import { getCurrentSalePrices } from "@/lib/money/product-prices";
 
 export interface RecordActionState {
   success: boolean;

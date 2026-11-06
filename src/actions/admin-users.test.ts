@@ -16,7 +16,7 @@ const { authMock, prismaMock, hashPasswordMock, revalidatePathMock } = vi.hoiste
 
 vi.mock("@/auth", () => ({ auth: authMock }));
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
-vi.mock("@/lib/password", () => ({ hashPassword: hashPasswordMock }));
+vi.mock("@/lib/auth/password", () => ({ hashPassword: hashPasswordMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 
 import { createUser, updateUser, setUserActive } from "@/actions/admin-users";

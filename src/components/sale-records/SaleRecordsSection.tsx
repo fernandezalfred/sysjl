@@ -1,23 +1,22 @@
 "use client";
 
-import { WinnerBadge } from "@/components/landing/WinnerBadge";
+import { WinnerBadge } from "@/components/sale-records/WinnerBadge";
 import { Fragment, useRef, useState } from "react";
-import { LabeledAmount } from "@/components/landing/LabeledAmount";
-import { formatCurrency } from "@/lib/pricing";
+import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
+import { formatCurrency } from "@/lib/money/pricing";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
-import { toEditableRecord } from "@/lib/records";
-import { SellerPayLine } from "@/components/landing/SellerPayLine";
+import { toEditableRecord } from "@/lib/editable-record";
+import { UserCell } from "@/components/sale-records/UserCell";
 import {
   buildNetProfitByDate,
   recordAdjustedRevenue,
   type UnitCosts,
   type MilkGrainsDeductions,
-} from "@/lib/revenue";
-import { CreateRecordForm } from "@/components/records/CreateRecordForm";
-import { EditRecordForm } from "@/components/records/EditRecordForm";
+} from "@/lib/money/revenue";
+import { CreateRecordForm } from "@/components/sale-records/CreateRecordForm";
+import { EditRecordForm } from "@/components/sale-records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
-import type { DailyRecordRow, ProductBreakdown } from "@/types/landing";
-import type { DailyWorkRecordRow } from "@/types/records";
+import type { DailyRecordRow, DailyWorkRecordRow, ProductBreakdown } from "@/types/daily-records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/ui/Pagination";
@@ -217,7 +216,7 @@ export function SaleRecordsSection({
                   <tr key={row.id} className="divide-x divide-foreground/15 align-top">
                     <td className="px-4 py-2">
                       {isAdmin || row.userId === currentUserId ? (
-                        <SellerPayLine
+                        <UserCell
                           name={<UserName name={row.userName} />}
                           totalSold={row.totalSold}
                           netProfit={netProfitOf(row)}
@@ -282,7 +281,7 @@ export function SaleRecordsSection({
                       the same right edge and never drifts far from its label. */}
                   <div className="max-w-sm">
                     {isAdmin || row.userId === currentUserId ? (
-                      <SellerPayLine
+                      <UserCell
                         name={
                           <div className="flex items-start gap-2">
                             <UserName name={row.userName} />

@@ -2,10 +2,10 @@
 
 import { useActionState } from "react";
 import { setProductPrice, type ActionState } from "@/actions/product-prices";
-import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/pricing";
+import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/money/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { PricedProduct } from "@prisma/client";
-import type { ProductPriceInfo } from "@/lib/product-prices";
+import type { ProductPriceInfo } from "@/lib/money/product-prices";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CreateRecordForm } from "@/components/records/CreateRecordForm";
+import { CreateRecordForm } from "@/components/sale-records/CreateRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 

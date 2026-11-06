@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { NotAuthorizedError } from "@/lib/require-admin";
+import { NotAuthorizedError } from "@/lib/auth/require-admin";
 
 export async function requireUserSession() {
   const session = await auth();

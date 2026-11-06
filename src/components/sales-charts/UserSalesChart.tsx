@@ -11,7 +11,7 @@ import {
   type ChartOptions,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 import { translate, type Locale } from "@/lib/i18n/translations";
 import type { Granularity } from "@/lib/date-buckets";
 import type { UserSalesPeriod } from "@/lib/sales-charts";

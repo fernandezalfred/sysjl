@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/money/pricing";
 
 // Intl puts a non-breaking space between "Bs" and the number; compare with plain spaces.
 const plain = (text: string) => text.replace(/\s/g, " ");
