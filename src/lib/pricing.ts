@@ -1,10 +1,5 @@
 import type { ProductCode } from "@/types/landing";
 
-export const PRODUCT_LABELS: Record<ProductCode, string> = {
-  QUESO: "Queso",
-  YOGURT: "Yogurt",
-};
-
 // i18n keys for showing a product's name in the UI in the viewer's language.
 export const PRODUCT_LABEL_KEYS: Record<ProductCode, string> = {
   QUESO: "product.queso",

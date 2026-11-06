@@ -14,15 +14,6 @@ export interface SaleRecord {
   quantityRemaining: number;
 }
 
-export interface ProductTotal {
-  product: ProductCode;
-  label: string;
-  quantitySold: number;
-  revenue: number;
-  quantityRemaining: number;
-  remainingValue: number;
-}
-
 export interface UserTotal {
   date: string;
   userId: string;
@@ -61,11 +52,6 @@ export interface DailyRecordRow {
 
 export interface LandingPageData {
   dailyRecords: DailyRecordRow[];
-  productTotals: ProductTotal[];
   userTotals: UserTotal[];
-  grandTotalQuantitySold: number;
-  grandTotalRevenue: number;
-  grandTotalRemainingQuantity: number;
-  grandTotalRemainingValue: number;
   generatedAt: string;
 }

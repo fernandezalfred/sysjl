@@ -1,16 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { PRODUCT_LABELS } from "@/lib/pricing";
 import type {
   DailyRecordRow,
   LandingPageData,
   ProductBreakdown,
-  ProductCode,
-  ProductTotal,
   SaleRecord,
   UserTotal,
 } from "@/types/landing";
-
-const PRODUCT_CODES: ProductCode[] = ["QUESO", "YOGURT"];
 
 export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
   // One row per user per day, reusing buildDailyRecords' totalRevenue (which already
@@ -30,34 +25,6 @@ export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
 
   // Most recent day first; same-day ties keep buildDailyRecords' own ordering.
   return rows.sort((a, b) => b.date.localeCompare(a.date));
-}
-
-// Revenue and remaining value are summed per record using each record's own
-// unitPrice (snapshotted at the time it was created), not today's current price —
-// so a later admin price change never rewrites a past record's figures here.
-export function buildProductTotals(records: SaleRecord[]): ProductTotal[] {
-  return PRODUCT_CODES.map((product) => {
-    const productRecords = records.filter((r) => r.product === product);
-    const quantitySold = productRecords.reduce(
-      (sum, r) => sum + (r.quantityTaken - r.quantityRemaining),
-      0,
-    );
-    const quantityRemaining = productRecords.reduce((sum, r) => sum + r.quantityRemaining, 0);
-    const revenue = productRecords.reduce(
-      (sum, r) => sum + (r.quantityTaken - r.quantityRemaining) * r.unitPrice,
-      0,
-    );
-    const remainingValue = productRecords.reduce((sum, r) => sum + r.quantityRemaining * r.unitPrice, 0);
-
-    return {
-      product,
-      label: PRODUCT_LABELS[product],
-      quantitySold,
-      revenue,
-      quantityRemaining,
-      remainingValue,
-    };
-  });
 }
 
 const EMPTY_BREAKDOWN: ProductBreakdown = { taken: 0, remaining: 0, sold: 0, revenue: 0, remainingValue: 0 };
@@ -197,18 +164,9 @@ export async function getLandingPageData(): Promise<LandingPageData> {
     ];
   });
 
-  const productTotals = buildProductTotals(records);
-  const userTotals = buildUserTotals(records);
-  const dailyRecords = buildDailyRecords(records);
-
   return {
-    dailyRecords,
-    productTotals,
-    userTotals,
-    grandTotalQuantitySold: productTotals.reduce((sum, p) => sum + p.quantitySold, 0),
-    grandTotalRevenue: productTotals.reduce((sum, p) => sum + p.revenue, 0),
-    grandTotalRemainingQuantity: productTotals.reduce((sum, p) => sum + p.quantityRemaining, 0),
-    grandTotalRemainingValue: productTotals.reduce((sum, p) => sum + p.remainingValue, 0),
+    dailyRecords: buildDailyRecords(records),
+    userTotals: buildUserTotals(records),
     generatedAt: new Date().toISOString(),
   };
 }

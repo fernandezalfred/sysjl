@@ -6,7 +6,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { buildDailyRecords, buildProductTotals, buildUserTotals, getLandingPageData } from "@/lib/landing-data";
+import { buildDailyRecords, buildUserTotals, getLandingPageData } from "@/lib/landing-data";
 import type { SaleRecord } from "@/types/landing";
 
 const MOCK_WORK_RECORDS = [
@@ -58,52 +58,6 @@ const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   quantityTaken: 10,
   quantityRemaining: 2,
   ...overrides,
-});
-
-describe("buildProductTotals", () => {
-  it("sums sold quantity, revenue and remaining value per product", () => {
-    const records = [
-      record({ product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 2 }),
-      record({ id: "r2", product: "QUESO", unitPrice: 9, quantityTaken: 5, quantityRemaining: 1 }),
-      record({ id: "r3", product: "YOGURT", unitPrice: 33, quantityTaken: 6, quantityRemaining: 1 }),
-    ];
-
-    const totals = buildProductTotals(records);
-    const queso = totals.find((t) => t.product === "QUESO")!;
-    const yogurt = totals.find((t) => t.product === "YOGURT")!;
-
-    expect(queso.quantitySold).toBe(12); // (10-2) + (5-1)
-    expect(queso.revenue).toBe(108); // 12 * 9
-    expect(queso.quantityRemaining).toBe(3); // 2 + 1
-    expect(queso.remainingValue).toBe(27); // 3 * 9
-
-    expect(yogurt.quantitySold).toBe(5); // 6-1
-    expect(yogurt.revenue).toBe(165); // 5 * 33
-  });
-
-  it("returns zeroed totals for a product with no records", () => {
-    const totals = buildProductTotals([record({ product: "QUESO" })]);
-    const yogurt = totals.find((t) => t.product === "YOGURT")!;
-
-    expect(yogurt.quantitySold).toBe(0);
-    expect(yogurt.revenue).toBe(0);
-    expect(yogurt.quantityRemaining).toBe(0);
-  });
-
-  it("uses each record's own unitPrice instead of today's current price, so an old record keeps its original revenue after a price change", () => {
-    const records = [
-      // Sold before a price change, at the old price of 9/unit.
-      record({ id: "r1", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0 }),
-      // Sold after the admin raised the price to 12/unit.
-      record({ id: "r2", product: "QUESO", unitPrice: 12, quantityTaken: 10, quantityRemaining: 0 }),
-    ];
-
-    const totals = buildProductTotals(records);
-    const queso = totals.find((t) => t.product === "QUESO")!;
-
-    // 10 * 9 + 10 * 12 = 210, not 20 * 12 = 240 (today's price applied to everything).
-    expect(queso.revenue).toBe(210);
-  });
 });
 
 describe("buildUserTotals", () => {
@@ -296,25 +250,12 @@ describe("buildDailyRecords", () => {
 });
 
 describe("getLandingPageData", () => {
-  it("produces consistent grand totals that match the sum of per-product totals", async () => {
-    const data = await getLandingPageData();
-
-    const expectedQuantitySold = data.productTotals.reduce((sum, p) => sum + p.quantitySold, 0);
-    const expectedRevenue = data.productTotals.reduce((sum, p) => sum + p.revenue, 0);
-    const expectedRemainingQuantity = data.productTotals.reduce((sum, p) => sum + p.quantityRemaining, 0);
-    const expectedRemainingValue = data.productTotals.reduce((sum, p) => sum + p.remainingValue, 0);
-
-    expect(data.grandTotalQuantitySold).toBe(expectedQuantitySold);
-    expect(data.grandTotalRevenue).toBe(expectedRevenue);
-    expect(data.grandTotalRemainingQuantity).toBe(expectedRemainingQuantity);
-    expect(data.grandTotalRemainingValue).toBe(expectedRemainingValue);
-  });
-
-  it("keeps per-user totals consistent with per-product totals", async () => {
+  it("builds one user total per user per day from every work record", async () => {
     const data = await getLandingPageData();
 
     const sumOfUserRevenue = data.userTotals.reduce((sum, u) => sum + u.quesoRevenue + u.yogurtRevenue, 0);
-    expect(sumOfUserRevenue).toBe(data.grandTotalRevenue);
+    expect(data.userTotals).toHaveLength(2);
+    expect(sumOfUserRevenue).toBe((80 - 12) * 9 + (60 - 5) * 33 + (70 - 20) * 9 + (50 - 18) * 33);
   });
 
   it("uses each record's own snapshotted sale price, not a hardcoded constant", async () => {
