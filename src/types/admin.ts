@@ -34,7 +34,7 @@ export interface StockPurchaseRow {
   // component that renders this list would re-run on hydration and can mismatch
   // the server-rendered string (different ICU data between Node and the browser).
   createdAtFormatted: string;
-  // Raw YYYY-MM-DD grouping key (see formatDateKey in src/lib/dates.ts). Only read
+  // Raw YYYY-MM-DD grouping key (see formatBusinessDateKey in src/lib/dates.ts). Only read
   // by Grains, Milk, and Yogurt, which group purchases by day; Cheese ignores it.
   createdAtDate: string;
 }

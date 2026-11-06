@@ -17,6 +17,24 @@ export function formatDateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+// The business operates in Bolivia. Server code must use this zone, not the
+// server's own (UTC on Vercel), or a purchase made after 20:00 local time lands
+// on the next day and stops matching that day's sale records.
+export const BUSINESS_TIME_ZONE = "America/La_Paz";
+
+const BUSINESS_DATE_KEY_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: BUSINESS_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+// A Date's calendar day in BUSINESS_TIME_ZONE as YYYY-MM-DD, regardless of the
+// timezone the code runs in.
+export function formatBusinessDateKey(date: Date): string {
+  return BUSINESS_DATE_KEY_FORMAT.format(date);
+}
+
 // Today's date in the browser's local timezone, as YYYY-MM-DD.
 export function todayDateString(): string {
   return formatDateKey(new Date());

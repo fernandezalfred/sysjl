@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStock } from "@/lib/stock";
 import { getT } from "@/lib/i18n/server";
-import { formatDateKey } from "@/lib/dates";
+import { formatBusinessDateKey } from "@/lib/dates";
 import { StockPurchasesSection } from "@/components/admin/stock-purchases/StockPurchasesSection";
 import type { StockPurchaseRow, SingleStockProduct } from "@/types/admin";
 import type { TranslateFn } from "@/lib/i18n/translations";
@@ -53,7 +53,7 @@ async function AdminProductStockContent({ product }: AdminProductStockPageProps)
     createdByName: row.createdBy.name,
     forUserName: null,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
-    createdAtDate: formatDateKey(row.createdAt),
+    createdAtDate: formatBusinessDateKey(row.createdAt),
   }));
 
   const label = productLabel(product, t);

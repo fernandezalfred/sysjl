@@ -108,6 +108,7 @@ describe("createStockPurchase", () => {
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/");
   });
 
   it("rejects a MILK purchase with no driver selected", async () => {

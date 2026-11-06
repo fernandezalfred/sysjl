@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentProductPrices } from "@/lib/product-prices";
 import { getT } from "@/lib/i18n/server";
-import { formatDateKey } from "@/lib/dates";
+import { formatBusinessDateKey } from "@/lib/dates";
 import { formatCurrency } from "@/lib/pricing";
 import { YogurtPurchasesSection } from "@/components/admin/yogurt-purchases/YogurtPurchasesSection";
 import { SetProductPriceForm } from "@/components/admin/product-pricing/SetProductPriceForm";
@@ -38,7 +38,7 @@ async function AdminYogurtContent() {
     createdByName: row.createdBy.name,
     forUserName: null,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
-    createdAtDate: formatDateKey(row.createdAt),
+    createdAtDate: formatBusinessDateKey(row.createdAt),
   }));
 
   const salePrice = prices.YOGURT.salePrice;

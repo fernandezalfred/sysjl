@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
-import { formatDateKey } from "@/lib/dates";
+import { formatBusinessDateKey } from "@/lib/dates";
 import { MilkPurchasesSection } from "@/components/admin/milk-purchases/MilkPurchasesSection";
 import type { StockPurchaseRow } from "@/types/admin";
 
@@ -42,7 +42,7 @@ async function AdminMilkContent() {
     createdByName: row.createdBy.name,
     forUserName: row.forUser?.name ?? null,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
-    createdAtDate: formatDateKey(row.createdAt),
+    createdAtDate: formatBusinessDateKey(row.createdAt),
   }));
 
   const label = t("product.milk");

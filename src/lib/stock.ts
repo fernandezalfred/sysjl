@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { formatDateKey } from "@/lib/dates";
+import { formatBusinessDateKey } from "@/lib/dates";
 import { milkCostKey } from "@/lib/revenue";
 import type { Product } from "@prisma/client";
 
@@ -52,7 +52,7 @@ export async function getLatestUnitCost(product: Product): Promise<number> {
   return latest?.unitCost ?? 0;
 }
 
-// Each driver's Milk purchase cost (quantity*unitCost) per local calendar day,
+// Each driver's Milk purchase cost (quantity*unitCost) per business calendar day (Bolivia),
 // keyed by milkCostKey(userId, YYYY-MM-DD) — so a sale record only deducts the
 // Milk bought for its own driver on its own day, never a later or earlier purchase.
 // Milk has no per-record sold quantity to cost against directly (unlike Queso/
@@ -66,14 +66,14 @@ export async function getMilkCostByUserAndDay(): Promise<Record<string, number>>
   const result: Record<string, number> = {};
   for (const purchase of purchases) {
     if (!purchase.forUserId) continue;
-    const key = milkCostKey(purchase.forUserId, formatDateKey(purchase.createdAt));
+    const key = milkCostKey(purchase.forUserId, formatBusinessDateKey(purchase.createdAt));
     result[key] = (result[key] ?? 0) + purchase.quantity * purchase.unitCost;
   }
   return result;
 }
 
 // Total grain purchase cost (quantity*unitCost across all three grain items),
-// grouped by the local calendar day the purchase was made — used to split a day's
+// grouped by the business calendar day (Bolivia) the purchase was made — used to split a day's
 // grains cost evenly across however many drivers have a work record that day.
 export async function getGrainsCostByDay(): Promise<Record<string, number>> {
   const purchases = await prisma.stockPurchase.findMany({
@@ -83,7 +83,7 @@ export async function getGrainsCostByDay(): Promise<Record<string, number>> {
 
   const result: Record<string, number> = {};
   for (const purchase of purchases) {
-    const key = formatDateKey(purchase.createdAt);
+    const key = formatBusinessDateKey(purchase.createdAt);
     result[key] = (result[key] ?? 0) + purchase.quantity * purchase.unitCost;
   }
   return result;
