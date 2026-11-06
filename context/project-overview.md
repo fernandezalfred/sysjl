@@ -1,117 +1,96 @@
-# Project Overview: Daily Sales, Vehicle Inventory, and Revenue Tracker
+# Project Overview: SysJL — Daily Sales and Net Profit Tracker
 
-## 1. Project Goal
+## 1. What the App Does
 
-Build a reliable web application to manage daily product distribution, sales records, remaining inventory, and revenue across multiple delivery vehicles.
+SysJL tracks the daily sales of a small dairy distribution business in Bolivia (amounts in bolivianos, "Bs").
 
-The business operates multiple vehicles. Each vehicle has one assigned user who takes products from a central deposit (warehouse), sells products during the working day, and reports the remaining products when returning.
+Each seller takes Queso and Yogurt from the central deposit in the morning, sells them during the day together with Milk and Mote, and reports at the end of the day what was left over and how much they sold in total. From those numbers the app works out each seller's sales, the value of what wasn't sold, the day's winner, the seller's pay and, for admins, the business's net profit.
 
-The business handles four products:
-
-- **Queso (cheese):** One standard size with a unit cost of 9.
-- **Yogurt:** Unit cost of 33.
-- **Milk:** Its cost must be configurable by the admin.
-- **Mote:** Its cost must be configurable by the admin.
-
-The application must distinguish between product quantities, product costs, sales revenue, and remaining inventory.
-
-The vehicle user records the quantities taken from the deposit and the quantities remaining at the end of the working day. The system calculates the quantities sold and the corresponding costs.
-
-Milk and mote contribute to the business's total revenue, but their sales quantities or revenue must not be incorrectly inferred from cheese and yogurt records. Their handling must follow the business rules defined in this document.
-
-Only authenticated users can access the application. Only administrators can manage product costs, pricing, revenue analytics, and administrative inventory information.
+The UI is in Spanish by default, with English as an option (cookie-backed language switcher).
 
 ## 2. Technology Stack
 
-Use the following technologies:
+- Next.js 16 (App Router, Turbopack, Partial Prerendering) + React 19 + TypeScript (strict)
+- Prisma 6 on MongoDB (replica set required; schema changes via `prisma db push`, no migrations)
+- Auth.js v5: Credentials provider, bcrypt, JWT sessions
+- Tailwind CSS v4 (CSS-based config in `src/app/globals.css`)
+- Zod for input validation, Chart.js (`react-chartjs-2`) for charts, Vitest for unit tests
+- Deployed on Vercel
 
-- Next.js with App Router
-- TypeScript
-- Prisma ORM
-- MongoDB
-- Tailwind CSS, if compatible with the existing project
-- A secure authentication solution compatible with the existing project
+## 3. Roles and Access
 
-Before implementation, inspect the existing repository, dependencies, database configuration, and authentication system. Preserve existing functionality and conventions where practical.
+| Role (`Role` enum) | Shown as             | Can do                                                                                                                         |
+| ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `ADMIN`            | Administrador        | Everything: manage users, prices and costs, Milk and grain purchases; see and edit every sale record; see costs and net profit |
+| `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see their own pay, change their own password                                           |
+| Guest (signed out) | —                    | See the public home page (sales by user, no costs, no profit, no pay)                                                           |
 
-## 3. User Roles and Permissions
+Rules:
 
-### 3.1 Administrator
+- The acting user always comes from the server-side session; a user id sent by the browser is never trusted.
+- `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
+- Costs, net profit and the winner's margin are admin-only. Seller pay is shown to admins on every row and to a seller on their own rows only.
+- Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
-The admin can:
+## 4. Pages
 
-- Manage user accounts.
-- Configure product costs and prices.
-- Manage central deposit inventory.
-- View all users' daily work records.
-- View business-wide inventory and revenue.
-- View product costs, profitability information, and remaining stock.
-- Review historical records and filter them by date or user.
-- Correct erroneous records using an auditable process.
-- Access the administrative landing page and reports.
+| Route           | Who             | Content                                                                                                     |
+| --------------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+| `/`             | Everyone        | Top seller banner, admin quick links, Sales by User charts, Totals by User table (one row per seller per day) |
+| `/login`        | Everyone        | Sign in                                                                                                     |
+| `/dashboard`    | Signed in       | Sales by User charts, Prices & Costs (admin), Sale Records table with create / edit / delete               |
+| `/account`      | Signed in       | Change own password                                                                                         |
+| `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
+| `/admin/milk`   | Admin           | Milk purchases per seller per day                                                                           |
+| `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
-Only administrators may view or change sensitive financial information, including product costs, profit calculations, and business-wide revenue.
+Clicking a day header in either table shows that day in the charts.
 
-### 3.2 Vehicle User
+## 5. Products and Inputs
 
-The user can:
+| Item                        | How it's recorded                                                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Queso, Yogurt               | Per sale record: units taken ("Sacó") and left over ("Sobró"). Sale price and purchase cost set by the admin on `/dashboard`. |
+| Milk & Mote                 | No quantities. Their revenue is what's left of the seller's "Total venta" after Queso and Yogurt revenue.                    |
+| Milk purchases              | Liters × cost per liter, entered by the admin for one seller on one day.                                                     |
+| Grains                      | Quartillas × cost per quartilla, per day. Deposit inputs only, never sold.                                                   |
 
-- Sign in securely.
-- Register their daily work record.
-- Record quantities of cheese and yogurt taken from the deposit.
-- Record remaining cheese and yogurt at the end of the day.
-- Review their own previous daily records.
-- View their own work history.
+The sale price is snapshotted on each sale record when it's created, so a later price change never rewrites past records. The current purchase cost is used for net profit (if not set, the last recorded purchase cost is the fallback).
 
-Users must only be able to view and modify their own authorized records. They must not access other users' records or administrative financial information.
+"Repeat last day" on the Milk and Grains pages copies the most recent day's purchases into today.
 
-The authenticated user must be determined and validated on the server. Do not trust a user ID supplied by the browser.
+The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 
-## 4. Product Management and Costs
+## 6. Calculations (per sale record)
 
-The application must initially support these products:
+| Name (Spanish UI)              | Formula                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Vendió (Queso / Yogurt)        | taken − left, × the record's sale price                                                                                   |
+| No vendidos                    | left × sale price, Queso + Yogurt                                                                                         |
+| Total venta                    | entered by the seller (all four products)                                                                                 |
+| Leche y Mote                   | Total venta − Queso revenue − Yogurt revenue                                                                              |
+| Total vendidos más no vendidos | Total venta + No vendidos                                                                                                 |
+| Ganador (daily winner)         | Highest "Total vendidos más no vendidos" of the day; needs 2+ records that day; ties share; margin = gap to the runner-up |
+| Ganancia neta (admin)          | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − that seller's Milk that day − an even share of that day's grains |
+| Pago (seller pay)              | Bs 150 up to 2500 of Total venta; +10 per 100 from 2500 to 3000; +20 per 100 above 3000 (amount over 2500 rounded to the nearest 100) |
+| Ganancia neta − Pago (admin)   | shown under the seller's name; display only                                                                               |
 
-| Product        | Initial unit cost | Cost configuration |
-| -------------- | ----------------: | ------------------ |
-| Cheese (Queso) |                 9 | Admin-configurable |
-| Yogurt         |                33 | Admin-configurable |
-| Milk           |     Not specified | Admin-configurable |
-| Mote           |     Not specified | Admin-configurable |
+The day header shows the day's total Ganancia neta (admins). Amounts are displayed in whole bolivianos; calculations and stored values keep their cents.
 
-The initial values of 9 and 33 are the current costs, not necessarily the final selling prices. The admin must be able to configure product costs and selling prices separately if the business uses different values.
+The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/revenue.ts` (net profit), `src/lib/money/seller-pay.ts` (pay) and `src/lib/money/net-profit.ts` (loading Milk and grain costs).
 
-Requirements:
+## 7. Data Model (`prisma/schema.prisma`)
 
-- Only the admin can create or change product costs and selling prices.
-- Do not hardcode product costs in UI components or business logic.
-- Store the cost and price that applied at the time of a transaction.
-- Changing a current cost or price must not rewrite historical records.
-- Keep a history of cost and price changes, including the administrator and timestamp.
-- Use a consistent currency format configured for the business.
+- **User** — name, email, bcrypt hash, role, `isActive`.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, snapshotted sale prices. The date is fixed at creation and can't change on edit.
+- **ProductPrice** — one row per priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
+- **StockPurchase** — a Milk or grain purchase: product, quantity, unit cost, who entered it (`createdBy`) and, for Milk, which seller it's for (`forUser`). Old Queso/Yogurt purchases are still stored but no longer shown.
 
-## 5. Central Deposit and Inventory Management
+## 8. Not Built (from the original spec)
 
-The application must track stock in the central deposit and products distributed to vehicles.
+These were in the first version of this document and are deliberately not implemented today:
 
-For each product, track:
-
-- Opening deposit stock.
-- Stock additions.
-- Quantity taken by each vehicle.
-- Quantity returned or remaining at the end of the day.
-- Current deposit stock.
-- Current stock assigned to vehicles, where applicable.
-
-Inventory must be updated consistently when products are transferred from the deposit to a vehicle.
-
-The system must prevent invalid transactions, including quantities greater than available stock.
-
-Maintain an inventory movement history that records:
-
-- Product.
-- Quantity.
-- Movement type.
-- Source and destination, such as deposit or vehicle.
-- Responsible user.
-- Date and time.
-- Related work record or transaction, when applicable.
+- Central deposit stock tracking (current stock, preventing quantities greater than available stock).
+- An inventory movement history.
+- A history of price and cost changes (only the current value and who set it are kept).
+- Vehicles as their own entity (removed; sellers are users).

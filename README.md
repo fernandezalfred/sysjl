@@ -1,8 +1,8 @@
 # SysJL
 
-Daily sales, vehicle inventory, and revenue tracker for a small distribution business selling **Queso** (cheese), **Yogurt**, **Milk**, and **Mote**, plus raw grain inputs purchased into a central deposit.
+Daily sales and net profit tracker for a small distribution business in Bolivia selling **Queso** (cheese), **Yogurt**, **Milk**, and **Mote**.
 
-A vehicle user takes products from the deposit each day, sells them, and reports what's left. Admins manage users, product pricing, and deposit stock purchases, and see business-wide revenue and inventory.
+Each seller takes Queso and Yogurt from the deposit, sells them with Milk and Mote, and records what was left over and their total sales. The app works out sales, unsold value, the daily winner and each seller's pay; admins also see net profit after Milk and grain costs. The full description of rules and calculations is in [`context/project-overview.md`](context/project-overview.md).
 
 ## Tech Stack
 
@@ -43,7 +43,7 @@ npx prisma generate
 npx prisma db push
 ```
 
-Then seed one admin and one vehicle user:
+Then seed one admin and one seller:
 
 ```bash
 npx prisma db seed
@@ -54,7 +54,7 @@ This creates:
 | Role         | Email                | Password      |
 | ------------ | --------------------- | -------------- |
 | Admin        | `admin@sysjl.local`   | `ChangeMe123!` |
-| Vehicle user | `carla@sysjl.local`   | `ChangeMe123!` |
+| Seller       | `carla@sysjl.local`   | `ChangeMe123!` |
 
 The seed is idempotent — re-running it won't duplicate users or overwrite an admin-set product price.
 
@@ -79,51 +79,55 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Roles & Access
 
-- **Admin** — manages user accounts, product sale prices, central-deposit stock purchases, and sees business-wide revenue, inventory, and sale records across all users.
-- **Vehicle user** — records their own daily sales (quantities taken from the deposit and left over at day's end) and views their own history. The acting user is always resolved from the server-side session, never trusted from the client.
+- **Admin** — manages users, Queso/Yogurt sale prices and purchase costs, Milk and grain purchases; sees and edits every sale record, costs and net profit.
+- **Seller** (`VEHICLE_USER`) — records and edits their own daily sale records and sees their own pay. The acting user always comes from the server-side session, never from the client.
+- **Guest** — sees the public home page `/` (sales by user, no costs, profit or pay).
 
-Route access is enforced centrally in `src/proxy.ts`: every route requires sign-in except `/` and `/login`, and everything under `/admin/*` additionally requires the admin role.
+`src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`; every Server Action checks again.
 
 ## Project Structure
 
 ```
 src/
-  app/                    # Next.js App Router pages
-    (panel)/              # Signed-in shell: sidebar, breadcrumbs, quick stats
-      dashboard/          # Summary cards, sale records, admin-only sale pricing
-      admin/
-        users/            # Admin: user CRUD
-        cheese/           # Admin: cheese stock purchases
-        yogurt/           # Admin: yogurt stock purchases
-        milk/             # Admin: milk stock purchases
-        grains/           # Admin: grain stock purchases (item picked per purchase)
-    page.tsx              # Public home page (totals by user, no login required)
+  app/
+    page.tsx              # Public home: top seller, sales charts, totals by user
     login/
-  actions/                # Server Actions (one file per feature), return { success, error }
+    (panel)/              # Signed-in shell: sidebar, header, breadcrumbs
+      dashboard/          # Sales charts, prices & costs (admin), sale records
+      account/            # Change own password
+      admin/users/        # Admin: user management
+      admin/milk/         # Admin: Milk purchases per seller per day
+      admin/grains/       # Admin: grain purchases
+  actions/                # Server Actions, one file per feature (+ tests)
   components/
-    admin/                # users/, stock-purchases/, grain-purchases/, product-pricing/
-    landing/              # Public home + dashboard sections
-    layout/               # PanelShell, Footer, etc.
-    records/              # Sale record create/edit forms
-  lib/                    # Business logic, Prisma client, i18n, pricing helpers
-  types/                  # Shared TypeScript types
+    home/                 # Public home sections
+    sale-records/         # Sale Records table, cells, record forms
+    sales-charts/         # Charts, selected-day context
+    admin/                # users/, milk-purchases/, grain-purchases/, stock-purchases/, product-pricing/
+    layout/ ui/ auth/ account/ i18n/
+  hooks/                  # Custom React hooks
+  lib/
+    daily-records.ts      # Builds sale record rows and the daily winner
+    money/                # Prices, costs, revenue, net profit, seller pay
+    auth/                 # Password hashing, session/admin guards
+    i18n/                 # Translations (Spanish default, English)
+  types/
 prisma/
-  schema.prisma           # Data model (see below)
+  schema.prisma
   seed.ts                 # Idempotent seed script
-context/                  # Project spec, coding standards, and feature-workflow docs
-  current-feature.md      # Active feature tracker (see context/ai-interaction.md)
+context/                  # Spec, coding standards, workflow, current feature, history
 ```
 
 ## Data Model
 
-- **User** — admin or vehicle-user role, active/inactive.
-- **DailyWorkRecord** — one per user per day: Queso/Yogurt quantities taken and left over, snapshotted sale prices (so a later price change never rewrites past revenue), and a user-entered total-sold figure covering all four products.
-- **ProductPrice** — current sale price per product (Queso/Yogurt only); one row per product, updated in place.
-- **StockPurchase** — a batch of product purchased into the central deposit (quantity + unit cost), covering Queso, Yogurt, Milk, and three grain items (Maíz Pelado, Maíz con Cáscara, Haba). Current deposit stock for Queso/Yogurt is *derived* — total purchased minus taken-minus-remaining across `DailyWorkRecord` — not a separately maintained counter.
+- **User** — admin or seller role, active/inactive.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left over, user-entered total sold (all four products), and the sale prices snapshotted at creation so later price changes never rewrite past records.
+- **ProductPrice** — current sale price and purchase cost for Queso and Yogurt; one row per product, updated in place.
+- **StockPurchase** — a Milk purchase (for one seller) or grain purchase (Maíz pelado, Maíz con cáscara, Haba): quantity and unit cost. Feeds net profit.
 
 ## Internationalization
 
-The app is fully bilingual (English/Spanish) via a cookie-backed locale switcher; see `src/lib/i18n/`.
+The app is bilingual — Spanish by default, English optional — via a cookie-backed language switcher; see `src/lib/i18n/`.
 
 ## Testing
 
