@@ -73,12 +73,16 @@ model DailyWorkRecord {
   @@unique([userId, date])
 }
 
-// A single current sale price per product, updated in place on each change — no
-// history is kept, just who last set it and when.
+// A single current sale price and purchase cost per product, updated in place on
+// each change — no history is kept, just who last set it and when.
 model ProductPrice {
-  id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  product   PricedProduct @unique
-  salePrice Float
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  product      PricedProduct @unique
+  salePrice    Float
+  // Cost per unit, deducted from Net profit for each unit sold. Optional so rows
+  // saved before it existed still read; those fall back to the product's last
+  // recorded StockPurchase cost (see getCurrentProductPrices).
+  purchaseCost Float?
   setById   String        @db.ObjectId
   setBy     User          @relation(fields: [setById], references: [id])
   updatedAt DateTime      @updatedAt

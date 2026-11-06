@@ -8,12 +8,6 @@ export interface AdminUserRow {
   isActive: boolean;
 }
 
-// Covers /admin/cheese only — fixed to one product. Yogurt and Milk each have their
-// own implementation (YogurtPurchasesSection, MilkPurchasesSection — day-grouping,
-// earning/driver-attribution specifics that no longer fit this simple shared shape),
-// and Maiz Pelado/Cascara/Haba are picked per-purchase on /admin/grains instead.
-export type SingleStockProduct = "QUESO";
-
 // The items selectable from /admin/grains' "Item" dropdown — all quartilla-priced.
 export type GrainProduct = "MAIZ_PELADO" | "MAIZ_CASCARA" | "HABA";
 

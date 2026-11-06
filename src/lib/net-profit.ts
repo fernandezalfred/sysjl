@@ -1,5 +1,6 @@
 import { buildGrainsShareByDate, type MilkGrainsDeductions, type UnitCosts } from "@/lib/revenue";
-import { getGrainsCostByDay, getLatestUnitCost, getMilkCostByUserAndDay } from "@/lib/stock";
+import { getCurrentPurchaseCosts } from "@/lib/product-prices";
+import { getGrainsCostByDay, getMilkCostByUserAndDay } from "@/lib/stock";
 import type { DailyRecordRow } from "@/types/landing";
 
 export interface NetProfitInputs {
@@ -11,15 +12,14 @@ export interface NetProfitInputs {
 // read live from the database so a changed purchase cost or quantity is reflected
 // immediately. Cost data is admin-only — callers must gate this on the admin role.
 export async function getNetProfitInputs(records: DailyRecordRow[]): Promise<NetProfitInputs> {
-  const [quesoCost, yogurtCost, milkCostByUserDay, grainsCostByDay] = await Promise.all([
-    getLatestUnitCost("QUESO"),
-    getLatestUnitCost("YOGURT"),
+  const [purchaseCosts, milkCostByUserDay, grainsCostByDay] = await Promise.all([
+    getCurrentPurchaseCosts(),
     getMilkCostByUserAndDay(),
     getGrainsCostByDay(),
   ]);
 
   return {
-    unitCosts: { QUESO: quesoCost, YOGURT: yogurtCost },
+    unitCosts: purchaseCosts,
     deductions: { milkCostByUserDay, grainsShareByDate: buildGrainsShareByDate(grainsCostByDay, records) },
   };
 }

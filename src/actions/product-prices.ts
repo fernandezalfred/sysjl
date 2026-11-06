@@ -14,10 +14,11 @@ export interface ActionState {
 const setPriceSchema = z.object({
   product: z.enum(PricedProduct),
   salePrice: z.coerce.number().min(0, "Sale price must be 0 or more."),
+  purchaseCost: z.coerce.number().min(0, "Purchase cost must be 0 or more."),
 });
 
-// Updates the product's single price row in place — no history is kept, just who
-// last set it and when.
+// Updates the product's single price row (sale price + purchase cost) in place — no
+// history is kept, just who last set it and when.
 export async function setProductPrice(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const session = await requireAdminSession();
@@ -25,6 +26,7 @@ export async function setProductPrice(_prevState: ActionState, formData: FormDat
     const parsed = setPriceSchema.safeParse({
       product: formData.get("product"),
       salePrice: formData.get("salePrice"),
+      purchaseCost: formData.get("purchaseCost") ?? undefined,
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -34,11 +36,13 @@ export async function setProductPrice(_prevState: ActionState, formData: FormDat
       where: { product: parsed.data.product },
       update: {
         salePrice: parsed.data.salePrice,
+        purchaseCost: parsed.data.purchaseCost,
         setById: session.user.id,
       },
       create: {
         product: parsed.data.product,
         salePrice: parsed.data.salePrice,
+        purchaseCost: parsed.data.purchaseCost,
         setById: session.user.id,
       },
     });

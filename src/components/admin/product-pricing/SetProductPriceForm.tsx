@@ -39,6 +39,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
       <p className="mt-1 text-xs text-foreground/60">
         {t("adminProducts.currentInfo", {
           sale: formatCurrency(current.salePrice),
+          cost: formatCurrency(current.purchaseCost),
         })}
         {current.updatedByName
           ? t("adminProducts.setByInfo", {
@@ -61,6 +62,21 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
             min="0"
             step="0.01"
             defaultValue={current.salePrice}
+            required
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`${product}-cost`} className="text-xs font-medium text-foreground/60">
+            {t("adminProducts.purchaseCostBs")}
+          </label>
+          <input
+            id={`${product}-cost`}
+            name="purchaseCost"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={current.purchaseCost}
             required
             className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
           />

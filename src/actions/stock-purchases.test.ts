@@ -40,7 +40,7 @@ function formData(fields: Record<string, string>) {
   return fd;
 }
 
-const VALID_FIELDS = { product: "QUESO", quantity: "50", unitCost: "6.5" };
+const VALID_FIELDS = { product: "HABA", quantity: "50", unitCost: "6.5" };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -81,27 +81,21 @@ describe("createStockPurchase", () => {
     expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
   });
 
-  it("creates a QUESO stock purchase tagged with the acting admin", async () => {
+  it("creates a grain stock purchase tagged with the acting admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     const result = await createStockPurchase({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: true });
     expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
-      data: { product: "QUESO", quantity: 50, unitCost: 6.5, createdById: "admin-1" },
+      data: { product: "HABA", quantity: 50, unitCost: 6.5, createdById: "admin-1" },
     });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/cheese");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
-  it("creates a YOGURT stock purchase and revalidates the yogurt page", async () => {
+  it.each(["QUESO", "YOGURT"])("rejects a new %s purchase (their cost is set on /dashboard)", async (product) => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    const result = await createStockPurchase(
-      { success: false },
-      formData({ ...VALID_FIELDS, product: "YOGURT" }),
-    );
-    expect(result).toEqual({ success: true });
-    expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
-      data: { product: "YOGURT", quantity: 50, unitCost: 6.5, createdById: "admin-1" },
-    });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/yogurt");
+    const result = await createStockPurchase({ success: false }, formData({ ...VALID_FIELDS, product }));
+    expect(result.success).toBe(false);
+    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
   });
 
   it("creates a MILK stock purchase tagged with the acting admin and the selected driver", async () => {
@@ -223,7 +217,7 @@ describe("updateStockPurchase", () => {
 
   it("updates quantity and unit cost in place for an admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "QUESO" });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "HABA" });
     const result = await updateStockPurchase(
       { success: false },
       formData({ quantity: "75", unitCost: "7", purchaseId: "p1" }),
@@ -233,14 +227,14 @@ describe("updateStockPurchase", () => {
       where: { id: "p1" },
       data: { quantity: 75, unitCost: 7 },
     });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/cheese");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
-  it("revalidates the yogurt page when editing a YOGURT purchase", async () => {
+  it("only refreshes /dashboard and / when editing an old YOGURT purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p2", product: "YOGURT" });
     await updateStockPurchase({ success: false }, formData({ quantity: "75", unitCost: "7", purchaseId: "p2" }));
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/yogurt");
+    expect(revalidatePathMock.mock.calls.map(([path]) => path).sort()).toEqual(["/", "/dashboard", "/dashboard"]);
   });
 
   it("revalidates the milk page when editing a MILK purchase", async () => {
@@ -283,18 +277,18 @@ describe("deleteStockPurchase", () => {
 
   it("deletes the purchase for an admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "QUESO" });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "HABA" });
     const result = await deleteStockPurchase("p1");
     expect(result).toEqual({ success: true });
     expect(prismaMock.stockPurchase.delete).toHaveBeenCalledWith({ where: { id: "p1" } });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/cheese");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
-  it("revalidates the yogurt page when deleting a YOGURT purchase", async () => {
+  it("only refreshes /dashboard and / when deleting an old YOGURT purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p2", product: "YOGURT" });
     await deleteStockPurchase("p2");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/yogurt");
+    expect(revalidatePathMock.mock.calls.map(([path]) => path).sort()).toEqual(["/", "/dashboard", "/dashboard"]);
   });
 
   it("revalidates the milk page when deleting a MILK purchase", async () => {

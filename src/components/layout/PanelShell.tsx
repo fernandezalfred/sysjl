@@ -42,18 +42,6 @@ function getBreadcrumbs(pathname: string, t: TranslateFn): NavItem[] {
       { href: "/admin/users", label: t("header.manageUsers") },
     ];
   }
-  if (pathname.startsWith("/admin/cheese")) {
-    return [
-      { href: "/admin/cheese", label: t("sidebar.administration") },
-      { href: "/admin/cheese", label: t("header.cheese") },
-    ];
-  }
-  if (pathname.startsWith("/admin/yogurt")) {
-    return [
-      { href: "/admin/yogurt", label: t("sidebar.administration") },
-      { href: "/admin/yogurt", label: t("header.yogurt") },
-    ];
-  }
   if (pathname.startsWith("/admin/milk")) {
     return [
       { href: "/admin/milk", label: t("sidebar.administration") },
@@ -91,8 +79,6 @@ export function PanelShell({ isAdmin, userName, locale, children }: PanelShellPr
             label: t("sidebar.administration"),
             items: [
               { href: "/admin/users", label: t("header.manageUsers") },
-              { href: "/admin/cheese", label: t("header.cheese") },
-              { href: "/admin/yogurt", label: t("header.yogurt") },
               { href: "/admin/milk", label: t("header.milk") },
               { href: "/admin/grains", label: t("header.grains") },
             ],

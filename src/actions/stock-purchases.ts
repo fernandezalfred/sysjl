@@ -13,12 +13,13 @@ export interface ActionState {
   error?: string;
 }
 
+// Queso and Yogurt no longer have a purchase page (their cost is set next to the
+// sale price on /dashboard); their old purchases only refresh /dashboard.
 function panelPathForProduct(product: Product): string {
   switch (product) {
     case "QUESO":
-      return "/admin/cheese";
     case "YOGURT":
-      return "/admin/yogurt";
+      return "/dashboard";
     case "MILK":
       return "/admin/milk";
     case "MAIZ_PELADO":
@@ -34,7 +35,7 @@ const quantityAndCost = z.object({
 });
 
 const createSchema = quantityAndCost.extend({
-  product: z.enum(["QUESO", "YOGURT", "MILK", "MAIZ_PELADO", "MAIZ_CASCARA", "HABA"]),
+  product: z.enum(["MILK", "MAIZ_PELADO", "MAIZ_CASCARA", "HABA"]),
   // Only read for MILK: the driver this purchase is for, picked from a dropdown on
   // that page. Distinct from createdById, which stays the entering admin for every
   // product, Milk included — this never replaces it.

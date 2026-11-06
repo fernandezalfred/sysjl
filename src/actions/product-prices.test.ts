@@ -25,7 +25,7 @@ function formData(fields: Record<string, string>) {
   return fd;
 }
 
-const VALID_FIELDS = { product: "QUESO", salePrice: "10" };
+const VALID_FIELDS = { product: "QUESO", salePrice: "10", purchaseCost: "9" };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -56,14 +56,28 @@ describe("setProductPrice", () => {
     expect(prismaMock.productPrice.upsert).not.toHaveBeenCalled();
   });
 
+  it("rejects a negative purchase cost", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const result = await setProductPrice({ success: false }, formData({ ...VALID_FIELDS, purchaseCost: "-1" }));
+    expect(result.success).toBe(false);
+    expect(prismaMock.productPrice.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing purchase cost", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const result = await setProductPrice({ success: false }, formData({ product: "QUESO", salePrice: "10" }));
+    expect(result.success).toBe(false);
+    expect(prismaMock.productPrice.upsert).not.toHaveBeenCalled();
+  });
+
   it("upserts the product's price row in place, tagged with the acting admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     const result = await setProductPrice({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: true });
     expect(prismaMock.productPrice.upsert).toHaveBeenCalledWith({
       where: { product: "QUESO" },
-      update: { salePrice: 10, setById: "admin-1" },
-      create: { product: "QUESO", salePrice: 10, setById: "admin-1" },
+      update: { salePrice: 10, purchaseCost: 9, setById: "admin-1" },
+      create: { product: "QUESO", salePrice: 10, purchaseCost: 9, setById: "admin-1" },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
