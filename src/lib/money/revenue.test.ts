@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/daily-records";
 import {
   buildGrainsShareByDate,
-  buildNetProfitByDate,
+  buildNetProfitAfterPayByDate,
   milkCostKey,
   recordAdjustedRevenue,
   type MilkGrainsDeductions,
@@ -118,11 +118,12 @@ describe("buildGrainsShareByDate", () => {
   });
 });
 
-describe("buildNetProfitByDate", () => {
-  it("sums each day's records' Net profit, deducting the day's full grains cost once", () => {
+describe("buildNetProfitAfterPayByDate", () => {
+  it("sums each day's records' Net profit minus seller pay, deducting the day's full grains cost once", () => {
     // Day 1: A sells 10 Queso (margin 3 each = 30), B sells 2 Yogurt (margin 11 each = 22).
-    // Grains 40 that day, split 20 + 20; A also has 5 of Milk. 30 + 22 - 40 - 5 = 7.
-    // Day 2: A sells 4 Queso = 12, no deductions.
+    // Grains 40 that day, split 20 + 20; A also has 5 of Milk. 30 + 22 - 40 - 5 = 7,
+    // minus Bs 150 pay for each seller (both sold under 2500): 7 - 300 = -293.
+    // Day 2: A sells 4 Queso = 12, minus 150 pay = -138.
     const rows = buildDailyRecords([
       record({ id: "r1", date: "2026-11-01", userId: "a", product: "QUESO", quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
       record({ id: "r2", date: "2026-11-01", userId: "b", product: "YOGURT", unitPrice: 33, quantityTaken: 2, quantityRemaining: 0, totalSold: 66 }),
@@ -133,13 +134,22 @@ describe("buildNetProfitByDate", () => {
       grainsShareByDate: buildGrainsShareByDate({ "2026-11-01": 40 }, rows),
     };
 
-    const byDate = buildNetProfitByDate(rows, unitCosts, deductions);
+    const byDate = buildNetProfitAfterPayByDate(rows, unitCosts, deductions);
 
-    expect(byDate["2026-11-01"]).toBeCloseTo(7, 5);
-    expect(byDate["2026-11-02"]).toBeCloseTo(12, 5);
+    expect(byDate["2026-11-01"]).toBeCloseTo(-293, 5);
+    expect(byDate["2026-11-02"]).toBeCloseTo(-138, 5);
+  });
+
+  it("deducts a higher-tier pay for a record with more than 2500 in sales", () => {
+    // 300 Queso sold at 9 = 2700 Total venta, margin 3 each = 900; pay for 2700 is 170.
+    const rows = buildDailyRecords([
+      record({ id: "r1", date: "2026-11-03", product: "QUESO", quantityTaken: 300, quantityRemaining: 0, totalSold: 2700 }),
+    ]);
+
+    expect(buildNetProfitAfterPayByDate(rows, unitCosts)["2026-11-03"]).toBeCloseTo(900 - 170, 5);
   });
 
   it("is empty when there are no records", () => {
-    expect(buildNetProfitByDate([], unitCosts)).toEqual({});
+    expect(buildNetProfitAfterPayByDate([], unitCosts)).toEqual({});
   });
 });

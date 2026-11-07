@@ -18,8 +18,8 @@ export interface UserTotal {
   date: string;
   userId: string;
   userName: string;
-  quesoRevenue: number;
-  yogurtRevenue: number;
+  queso: ProductBreakdown;
+  yogurt: ProductBreakdown;
   milkMoteRevenue: number;
   totalRevenue: number;
   isDailyWinner: boolean;

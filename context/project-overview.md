@@ -22,14 +22,14 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 | Role (`Role` enum) | Shown as             | Can do                                                                                                                         |
 | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `ADMIN`            | Administrador        | Everything: manage users, prices and costs, Milk and grain purchases; see and edit every sale record; see costs and net profit |
-| `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see their own pay, change their own password                                           |
+| `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see every seller's pay, change their own password                                     |
 | Guest (signed out) | —                    | See the public home page (sales by user, no costs, no profit, no pay)                                                           |
 
 Rules:
 
 - The acting user always comes from the server-side session; a user id sent by the browser is never trusted.
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
-- Costs, net profit and the winner's margin are admin-only. Seller pay is shown to admins on every row and to a seller on their own rows only.
+- Costs, net profit and the winner's margin are admin-only. Seller pay is shown to every signed-in user on every row (not to guests).
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
 ## 4. Pages
@@ -75,7 +75,7 @@ The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 | Pago (seller pay)              | Bs 150 up to 2500 of Total venta; +10 per 100 from 2500 to 3000; +20 per 100 above 3000 (amount over 2500 rounded to the nearest 100) |
 | Ganancia neta − Pago (admin)   | shown under the seller's name; display only                                                                               |
 
-The day header shows the day's total Ganancia neta (admins). Amounts are displayed in whole bolivianos; calculations and stored values keep their cents.
+The day header shows the day's total of Ganancia neta − Pago over all its records (admins). Amounts are displayed in whole bolivianos; calculations and stored values keep their cents.
 
 The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/revenue.ts` (net profit), `src/lib/money/seller-pay.ts` (pay) and `src/lib/money/net-profit.ts` (loading Milk and grain costs).
 

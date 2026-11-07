@@ -19,7 +19,8 @@ interface UserCellProps {
 // subtraction written like on paper — Ganancia neta, "−" Pago, a line, and on the last row
 // the seller's name on the left and the result in bold purple on the right (label kept as
 // tooltip / screen-reader text). Without it: the name, then just the "Pago" line.
-// Callers use it for admins on every row and for a seller on their own rows only.
+// Callers use it for every signed-in viewer on every row (admins get the subtraction,
+// sellers just the name and Pago); guests see only the name.
 export function UserCell({ name, totalSold, netProfit, t }: UserCellProps) {
   const pay = sellerPay(totalSold);
   if (netProfit === null) {

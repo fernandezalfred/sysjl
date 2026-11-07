@@ -76,8 +76,8 @@ describe("buildUserTotals", () => {
     const carlaDaily = dailyRows.find((r) => r.userId === "u1")!;
     const jorgeDaily = dailyRows.find((r) => r.userId === "u2")!;
 
-    expect(carla.quesoRevenue).toBe(68 * 9);
-    expect(carla.yogurtRevenue).toBe(55 * 33);
+    expect(carla.queso.revenue).toBe(68 * 9);
+    expect(carla.yogurt.revenue).toBe(55 * 33);
     expect(carla.milkMoteRevenue).toBe(carlaDaily.milkMoteRevenue);
     expect(carla.totalRevenue).toBe(carlaDaily.totalRevenue);
     expect(carla.isDailyWinner).toBe(true);
@@ -253,7 +253,7 @@ describe("getDailyRecordsData", () => {
   it("builds one user total per user per day from every work record", async () => {
     const data = await getDailyRecordsData();
 
-    const sumOfUserRevenue = data.userTotals.reduce((sum, u) => sum + u.quesoRevenue + u.yogurtRevenue, 0);
+    const sumOfUserRevenue = data.userTotals.reduce((sum, u) => sum + u.queso.revenue + u.yogurt.revenue, 0);
     expect(data.userTotals).toHaveLength(2);
     expect(sumOfUserRevenue).toBe((80 - 12) * 9 + (60 - 5) * 33 + (70 - 20) * 9 + (50 - 18) * 33);
   });

@@ -1,3 +1,4 @@
+import { netProfitAfterPay } from "@/lib/money/seller-pay";
 import type { DailyRecordRow, ProductCode } from "@/types/daily-records";
 
 export type UnitCosts = Record<ProductCode, number>;
@@ -65,18 +66,21 @@ export function buildGrainsShareByDate(
   return result;
 }
 
-// A day's total Net profit: the sum of recordAdjustedRevenue over that day's
-// records, keyed by YYYY-MM-DD. Shown in each day header of Sale Records and
-// Totals by User (admin-only, like every Net profit figure). Since grains are
-// split evenly across the day's records, the sum deducts the day's full grains cost.
-export function buildNetProfitByDate(
+// A day's total Net profit after paying the sellers: the sum, over that day's records,
+// of each record's Net profit minus its seller pay (the same "Ganancia neta − Pago"
+// shown under each seller's name), keyed by YYYY-MM-DD. Shown in each day header of
+// Sale Records and Totals by User (admin-only, like every Net profit figure). Since
+// grains are split evenly across the day's records, the sum deducts the day's full
+// grains cost.
+export function buildNetProfitAfterPayByDate(
   rows: DailyRecordRow[],
   unitCosts: UnitCosts,
   deductions?: MilkGrainsDeductions,
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const row of rows) {
-    result[row.date] = (result[row.date] ?? 0) + recordAdjustedRevenue(row, unitCosts, deductions);
+    const netProfit = recordAdjustedRevenue(row, unitCosts, deductions);
+    result[row.date] = (result[row.date] ?? 0) + netProfitAfterPay(netProfit, row.totalSold);
   }
   return result;
 }

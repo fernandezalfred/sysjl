@@ -80,7 +80,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Roles & Access
 
 - **Admin** — manages users, Queso/Yogurt sale prices and purchase costs, Milk and grain purchases; sees and edits every sale record, costs and net profit.
-- **Seller** (`VEHICLE_USER`) — records and edits their own daily sale records and sees their own pay. The acting user always comes from the server-side session, never from the client.
+- **Seller** (`VEHICLE_USER`) — records and edits their own daily sale records and sees every seller's pay. The acting user always comes from the server-side session, never from the client.
 - **Guest** — sees the public home page `/` (sales by user, no costs, profit or pay).
 
 `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`; every Server Action checks again.

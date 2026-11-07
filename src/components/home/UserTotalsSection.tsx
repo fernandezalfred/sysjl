@@ -5,9 +5,10 @@ import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
 import { formatCurrency } from "@/lib/money/pricing";
+import { ProductCell } from "@/components/sale-records/ProductCell";
 import { UserCell } from "@/components/sale-records/UserCell";
 import {
-  buildNetProfitByDate,
+  buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
   type UnitCosts,
   type MilkGrainsDeductions,
@@ -36,7 +37,7 @@ interface UserTotalsSectionProps {
 // Matches Sale Records' "sold" revenue: Queso + Yogurt + Milk & Mote, excluding
 // the value of unsold ("left") product.
 function soldRevenueOf(u: UserTotal): number {
-  return u.quesoRevenue + u.yogurtRevenue + u.milkMoteRevenue;
+  return u.queso.revenue + u.yogurt.revenue + u.milkMoteRevenue;
 }
 
 // Mirrors Sale Records' TotalRevenueCell: bold sold revenue, plus the remaining
@@ -108,10 +109,10 @@ export function UserTotalsSection({
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(userTotals), "totals");
 
-  // The day's total Net profit for its header — admins only (unitCosts is null for
+  // The day's total Net profit minus seller pay for its header — admins only (unitCosts is null for
   // everyone else). Computed from every record, not just the current page, so a
   // day split across pages still shows its full total.
-  const netProfitByDate = unitCosts ? buildNetProfitByDate(dailyRecords, unitCosts, deductions ?? undefined) : null;
+  const netProfitByDate = unitCosts ? buildNetProfitAfterPayByDate(dailyRecords, unitCosts, deductions ?? undefined) : null;
   function dayNetProfit(date: string) {
     const amount = netProfitByDate?.[date];
     if (amount === undefined) return null;
@@ -195,7 +196,7 @@ export function UserTotalsSection({
                 {group.totals.map((u) => (
                   <tr key={`${u.date}-${u.userId}`} className="divide-x divide-foreground/15">
                     <td className="px-4 py-2">
-                      {isAdmin || u.userId === currentUserId ? (
+                      {currentUserId ? (
                         <UserCell
                           name={<UserName name={u.userName} />}
                           totalSold={soldRevenueOf(u)}
@@ -206,8 +207,12 @@ export function UserTotalsSection({
                         <UserName name={u.userName} />
                       )}
                     </td>
-                    <td className="px-4 py-2 font-semibold">{formatCurrency(u.quesoRevenue)}</td>
-                    <td className="px-4 py-2 font-semibold">{formatCurrency(u.yogurtRevenue)}</td>
+                    <td className="px-4 py-2">
+                      <ProductCell breakdown={u.queso} t={t} />
+                    </td>
+                    <td className="px-4 py-2">
+                      <ProductCell breakdown={u.yogurt} t={t} />
+                    </td>
                     <td className="px-4 py-2">
                       <div className="font-semibold">{formatCurrency(u.milkMoteRevenue)}</div>
                       <WinnerBadge isDailyWinner={u.isDailyWinner} winnerMargin={u.winnerMargin} isAdmin={isAdmin} t={t} />
@@ -245,13 +250,13 @@ export function UserTotalsSection({
               className="rounded-md px-3 py-1.5"
               trailing={dayNetProfit(group.date)}
             />
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-3">
               {group.totals.map((u) => (
                 <li
                   key={`${u.date}-${u.userId}`}
-                  className="rounded-lg border border-foreground/10 p-3"
+                  className="rounded-lg border border-foreground/25 border-l-4 border-l-sky-600 bg-foreground/[0.03] p-3 shadow-sm dark:border-l-sky-400"
                 >
-                  {isAdmin || u.userId === currentUserId ? (
+                  {currentUserId ? (
                     <UserCell
                       name={<UserName name={u.userName} />}
                       totalSold={soldRevenueOf(u)}
@@ -261,18 +266,22 @@ export function UserTotalsSection({
                   ) : (
                     <UserName name={u.userName} />
                   )}
-                  <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
+                  {/* One column like the Sale Records cards: the Queso / Yogurt lines never
+                      wrap, so they need the card's full width on a phone. */}
+                  <div className="mt-2 flex flex-col gap-3 text-sm">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.queso")}</p>
-                      <div className="font-semibold">{formatCurrency(u.quesoRevenue)}</div>
+                      <ProductCell breakdown={u.queso} t={t} />
                     </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.yogurt")}</p>
-                      <div className="font-semibold">{formatCurrency(u.yogurtRevenue)}</div>
+                      <ProductCell breakdown={u.yogurt} t={t} />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
-                      <div className="font-semibold">{formatCurrency(u.milkMoteRevenue)}</div>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
+                        <div className="font-semibold tabular-nums">{formatCurrency(u.milkMoteRevenue)}</div>
+                      </div>
                       <WinnerBadge isDailyWinner={u.isDailyWinner} winnerMargin={u.winnerMargin} isAdmin={isAdmin} t={t} />
                     </div>
                   </div>

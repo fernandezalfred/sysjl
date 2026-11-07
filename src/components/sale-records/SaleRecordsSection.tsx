@@ -3,12 +3,13 @@
 import { WinnerBadge } from "@/components/sale-records/WinnerBadge";
 import { Fragment, useRef, useState } from "react";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
+import { ProductCell } from "@/components/sale-records/ProductCell";
 import { formatCurrency } from "@/lib/money/pricing";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { toEditableRecord } from "@/lib/editable-record";
 import { UserCell } from "@/components/sale-records/UserCell";
 import {
-  buildNetProfitByDate,
+  buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
   type UnitCosts,
   type MilkGrainsDeductions,
@@ -16,7 +17,7 @@ import {
 import { CreateRecordForm } from "@/components/sale-records/CreateRecordForm";
 import { EditRecordForm } from "@/components/sale-records/EditRecordForm";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
-import type { DailyRecordRow, DailyWorkRecordRow, ProductBreakdown } from "@/types/daily-records";
+import type { DailyRecordRow, DailyWorkRecordRow } from "@/types/daily-records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/ui/Pagination";
@@ -34,22 +35,6 @@ interface SaleRecordsSectionProps {
 }
 
 type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
-
-function ProductCell({ breakdown, t }: { breakdown: ProductBreakdown; t: TranslateFn }) {
-  return (
-    <>
-      <div className="text-xs text-foreground/70">
-        <LabeledAmount label={t("cell.soldCount", { sold: breakdown.sold })} amount={formatCurrency(breakdown.revenue)} />
-      </div>
-      <div className="text-xs text-foreground/70">
-        <LabeledAmount
-          label={t("cell.takenLeftCount", { taken: breakdown.taken, remaining: breakdown.remaining })}
-          amount={formatCurrency(breakdown.remainingValue)}
-        />
-      </div>
-    </>
-  );
-}
 
 function UserName({ name }: { name: string }) {
   return <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{name}</div>;
@@ -129,10 +114,10 @@ export function SaleRecordsSection({
   const [formKey, setFormKey] = useState(0);
   const { pageItems: dayGroups, ...pager } = useGroupedPagination(groupByDay(dailyRecords), "rows");
 
-  // The day's total Net profit for its header — admins only (unitCosts is null for
+  // The day's total Net profit minus seller pay for its header — admins only (unitCosts is null for
   // everyone else). Computed from every record, not just the current page, so a
   // day split across pages still shows its full total.
-  const netProfitByDate = unitCosts ? buildNetProfitByDate(dailyRecords, unitCosts, deductions ?? undefined) : null;
+  const netProfitByDate = unitCosts ? buildNetProfitAfterPayByDate(dailyRecords, unitCosts, deductions ?? undefined) : null;
   function dayNetProfit(date: string) {
     const amount = netProfitByDate?.[date];
     if (amount === undefined) return null;
@@ -215,7 +200,7 @@ export function SaleRecordsSection({
                 {group.rows.map((row) => (
                   <tr key={row.id} className="divide-x divide-foreground/15 align-top">
                     <td className="px-4 py-2">
-                      {isAdmin || row.userId === currentUserId ? (
+                      {currentUserId ? (
                         <UserCell
                           name={<UserName name={row.userName} />}
                           totalSold={row.totalSold}
@@ -274,18 +259,20 @@ export function SaleRecordsSection({
               className="rounded-md px-3 py-1.5"
               trailing={dayNetProfit(group.date)}
             />
-            <ul className="grid grid-cols-1 gap-2 @min-[44rem]/records:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 @min-[44rem]/records:grid-cols-2">
               {group.rows.map((row) => (
-                <li key={row.id} className="fluid-text @container rounded-lg border border-foreground/10 p-3">
+                <li key={row.id} className="fluid-text @container rounded-lg border border-foreground/25 border-l-4 border-l-sky-600 bg-foreground/[0.03] p-3 shadow-sm dark:border-l-sky-400">
                   {/* One column, capped at max-w-sm, so every amount on the card lines up at
                       the same right edge and never drifts far from its label. */}
                   <div className="max-w-sm">
-                    {isAdmin || row.userId === currentUserId ? (
+                    {currentUserId ? (
                       <UserCell
                         name={
                           <div className="flex items-start gap-2">
                             <UserName name={row.userName} />
-                            <EditButton onClick={() => openEdit(row)} label={t("table.edit")} />
+                            {isAdmin || row.userId === currentUserId ? (
+                              <EditButton onClick={() => openEdit(row)} label={t("table.edit")} />
+                            ) : null}
                           </div>
                         }
                         totalSold={row.totalSold}
