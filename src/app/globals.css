@@ -107,3 +107,43 @@ dialog:modal {
 .fluid-text .text-xs {
   font-size: var(--fluid-xs);
 }
+
+/* A visible, rounded horizontal scrollbar for scroll frames such as the trend chart:
+   a black thumb on a light gray track (a lighter gray in dark mode, so the black thumb
+   still stands out against the dark page), dark gray on hover. Firefox
+   uses scrollbar-color / scrollbar-width; Chrome, Edge and Safari the ::-webkit rules. */
+.styled-scroll {
+  --scroll-track: var(--color-neutral-200);
+  --scroll-thumb: var(--color-black);
+  --scroll-thumb-hover: var(--color-neutral-700);
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-width: thin;
+}
+
+@media (prefers-color-scheme: dark) {
+  .styled-scroll {
+    --scroll-track: var(--color-neutral-500);
+    --scroll-thumb-hover: var(--color-neutral-800);
+  }
+}
+
+.styled-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.styled-scroll::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+  border-radius: 9999px;
+}
+
+.styled-scroll::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.styled-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  background-clip: padding-box;
+}

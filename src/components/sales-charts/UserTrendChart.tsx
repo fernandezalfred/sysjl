@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -37,6 +37,36 @@ const USER_COLORS = [
   { light: "#e34948", dark: "#e66767" },
 ];
 
+// On every screen the chart gets at least ~4rem per period (day/week/month) so points
+// and their amount labels don't pile up; when that's wider than the container, the frame
+// scrolls sideways. A wider container just stretches the chart, as before.
+// Full class strings (not built from numbers) so Tailwind generates them.
+const CHART_MIN_WIDTHS: { maxPeriods: number; className: string }[] = [
+  { maxPeriods: 5, className: "" },
+  { maxPeriods: 8, className: "min-w-[32rem]" },
+  { maxPeriods: 12, className: "min-w-[48rem]" },
+  { maxPeriods: 16, className: "min-w-[64rem]" },
+  { maxPeriods: 20, className: "min-w-[80rem]" },
+  { maxPeriods: 24, className: "min-w-[96rem]" },
+];
+const CHART_MIN_WIDTH_MAX = "min-w-[128rem]";
+
+function chartMinWidthClass(periodCount: number): string {
+  return CHART_MIN_WIDTHS.find((w) => periodCount <= w.maxPeriods)?.className ?? CHART_MIN_WIDTH_MAX;
+}
+
+// Legend dots matching USER_COLORS, light then dark (Tailwind needs literal classes).
+const USER_DOT_CLASSES = [
+  "bg-[#2a78d6] dark:bg-[#3987e5]",
+  "bg-[#eb6834] dark:bg-[#d95926]",
+  "bg-[#1baf7a] dark:bg-[#199e70]",
+  "bg-[#eda100] dark:bg-[#c98500]",
+  "bg-[#e87ba4] dark:bg-[#d55181]",
+  "bg-[#008300] dark:bg-[#008300]",
+  "bg-[#6250d6] dark:bg-[#9085e9]",
+  "bg-[#e34948] dark:bg-[#e66767]",
+];
+
 function periodLabel(period: string, granularity: Granularity, locale: Locale, t: TranslateFn): string {
   if (granularity === "month") return formatMonthLabel(period, locale);
   if (granularity === "week") return t("trend.weekOf", { date: formatDayLabel(period, locale) });
@@ -54,6 +84,14 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
   const [granularity, setGranularity] = useState<Granularity>("day");
   const mode = useIsDarkMode() ? "dark" : "light";
   const { periods, series } = trends[granularity];
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Start scrolled to the newest period (the right end) whenever the data or the
+  // day/week/month choice changes; does nothing when nothing overflows.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [granularity, periods.length]);
 
   const options: ChartOptions<"line"> = {
     responsive: true,
@@ -62,7 +100,8 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
     // Room around the edge points for their numbers.
     layout: { padding: { left: 24, right: 24 } },
     plugins: {
-      legend: { position: "top", labels: { color: CHART_COLORS.ink[mode], font: { size: 12 } } },
+      // Drawn as HTML above the scroll frame instead, so it stays visible while scrolling.
+      legend: { display: false },
       tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y ?? 0)}` } },
     },
     scales: {
@@ -100,28 +139,42 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
         ))}
       </div>
 
-      <div className="h-64">
-        <Line
-          options={options}
-          plugins={[linePointLabels({ ink: CHART_COLORS.ink[mode], surface: CHART_COLORS.surface[mode] })]}
-          aria-label={t("salesCharts.trendTitle")}
-          data={{
-            labels: periods.map((p) => periodLabel(p, granularity, locale, t)),
-            datasets: series.map((s, i) => {
-              const color = USER_COLORS[i % USER_COLORS.length][mode];
-              return {
-                label: s.userName,
-                data: s.totals,
-                borderColor: color,
-                backgroundColor: color,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                borderWidth: 2,
-                tension: 0,
-              };
-            }),
-          }}
-        />
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-foreground/80">
+        {series.map((s, i) => (
+          <li key={s.userName} className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className={`h-2.5 w-2.5 rounded-full ${USER_DOT_CLASSES[i % USER_DOT_CLASSES.length]}`}
+            />
+            {s.userName}
+          </li>
+        ))}
+      </ul>
+
+      <div ref={scrollRef} className="styled-scroll overflow-x-auto overscroll-x-contain pb-2">
+        <div className={`h-72 md:h-64 ${chartMinWidthClass(periods.length)}`}>
+          <Line
+            options={options}
+            plugins={[linePointLabels({ ink: CHART_COLORS.ink[mode], surface: CHART_COLORS.surface[mode] })]}
+            aria-label={t("salesCharts.trendTitle")}
+            data={{
+              labels: periods.map((p) => periodLabel(p, granularity, locale, t)),
+              datasets: series.map((s, i) => {
+                const color = USER_COLORS[i % USER_COLORS.length][mode];
+                return {
+                  label: s.userName,
+                  data: s.totals,
+                  borderColor: color,
+                  backgroundColor: color,
+                  pointRadius: 3,
+                  pointHoverRadius: 5,
+                  borderWidth: 2,
+                  tension: 0,
+                };
+              }),
+            }}
+          />
+        </div>
       </div>
     </div>
   );
