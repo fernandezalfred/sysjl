@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getDailyRecordsData } from "@/lib/daily-records";
+import { getDailyRecordsData, recordsVisibleTo } from "@/lib/daily-records";
 import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { latestWorkDay } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
@@ -43,11 +43,17 @@ async function LandingContent() {
 
   const isAdmin = session?.user?.role === "ADMIN";
   const isSignedIn = Boolean(session?.user?.id);
+  // A signed-in seller only sees their own records (banner, charts, Totals by User);
+  // guests still see every seller. Filtered after the day's winner/loser was worked
+  // out against every seller, so others' rows never reach the browser.
+  const userId = session?.user?.id ?? null;
+  const dailyRecords = isSignedIn ? recordsVisibleTo(data.dailyRecords, userId, isAdmin) : data.dailyRecords;
+  const userTotals = isSignedIn ? recordsVisibleTo(data.userTotals, userId, isAdmin) : data.userTotals;
   // Net profit is cost/financial data per project-overview.md §3 — admin-only.
-  const netProfitInputs = isAdmin ? await getNetProfitInputs(data.dailyRecords) : null;
+  const netProfitInputs = isAdmin ? await getNetProfitInputs(dailyRecords) : null;
 
   return (
-    <SelectedDayProvider defaultDay={latestWorkDay(data.dailyRecords)}>
+    <SelectedDayProvider defaultDay={latestWorkDay(dailyRecords)}>
       <div className="flex flex-col gap-8">
         <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
           <AppHeader
@@ -69,11 +75,11 @@ async function LandingContent() {
           )}
         </div>
 
-        <TopSellerBanner userTotals={data.userTotals} isAdmin={isAdmin} t={t} />
+        <TopSellerBanner userTotals={userTotals} isAdmin={isAdmin} t={t} />
 
         {isAdmin ? <AdminQuickSettings t={t} /> : null}
 
-        <SalesChartsSection dailyRecords={data.dailyRecords} locale={locale} />
+        <SalesChartsSection dailyRecords={dailyRecords} locale={locale} />
 
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/70">
@@ -90,8 +96,8 @@ async function LandingContent() {
         </div>
 
         <UserTotalsSection
-          userTotals={data.userTotals}
-          dailyRecords={data.dailyRecords}
+          userTotals={userTotals}
+          dailyRecords={dailyRecords}
           currentUserId={session?.user?.id ?? null}
           isAdmin={isAdmin}
           unitCosts={netProfitInputs?.unitCosts ?? null}

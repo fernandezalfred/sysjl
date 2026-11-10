@@ -1,6 +1,8 @@
 "use client";
 
 import { LossMargin, loserBackgroundClass } from "@/components/sale-records/LossMargin";
+import { TotalPayHeader } from "@/components/sale-records/TotalPayHeader";
+import { totalSellerPay } from "@/lib/money/seller-pay";
 import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
@@ -129,6 +131,14 @@ export function UserTotalsSection({
   // the dialog that was just reopened.
   const [formKey, setFormKey] = useState(0);
   const canEditAny = Boolean(currentUserId);
+  // A seller's pay over every day they worked, in the Edit column's header.
+  const sellerTotal =
+    currentUserId && !isAdmin
+      ? totalSellerPay(
+          userTotals.map((u) => ({ userId: u.userId, totalSold: soldRevenueOf(u) })),
+          currentUserId,
+        )
+      : null;
   const columnCount = canEditAny ? 6 : 5;
 
   const dailyRecordsByKey = new Map(
@@ -177,7 +187,7 @@ export function UserTotalsSection({
               <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.yogurt")}</th>
               <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.milkMote")}</th>
               <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.totalRevenue")}</th>
-              {canEditAny ? <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold" /> : null}
+              {canEditAny ? <TotalPayHeader total={sellerTotal} t={t} /> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getDailyRecordsData } from "@/lib/daily-records";
+import { getDailyRecordsData, recordsVisibleTo } from "@/lib/daily-records";
 import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { latestWorkDay } from "@/lib/sales-charts";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
@@ -37,6 +37,10 @@ async function DashboardContent() {
   ]);
 
   const isAdmin = session?.user?.role === "ADMIN";
+  // A seller only sees their own records (charts and table). Filtered here, after the
+  // day's winner/loser was worked out against every seller, so others' rows never
+  // reach the browser.
+  const dailyRecords = recordsVisibleTo(data.dailyRecords, session?.user?.id ?? null, isAdmin);
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
   const [prices, netProfitInputs] = isAdmin
@@ -47,7 +51,7 @@ async function DashboardContent() {
   const deductions = netProfitInputs?.deductions ?? null;
 
   return (
-    <SelectedDayProvider defaultDay={latestWorkDay(data.dailyRecords)}>
+    <SelectedDayProvider defaultDay={latestWorkDay(dailyRecords)}>
       <div className="flex flex-col gap-8">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">{t("header.dashboard")}</h1>
@@ -60,7 +64,7 @@ async function DashboardContent() {
           </p>
         </header>
 
-        <SalesChartsSection dailyRecords={data.dailyRecords} locale={locale} />
+        <SalesChartsSection dailyRecords={dailyRecords} locale={locale} />
 
         {isAdmin && prices ? (
           <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
@@ -89,7 +93,7 @@ async function DashboardContent() {
         ) : null}
 
         <SaleRecordsSection
-          dailyRecords={data.dailyRecords}
+          dailyRecords={dailyRecords}
           currentUserId={session?.user?.id ?? null}
           currentUserName={session?.user?.name ?? null}
           isAdmin={isAdmin}

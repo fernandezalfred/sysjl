@@ -133,6 +133,14 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
   return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+// The rows (Sale Records or Totals by User) a signed-in viewer may see: admins every row,
+// a seller only their own, no user id none.
+export function recordsVisibleTo<T extends { userId: string }>(rows: T[], userId: string | null, isAdmin: boolean): T[] {
+  if (isAdmin) return rows;
+  if (!userId) return [];
+  return rows.filter((row) => row.userId === userId);
+}
+
 export async function getDailyRecordsData(): Promise<DailyRecordsData> {
   const workRecords = await prisma.dailyWorkRecord.findMany({
     include: { user: true },

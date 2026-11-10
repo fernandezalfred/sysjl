@@ -10,6 +10,8 @@ import { toEditableRecord } from "@/lib/editable-record";
 import { UserCell } from "@/components/sale-records/UserCell";
 import { PayPaidToggle } from "@/components/sale-records/PayPaidToggle";
 import { PendingPaySummary } from "@/components/sale-records/PendingPaySummary";
+import { TotalPayHeader } from "@/components/sale-records/TotalPayHeader";
+import { totalSellerPay } from "@/lib/money/seller-pay";
 import {
   buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
@@ -130,6 +132,9 @@ export function SaleRecordsSection({
     return unitCosts ? recordAdjustedRevenue(row, unitCosts, deductions ?? undefined) : null;
   }
 
+  // A seller's pay over every day they worked, in the Edit column's header.
+  const sellerTotal = currentUserId && !isAdmin ? totalSellerPay(dailyRecords, currentUserId) : null;
+
   // Admins see every seller's pay; a seller only their own.
   function canSeePay(row: DailyRecordRow): boolean {
     return isAdmin || row.userId === currentUserId;
@@ -192,7 +197,7 @@ export function SaleRecordsSection({
               <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.yogurt")}</th>
               <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("table.milkMote")}</th>
               <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold">{t("saleRecords.totalRevenue")}</th>
-              <th className="sticky top-[var(--sticky-offset,0px)] z-10 bg-foreground px-4 py-2 font-semibold" />
+              <TotalPayHeader total={sellerTotal} t={t} />
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">

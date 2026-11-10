@@ -65,6 +65,8 @@ const en = {
   "pay.pendingHeading": "Your pending pay",
   "pay.pendingDays": "Days not paid: {days}",
   "pay.noPending": "You have no pending pay.",
+  "pay.totalEarned": "Total earned",
+  "pay.daysWorked": "Days worked: {days}",
 
   "saleRecords.heading": "Sale Records",
   "saleRecords.newRecord": "New record",
@@ -313,6 +315,8 @@ const es: Record<DictionaryKey, string> = {
   "pay.pendingHeading": "Tu pago pendiente",
   "pay.pendingDays": "Días sin pagar: {days}",
   "pay.noPending": "No tienes pagos pendientes.",
+  "pay.totalEarned": "Ganancia total",
+  "pay.daysWorked": "Días trabajados: {days}",
 
   "saleRecords.heading": "Registros de Venta",
   "saleRecords.newRecord": "Nuevo registro",

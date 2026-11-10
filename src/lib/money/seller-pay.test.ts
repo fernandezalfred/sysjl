@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { netProfitAfterPay, pendingSellerPay, sellerPay } from "@/lib/money/seller-pay";
+import { netProfitAfterPay, pendingSellerPay, sellerPay, totalSellerPay } from "@/lib/money/seller-pay";
 
 describe("sellerPay", () => {
   it("is 150 for sales up to 2500", () => {
@@ -52,5 +52,21 @@ describe("pendingSellerPay", () => {
   it("is zero when every day is paid or there are none", () => {
     expect(pendingSellerPay(records, "u3")).toEqual({ amount: 0, days: 0 });
     expect(pendingSellerPay([{ userId: "u1", totalSold: 2000, payPaid: true }], "u1")).toEqual({ amount: 0, days: 0 });
+  });
+});
+
+describe("totalSellerPay", () => {
+  const records = [
+    { userId: "u1", totalSold: 2000 },
+    { userId: "u1", totalSold: 2700 },
+    { userId: "u2", totalSold: 3000 },
+  ];
+
+  it("sums the seller's pay over every day they worked", () => {
+    expect(totalSellerPay(records, "u1")).toEqual({ amount: 150 + 170, days: 2 });
+  });
+
+  it("is zero for a seller with no days", () => {
+    expect(totalSellerPay(records, "u3")).toEqual({ amount: 0, days: 0 });
   });
 });

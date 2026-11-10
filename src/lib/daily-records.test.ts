@@ -6,7 +6,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { buildDailyRecords, buildUserTotals, getDailyRecordsData } from "@/lib/daily-records";
+import { buildDailyRecords, buildUserTotals, getDailyRecordsData, recordsVisibleTo } from "@/lib/daily-records";
 import type { SaleRecord } from "@/types/daily-records";
 
 const MOCK_WORK_RECORDS = [
@@ -298,5 +298,27 @@ describe("getDailyRecordsData", () => {
 
     expect(row.queso.revenue).toBe((80 - 12) * 15);
     expect(row.yogurt.revenue).toBe((60 - 5) * 40);
+  });
+});
+
+describe("recordsVisibleTo", () => {
+  const rows = buildDailyRecords([
+    record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "Carla", quantityRemaining: 0, totalSold: 100 }),
+    record({ id: "r2", date: "2026-10-27", userId: "u2", userName: "Jorge", quantityRemaining: 0, totalSold: 50 }),
+  ]);
+
+  it("gives an admin every row", () => {
+    expect(recordsVisibleTo(rows, "admin-1", true)).toHaveLength(2);
+  });
+
+  it("gives a seller only their own rows, keeping the winner worked out against everyone", () => {
+    const visible = recordsVisibleTo(rows, "u2", false);
+    expect(visible.map((r) => r.userId)).toEqual(["u2"]);
+    expect(visible[0].isDailyWinner).toBe(false);
+    expect(visible[0].lossMargin).toBe(50);
+  });
+
+  it("gives a signed-out viewer nothing", () => {
+    expect(recordsVisibleTo(rows, null, false)).toEqual([]);
   });
 });
