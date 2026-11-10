@@ -1,6 +1,6 @@
 "use client";
 
-import { WinnerBadge } from "@/components/sale-records/WinnerBadge";
+import { LossMargin, loserBackgroundClass } from "@/components/sale-records/LossMargin";
 import { Fragment, useRef, useState } from "react";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
@@ -201,6 +201,8 @@ export function UserTotalsSection({
                           name={<UserName name={u.userName} />}
                           totalSold={soldRevenueOf(u)}
                           netProfit={netProfitOf(u)}
+                          showPay={isAdmin || u.userId === currentUserId}
+                          payPaid={u.payPaid}
                           t={t}
                         />
                       ) : (
@@ -213,9 +215,9 @@ export function UserTotalsSection({
                     <td className="px-4 py-2">
                       <ProductCell breakdown={u.yogurt} t={t} />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className={`px-4 py-2 ${loserBackgroundClass(u.lossMargin)}`}>
                       <div className="font-semibold">{formatCurrency(u.milkMoteRevenue)}</div>
-                      <WinnerBadge isDailyWinner={u.isDailyWinner} winnerMargin={u.winnerMargin} isAdmin={isAdmin} t={t} />
+                      {isAdmin ? <LossMargin lossMargin={u.lossMargin} t={t} /> : null}
                     </td>
                     <td
                       className={
@@ -261,6 +263,8 @@ export function UserTotalsSection({
                       name={<UserName name={u.userName} />}
                       totalSold={soldRevenueOf(u)}
                       netProfit={netProfitOf(u)}
+                      showPay={isAdmin || u.userId === currentUserId}
+                      payPaid={u.payPaid}
                       t={t}
                     />
                   ) : (
@@ -277,12 +281,12 @@ export function UserTotalsSection({
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.yogurt")}</p>
                       <ProductCell breakdown={u.yogurt} t={t} />
                     </div>
-                    <div>
+                    <div className={u.lossMargin === null ? "" : `p-2 ${loserBackgroundClass(u.lossMargin)}`}>
                       <div className="flex items-baseline justify-between gap-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
                         <div className="font-semibold tabular-nums">{formatCurrency(u.milkMoteRevenue)}</div>
                       </div>
-                      <WinnerBadge isDailyWinner={u.isDailyWinner} winnerMargin={u.winnerMargin} isAdmin={isAdmin} t={t} />
+                      {isAdmin ? <LossMargin lossMargin={u.lossMargin} t={t} /> : null}
                     </div>
                   </div>
                   <div className="mt-2 flex items-end justify-between gap-2">

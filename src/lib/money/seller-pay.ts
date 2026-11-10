@@ -25,3 +25,21 @@ export function sellerPay(totalSold: number): number {
 export function netProfitAfterPay(netProfit: number, totalSold: number): number {
   return netProfit - sellerPay(totalSold);
 }
+
+export interface PendingPay {
+  amount: number;
+  days: number;
+}
+
+// A seller's pay still owed: the sum of Pago over their records the admin hasn't
+// marked as paid yet.
+export function pendingSellerPay(
+  records: { userId: string; totalSold: number; payPaid: boolean }[],
+  userId: string,
+): PendingPay {
+  const unpaid = records.filter((r) => r.userId === userId && !r.payPaid);
+  return {
+    amount: unpaid.reduce((sum, r) => sum + sellerPay(r.totalSold), 0),
+    days: unpaid.length,
+  };
+}

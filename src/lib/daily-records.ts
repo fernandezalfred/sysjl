@@ -13,6 +13,7 @@ export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
   // so "winner" means the same thing here as it does in the Sale Records table.
   const rows: UserTotal[] = buildDailyRecords(records).map((row) => ({
     date: row.date,
+    payPaid: row.payPaid,
     userId: row.userId,
     userName: row.userName,
     queso: row.queso,
@@ -21,6 +22,7 @@ export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
     totalRevenue: row.totalRevenue,
     isDailyWinner: row.isDailyWinner,
     winnerMargin: row.winnerMargin,
+    lossMargin: row.lossMargin,
   }));
 
   // Most recent day first; same-day ties keep buildDailyRecords' own ordering.
@@ -31,7 +33,7 @@ const EMPTY_BREAKDOWN: ProductBreakdown = { taken: 0, remaining: 0, sold: 0, rev
 
 type PartialDailyRecordRow = Omit<
   DailyRecordRow,
-  "milkMoteRevenue" | "totalRevenue" | "isDailyWinner" | "winnerMargin"
+  "milkMoteRevenue" | "totalRevenue" | "isDailyWinner" | "winnerMargin" | "lossMargin"
 >;
 
 export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
@@ -59,6 +61,7 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
       id: key,
       workRecordId: record.workRecordId,
       totalSold: record.totalSold,
+      payPaid: record.payPaid,
       createdAt: record.createdAt,
       date: record.date,
       userId: record.userId,
@@ -116,10 +119,13 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
     const hasCompetitor = countByDate.get(row.date)! > 1;
     const max = maxRevenueByDate.get(row.date)!;
     const runnerUp = runnerUpRevenueByDate.get(row.date);
+    const isDailyWinner = hasCompetitor && row.totalRevenue === max;
     return {
       ...row,
-      isDailyWinner: hasCompetitor && row.totalRevenue === max,
+      isDailyWinner,
       winnerMargin: runnerUp === undefined ? null : max - runnerUp,
+      // A loser is anyone below the day's winner; how far behind the winner they ended.
+      lossMargin: hasCompetitor && !isDailyWinner ? max - row.totalRevenue : null,
     };
   });
 
@@ -138,6 +144,7 @@ export async function getDailyRecordsData(): Promise<DailyRecordsData> {
       userId: r.userId,
       userName: r.user.name,
       totalSold: r.totalSold,
+      payPaid: Boolean(r.payPaidAt),
       createdAt: r.createdAt.toISOString(),
     };
 

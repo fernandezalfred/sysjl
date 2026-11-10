@@ -4,6 +4,8 @@ export interface SaleRecord {
   id: string;
   workRecordId: string;
   totalSold: number;
+  // The admin marked this day's seller pay as paid.
+  payPaid: boolean;
   createdAt: string;
   date: string;
   userId: string;
@@ -16,6 +18,7 @@ export interface SaleRecord {
 
 export interface UserTotal {
   date: string;
+  payPaid: boolean;
   userId: string;
   userName: string;
   queso: ProductBreakdown;
@@ -24,6 +27,9 @@ export interface UserTotal {
   totalRevenue: number;
   isDailyWinner: boolean;
   winnerMargin: number | null;
+  // How much less than the day's winner this seller ended with; null for the winner
+  // and on days without a winner.
+  lossMargin: number | null;
 }
 
 export interface ProductBreakdown {
@@ -38,6 +44,7 @@ export interface DailyRecordRow {
   id: string;
   workRecordId: string;
   totalSold: number;
+  payPaid: boolean;
   createdAt: string;
   date: string;
   userId: string;
@@ -48,6 +55,7 @@ export interface DailyRecordRow {
   totalRevenue: number;
   isDailyWinner: boolean;
   winnerMargin: number | null;
+  lossMargin: number | null;
 }
 
 export interface DailyRecordsData {

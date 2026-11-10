@@ -12,7 +12,18 @@ interface UserCellProps {
   totalSold: number;
   // The record's Ganancia neta; null when the viewer may not see cost data.
   netProfit: number | null;
+  // Whether the viewer may see this row's Pago (admins: every row; sellers: their own).
+  showPay: boolean;
+  // The admin marked this day's pay as paid: the Pago is shown struck through.
+  payPaid: boolean;
   t: TranslateFn;
+}
+
+const PAY_AMOUNT_CLASS = "text-amount font-semibold text-foreground";
+const PAID_AMOUNT_CLASS = "text-amount font-semibold text-foreground/50 line-through";
+
+function payLabel(t: TranslateFn, payPaid: boolean): string {
+  return payPaid ? `${t("cell.pay")} (${t("pay.paid")})` : t("cell.pay");
 }
 
 // The User cell in Sale Records and Totals by User. With net profit (admins): a
@@ -20,16 +31,19 @@ interface UserCellProps {
 // the seller's name on the left and the result in bold purple on the right (label kept as
 // tooltip / screen-reader text). Without it: the name, then just the "Pago" line.
 // Callers use it for every signed-in viewer on every row (admins get the subtraction,
-// sellers just the name and Pago); guests see only the name.
-export function UserCell({ name, totalSold, netProfit, t }: UserCellProps) {
+// sellers the name and, on their own rows, the Pago); guests see only the name.
+export function UserCell({ name, totalSold, netProfit, showPay, payPaid, t }: UserCellProps) {
   const pay = sellerPay(totalSold);
+  const amountClassName = payPaid ? PAID_AMOUNT_CLASS : PAY_AMOUNT_CLASS;
   if (netProfit === null) {
     return (
       <>
         {name}
-        <div className="text-xs font-normal text-foreground/70">
-          <LabeledAmount label={t("cell.pay")} amount={formatCurrency(pay)} />
-        </div>
+        {showPay ? (
+          <div className="text-xs font-normal text-foreground/70">
+            <LabeledAmount label={payLabel(t, payPaid)} amount={formatCurrency(pay)} amountClassName={amountClassName} />
+          </div>
+        ) : null}
       </>
     );
   }
@@ -39,7 +53,12 @@ export function UserCell({ name, totalSold, netProfit, t }: UserCellProps) {
     <div>
       <NetProfitLine amount={netProfit} t={t} />
       <div className="text-xs font-normal text-foreground/70">
-        <LabeledAmount label={t("cell.pay")} amount={formatCurrency(pay)} prefix="−" />
+        <LabeledAmount
+          label={payLabel(t, payPaid)}
+          amount={formatCurrency(pay)}
+          amountClassName={amountClassName}
+          prefix="−"
+        />
       </div>
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">{name}</div>

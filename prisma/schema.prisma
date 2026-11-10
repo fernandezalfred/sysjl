@@ -67,6 +67,8 @@ model DailyWorkRecord {
   // rewrites a past record's revenue. Defaults only guard legacy/pre-field documents.
   quesoSalePrice  Float    @default(9)
   yogurtSalePrice Float    @default(33)
+  // When the admin marked this day's seller pay as paid; null = not paid yet.
+  payPaidAt       DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

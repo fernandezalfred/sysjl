@@ -1,6 +1,6 @@
 "use client";
 
-import { WinnerBadge } from "@/components/sale-records/WinnerBadge";
+import { LossMargin, loserBackgroundClass } from "@/components/sale-records/LossMargin";
 import { Fragment, useRef, useState } from "react";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
 import { ProductCell } from "@/components/sale-records/ProductCell";
@@ -8,6 +8,8 @@ import { formatCurrency } from "@/lib/money/pricing";
 import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
 import { toEditableRecord } from "@/lib/editable-record";
 import { UserCell } from "@/components/sale-records/UserCell";
+import { PayPaidToggle } from "@/components/sale-records/PayPaidToggle";
+import { PendingPaySummary } from "@/components/sale-records/PendingPaySummary";
 import {
   buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
@@ -128,6 +130,11 @@ export function SaleRecordsSection({
     return unitCosts ? recordAdjustedRevenue(row, unitCosts, deductions ?? undefined) : null;
   }
 
+  // Admins see every seller's pay; a seller only their own.
+  function canSeePay(row: DailyRecordRow): boolean {
+    return isAdmin || row.userId === currentUserId;
+  }
+
   function openCreate() {
     setMode({ type: "create" });
     setFormKey((k) => k + 1);
@@ -167,6 +174,10 @@ export function SaleRecordsSection({
         ) : null}
       </div>
 
+      {currentUserId && !isAdmin ? (
+        <PendingPaySummary dailyRecords={dailyRecords} userId={currentUserId} t={t} />
+      ) : null}
+
       {/* Full table only when the section is at least 70rem (1120px) wide: six columns
           kept on one line at the larger text sizes need about that much. */}
       <div className="fluid-text fluid-text-wide hidden overflow-clip rounded-lg border border-foreground/10 @min-[70rem]/records:block">
@@ -205,6 +216,8 @@ export function SaleRecordsSection({
                           name={<UserName name={row.userName} />}
                           totalSold={row.totalSold}
                           netProfit={netProfitOf(row)}
+                          showPay={canSeePay(row)}
+                          payPaid={row.payPaid}
                           t={t}
                         />
                       ) : (
@@ -217,14 +230,10 @@ export function SaleRecordsSection({
                     <td className="px-4 py-2">
                       <ProductCell breakdown={row.yogurt} t={t} />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className={`px-4 py-2 ${loserBackgroundClass(row.lossMargin)}`}>
                       <div className="text-amount whitespace-nowrap font-semibold">{formatCurrency(row.milkMoteRevenue)}</div>
-                      <WinnerBadge
-                        isDailyWinner={row.isDailyWinner}
-                        winnerMargin={row.winnerMargin}
-                        isAdmin={isAdmin}
-                        t={t}
-                      />
+                      {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
+                      {isAdmin ? <PayPaidToggle row={row} t={t} /> : null}
                     </td>
                     <td
                       className={
@@ -277,6 +286,8 @@ export function SaleRecordsSection({
                         }
                         totalSold={row.totalSold}
                         netProfit={netProfitOf(row)}
+                        showPay={canSeePay(row)}
+                        payPaid={row.payPaid}
                         t={t}
                       />
                     ) : (
@@ -291,19 +302,17 @@ export function SaleRecordsSection({
                         <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.yogurt")}</p>
                         <ProductCell breakdown={row.yogurt} t={t} />
                       </div>
-                      <div>
+                      {/* A loser's red background bleeds 8px past the column (-mx-2 px-2), like
+                          the winner's green below, so the amounts stay aligned. */}
+                      <div className={row.lossMargin === null ? "" : `-mx-2 px-2 py-1 ${loserBackgroundClass(row.lossMargin)}`}>
                         <div className="flex items-baseline justify-between gap-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
                           <div className="text-amount whitespace-nowrap font-semibold tabular-nums">
                             {formatCurrency(row.milkMoteRevenue)}
                           </div>
                         </div>
-                        <WinnerBadge
-                          isDailyWinner={row.isDailyWinner}
-                          winnerMargin={row.winnerMargin}
-                          isAdmin={isAdmin}
-                          t={t}
-                        />
+                        {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
+                        {isAdmin ? <PayPaidToggle row={row} t={t} /> : null}
                       </div>
                     </div>
                     {/* The winner's green background bleeds 8px past the column (-mx-2 px-2)

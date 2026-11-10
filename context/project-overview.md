@@ -22,14 +22,15 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 | Role (`Role` enum) | Shown as             | Can do                                                                                                                         |
 | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `ADMIN`            | Administrador        | Everything: manage users, prices and costs, Milk and grain purchases; see and edit every sale record; see costs and net profit |
-| `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see every seller's pay, change their own password                                     |
+| `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see their own pay and pending pay total, change their own password                      |
 | Guest (signed out) | —                    | See the public home page (sales by user, no costs, no profit, no pay)                                                           |
 
 Rules:
 
 - The acting user always comes from the server-side session; a user id sent by the browser is never trusted.
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
-- Costs, net profit and the winner's margin are admin-only. Seller pay is shown to every signed-in user on every row (not to guests).
+- Costs, net profit and the winner's margin are admin-only. Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
+- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. A seller sees the sum of their unpaid Pago above Sale Records on `/dashboard`.
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
 ## 4. Pages
@@ -71,6 +72,7 @@ The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 | Leche y Mote                   | Total venta − Queso revenue − Yogurt revenue                                                                              |
 | Total vendidos más no vendidos | Total venta + No vendidos                                                                                                 |
 | Ganador (daily winner)         | Highest "Total vendidos más no vendidos" of the day; needs 2+ records that day; ties share; margin = gap to the runner-up |
+| Perdedor (loser)               | Everyone below the day's winner: Leche y Mote cell in red; admins see "Perdió por" = gap to the winner                  |
 | Ganancia neta (admin)          | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − that seller's Milk that day − an even share of that day's grains |
 | Pago (seller pay)              | Bs 150 up to 2500 of Total venta; +10 per 100 from 2500 to 3000; +20 per 100 above 3000 (amount over 2500 rounded to the nearest 100) |
 | Ganancia neta − Pago (admin)   | shown under the seller's name; display only                                                                               |
@@ -82,7 +84,7 @@ The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/rev
 ## 7. Data Model (`prisma/schema.prisma`)
 
 - **User** — name, email, bcrypt hash, role, `isActive`.
-- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, snapshotted sale prices. The date is fixed at creation and can't change on edit.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, snapshotted sale prices, `payPaidAt` (when the admin marked the pay as paid). The date is fixed at creation and can't change on edit.
 - **ProductPrice** — one row per priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
 - **StockPurchase** — a Milk or grain purchase: product, quantity, unit cost, who entered it (`createdBy`) and, for Milk, which seller it's for (`forUser`). Old Queso/Yogurt purchases are still stored but no longer shown.
 

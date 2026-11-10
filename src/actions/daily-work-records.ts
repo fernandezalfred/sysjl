@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserSession } from "@/lib/auth/require-session";
-import { NotAuthorizedError } from "@/lib/auth/require-admin";
+import { NotAuthorizedError, requireAdminSession } from "@/lib/auth/require-admin";
 import { getCurrentSalePrices } from "@/lib/money/product-prices";
 
 export interface RecordActionState {
@@ -192,6 +192,40 @@ export async function deleteDailyWorkRecord(recordId: string): Promise<RecordAct
     }
 
     await prisma.dailyWorkRecord.delete({ where: { id: existing.id } });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    if (error instanceof NotAuthorizedError) {
+      return { success: false, error: error.message };
+    }
+    throw error;
+  }
+}
+
+const payPaidSchema = z.object({ recordId: z.string().min(1), paid: z.boolean() });
+
+// Admin only: marks a day's seller pay as paid (or undoes it). Display only — no
+// amount changes, the Pago is just shown struck through and leaves the pending total.
+export async function setRecordPayPaid(recordId: string, paid: boolean): Promise<RecordActionState> {
+  try {
+    await requireAdminSession();
+
+    const parsed = payPaidSchema.safeParse({ recordId, paid });
+    if (!parsed.success) {
+      return { success: false, error: "Invalid input." };
+    }
+
+    const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: parsed.data.recordId } });
+    if (!existing) {
+      return { success: false, error: "Record not found." };
+    }
+
+    await prisma.dailyWorkRecord.update({
+      where: { id: existing.id },
+      data: { payPaidAt: parsed.data.paid ? new Date() : null },
+    });
 
     revalidatePath("/");
     revalidatePath("/dashboard");

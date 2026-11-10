@@ -26,6 +26,7 @@ vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 import {
   createDailyWorkRecord,
   deleteDailyWorkRecord,
+  setRecordPayPaid,
   updateDailyWorkRecord,
 } from "@/actions/daily-work-records";
 
@@ -372,5 +373,44 @@ describe("deleteDailyWorkRecord", () => {
     const result = await deleteDailyWorkRecord("r1");
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.delete).toHaveBeenCalledWith({ where: { id: "r1" } });
+  });
+});
+
+describe("setRecordPayPaid", () => {
+  it("rejects a non-admin session without touching the database", async () => {
+    authMock.mockResolvedValue(SESSION);
+    const result = await setRecordPayPaid("wr1", true);
+    expect(result).toEqual({ success: false, error: "Admin access required." });
+    expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
+  });
+
+  it("returns an error when the record does not exist", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
+    const result = await setRecordPayPaid("missing", true);
+    expect(result).toEqual({ success: false, error: "Record not found." });
+    expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
+  });
+
+  it("marks the pay as paid with the current time", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ id: "wr1" });
+    const result = await setRecordPayPaid("wr1", true);
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
+      where: { id: "wr1" },
+      data: { payPaidAt: expect.any(Date) },
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("undoes the paid mark", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ id: "wr1" });
+    await setRecordPayPaid("wr1", false);
+    expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
+      where: { id: "wr1" },
+      data: { payPaidAt: null },
+    });
   });
 });

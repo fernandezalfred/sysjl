@@ -48,6 +48,7 @@ beforeEach(() => {
 const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   id: "r1",
   workRecordId: "wr1",
+  payPaid: false,
   totalSold: 8,
   createdAt: "2026-10-27T10:00:00.000Z",
   date: "2026-10-27",
@@ -171,6 +172,25 @@ describe("buildDailyRecords", () => {
     expect(rows.every((r) => r.isDailyWinner)).toBe(true);
     // No lower-ranked competitor to measure a margin against.
     expect(rows.every((r) => r.winnerMargin === null)).toBe(true);
+    expect(rows.every((r) => r.lossMargin === null)).toBe(true);
+  });
+
+  it("gives each loser how far behind the winner they ended", () => {
+    const records = [
+      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "Carla", quantityRemaining: 0, totalSold: 100 }),
+      record({ id: "r2", date: "2026-10-27", userId: "u2", userName: "Jorge", quantityRemaining: 0, totalSold: 70 }),
+      record({ id: "r3", date: "2026-10-27", userId: "u3", userName: "Ana", quantityRemaining: 0, totalSold: 40 }),
+    ];
+
+    const rows = buildDailyRecords(records);
+    const lossByUser = Object.fromEntries(rows.map((r) => [r.userId, r.lossMargin]));
+
+    expect(lossByUser).toEqual({ u1: null, u2: 30, u3: 60 });
+  });
+
+  it("has no loser on a day with a single record", () => {
+    const rows = buildDailyRecords([record({ id: "r1", date: "2026-10-27", userId: "u1", totalSold: 100 })]);
+    expect(rows[0].lossMargin).toBeNull();
   });
 
   it("determines the winner independently per day", () => {
@@ -250,6 +270,16 @@ describe("buildDailyRecords", () => {
 });
 
 describe("getDailyRecordsData", () => {
+  it("marks a record's pay as paid only when payPaidAt is set", async () => {
+    prismaMock.dailyWorkRecord.findMany.mockResolvedValue([
+      { ...MOCK_WORK_RECORDS[0], payPaidAt: new Date("2026-10-28T12:00:00.000Z") },
+      { ...MOCK_WORK_RECORDS[1], payPaidAt: null },
+    ]);
+    const data = await getDailyRecordsData();
+    const paidByUser = Object.fromEntries(data.dailyRecords.map((r) => [r.userId, r.payPaid]));
+    expect(paidByUser).toEqual({ u1: true, u2: false });
+  });
+
   it("builds one user total per user per day from every work record", async () => {
     const data = await getDailyRecordsData();
 

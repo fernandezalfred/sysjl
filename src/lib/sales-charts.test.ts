@@ -12,6 +12,7 @@ import type { SaleRecord } from "@/types/daily-records";
 const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   id: "r1",
   workRecordId: "wr1",
+  payPaid: false,
   totalSold: 90,
   createdAt: "2026-10-27T10:00:00.000Z",
   date: "2026-10-27",
