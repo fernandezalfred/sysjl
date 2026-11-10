@@ -2,6 +2,9 @@ import { Suspense, type ReactNode } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { getT } from "@/lib/i18n/server";
+import { prisma } from "@/lib/prisma";
+import { pendingSellerPay, totalSellerPay } from "@/lib/money/seller-pay";
+import type { SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { PanelShell } from "@/components/layout/PanelShell";
 import { Footer } from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -20,13 +23,25 @@ async function PanelContent({ children }: { children: ReactNode }) {
   await connection();
   const [session, { t, locale }] = await Promise.all([auth(), getT()]);
   const isAdmin = session?.user?.role === "ADMIN";
+  const userId = session?.user?.id;
+  const payTotals = userId && !isAdmin ? await getSellerPayTotals(userId) : null;
 
   return (
-    <PanelShell isAdmin={isAdmin} userName={session?.user?.name} locale={locale}>
+    <PanelShell isAdmin={isAdmin} userName={session?.user?.name} locale={locale} payTotals={payTotals}>
       {children}
       <Footer t={t} />
     </PanelShell>
   );
+}
+
+// A seller's pay over every day they worked, and what the admin hasn't paid yet.
+async function getSellerPayTotals(userId: string): Promise<SellerPayTotals> {
+  const rows = await prisma.dailyWorkRecord.findMany({
+    where: { userId },
+    select: { totalSold: true, payPaidAt: true },
+  });
+  const records = rows.map((r) => ({ userId, totalSold: r.totalSold, payPaid: Boolean(r.payPaidAt) }));
+  return { earned: totalSellerPay(records, userId), pending: pendingSellerPay(records, userId) };
 }
 
 function PanelSkeleton() {
@@ -36,8 +51,8 @@ function PanelSkeleton() {
         <Skeleton className="h-8 w-9" />
         <Skeleton className="h-4 w-24" />
       </div>
-      <div className="hidden w-56 flex-shrink-0 flex-col gap-2 border-r border-foreground/10 pr-4 lg:sticky lg:top-0 lg:flex lg:self-start lg:pt-3">
-        <Skeleton className="h-4 w-16" />
+      <div className="hidden h-[calc(100dvh-4rem)] w-64 flex-shrink-0 flex-col gap-2 rounded-2xl border border-foreground/10 p-4 lg:flex">
+        <Skeleton className="mb-4 h-10 w-32" />
         <Skeleton className="h-6 w-full" />
         <Skeleton className="h-6 w-full" />
         <Skeleton className="h-6 w-full" />

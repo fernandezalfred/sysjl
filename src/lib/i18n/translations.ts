@@ -61,9 +61,8 @@ const en = {
   "pay.markUnpaid": "Undo paid",
   "pay.confirmPaid": "Confirm that {name}'s pay of {amount} for {date} was paid?",
   "pay.confirmUnpaid": "Mark {name}'s pay for {date} as not paid?",
-  "pay.pendingHeading": "Your pending pay",
-  "pay.pendingDays": "Days not paid: {days}",
-  "pay.noPending": "You have no pending pay.",
+  "pay.pendingHeading": "Still owed",
+  "pay.days": "{days} days",
   "pay.totalEarned": "Total earned",
   "pay.daysWorked": "Days worked: {days}",
 
@@ -152,6 +151,9 @@ const en = {
   "sidebar.overview": "Overview",
   "sidebar.administration": "Administration",
   "sidebar.breadcrumbLabel": "Breadcrumb",
+  "sidebar.tagline": "Daily sales",
+  "sidebar.language": "Language",
+  "sidebar.greeting": "Hi, {name}",
 
   "header.account": "My account",
   "account.heading": "My account",
@@ -306,9 +308,8 @@ const es: Record<DictionaryKey, string> = {
   "pay.markUnpaid": "Quitar pagado",
   "pay.confirmPaid": "¿Confirmas que el pago de {name} de {amount} del {date} fue cancelado?",
   "pay.confirmUnpaid": "¿Marcar el pago de {name} del {date} como no pagado?",
-  "pay.pendingHeading": "Tu pago pendiente",
-  "pay.pendingDays": "Días sin pagar: {days}",
-  "pay.noPending": "No tienes pagos pendientes.",
+  "pay.pendingHeading": "Te falta cobrar",
+  "pay.days": "{days} días",
   "pay.totalEarned": "Ganancia total",
   "pay.daysWorked": "Días trabajados: {days}",
 
@@ -397,6 +398,9 @@ const es: Record<DictionaryKey, string> = {
   "sidebar.overview": "Resumen",
   "sidebar.administration": "Administración",
   "sidebar.breadcrumbLabel": "Ruta de navegación",
+  "sidebar.tagline": "Ventas diarias",
+  "sidebar.language": "Idioma",
+  "sidebar.greeting": "Hola, {name}",
 
   "header.account": "Mi cuenta",
   "account.heading": "Mi cuenta",

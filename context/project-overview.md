@@ -31,7 +31,7 @@ Rules:
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
 - Costs, net profit and the winner's margin are admin-only (a seller sees the Milk liters and price they entered in their own record form; guests never receive them). Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
 - A signed-in seller sees only their own records, on `/` (top seller banner, charts, Totals by User) and `/dashboard` (charts, Sale Records). Guests on `/` still see every seller.
-- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. A seller sees the sum of their unpaid Pago above Sale Records on `/dashboard`.
+- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. On every panel page, a seller sees in place of the breadcrumbs their total earned Pago (every day worked) and what they're still owed (unpaid Pago), each with its number of days.
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
 ## 4. Pages
