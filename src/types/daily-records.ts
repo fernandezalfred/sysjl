@@ -18,22 +18,6 @@ export interface SaleRecord {
   milkUnitCost: number;
 }
 
-export interface UserTotal {
-  date: string;
-  payPaid: boolean;
-  userId: string;
-  userName: string;
-  queso: ProductBreakdown;
-  yogurt: ProductBreakdown;
-  milkMoteRevenue: number;
-  totalRevenue: number;
-  isDailyWinner: boolean;
-  winnerMargin: number | null;
-  // How much less than the day's winner this seller ended with; null for the winner
-  // and on days without a winner.
-  lossMargin: number | null;
-}
-
 export interface ProductBreakdown {
   taken: number;
   remaining: number;
@@ -66,7 +50,6 @@ export interface DailyRecordRow {
 
 export interface DailyRecordsData {
   dailyRecords: DailyRecordRow[];
-  userTotals: UserTotal[];
   generatedAt: string;
 }
 export interface DailyWorkRecordRow {

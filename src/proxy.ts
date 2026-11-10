@@ -16,8 +16,13 @@ export const proxy = auth((req) => {
     return Response.redirect(loginUrl);
   }
 
+  // Already signed in: the login page sends straight to the dashboard.
+  if (req.auth && pathname.startsWith("/login")) {
+    return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
+  }
+
   if (pathname.startsWith(ADMIN_PATH_PREFIX) && req.auth?.user.role !== "ADMIN") {
-    return Response.redirect(new URL("/", req.nextUrl.origin));
+    return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 });
 

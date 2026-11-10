@@ -39,8 +39,8 @@ src/
   actions/             Server Actions, one file per feature, tests next to them
   components/[feature]/ComponentName.tsx
     admin/             users, grain-purchases, stock-purchases (shared), product-pricing
-    home/              public home page sections
-    sale-records/      Sale Records table, its cells, record forms (also used by home/)
+    landing/           public landing page sections
+    sale-records/      Sale Records table, its cells, record forms
     sales-charts/      charts and the selected-day context
     layout/ ui/ auth/ account/ i18n/
   hooks/               Custom React hooks

@@ -23,14 +23,14 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `ADMIN`            | Administrador        | Everything: manage users, prices and costs, grain purchases; see and edit every sale record; see costs and net profit |
 | `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see their own pay and pending pay total, change their own password                      |
-| Guest (signed out) | —                    | See the public home page (sales by user, no costs, no profit, no pay)                                                           |
+| Guest (signed out) | —                    | See the public landing page `/` (presents the product; no company data)                                                        |
 
 Rules:
 
 - The acting user always comes from the server-side session; a user id sent by the browser is never trusted.
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
 - Costs, net profit and the winner's margin are admin-only (a seller sees the Milk liters and price they entered in their own record form; guests never receive them). Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
-- A signed-in seller sees only their own records, on `/` (top seller banner, charts, Totals by User) and `/dashboard` (charts, Sale Records). Guests on `/` still see every seller.
+- Signing in goes straight to `/dashboard` (also when a signed-in user opens `/login`; a non-admin opening `/admin/*` lands there too). On `/dashboard` a seller sees only their own records (charts, Sale Records). The public landing page `/` presents the product to the distribution companies that would rent it and shows no real data (its preview uses made-up figures).
 - The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. On every panel page, a seller sees in place of the breadcrumbs their total earned Pago (every day worked) and what they're still owed (unpaid Pago), each with its number of days.
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
@@ -38,14 +38,14 @@ Rules:
 
 | Route           | Who             | Content                                                                                                     |
 | --------------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `/`             | Everyone        | Top seller banner, admin quick links, Sales by User charts, Totals by User table (one row per seller per day) |
+| `/`             | Everyone        | Public product landing page for distribution companies: hero with a panel preview (made-up figures), features, roles (admin, sub-admin, seller), how it works, sign-in call to action |
 | `/login`        | Everyone        | Sign in                                                                                                     |
 | `/dashboard`    | Signed in       | Sales by User charts, Prices & Costs (admin), Sale Records table with create / edit / delete               |
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
 | `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
-Clicking a day header in either table shows that day in the charts.
+Clicking a day header in Sale Records shows that day in the charts.
 
 ## 5. Products and Inputs
 
@@ -96,3 +96,4 @@ These were in the first version of this document and are deliberately not implem
 - An inventory movement history.
 - A history of price and cost changes (only the current value and who set it are kept).
 - Vehicles as their own entity (removed; sellers are users).
+- Multiple companies / branches and the sub-administrator role. The landing page already describes them (platform admin → one sub-admin per company → its sellers), but today the app runs a single company with `ADMIN` and `VEHICLE_USER`.

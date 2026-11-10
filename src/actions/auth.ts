@@ -28,7 +28,7 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/",
+      redirectTo: "/dashboard",
     });
     return { success: true };
   } catch (error) {

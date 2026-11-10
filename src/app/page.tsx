@@ -1,146 +1,118 @@
 import { Suspense } from "react";
-import { connection } from "next/server";
+import Link from "next/link";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { getDailyRecordsData, recordsVisibleTo, withoutMilkCost } from "@/lib/daily-records";
-import { getNetProfitInputs } from "@/lib/money/net-profit";
-import { latestWorkDay } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
-import { defaultT, type TranslateFn } from "@/lib/i18n/translations";
-import { UserTotalsSection } from "@/components/home/UserTotalsSection";
-import { AdminQuickSettings } from "@/components/home/AdminQuickSettings";
-import { TopSellerBanner } from "@/components/home/TopSellerBanner";
-import { SalesChartsSection } from "@/components/sales-charts/SalesChartsSection";
-import { SelectedDayProvider } from "@/components/sales-charts/SelectedDayProvider";
-import { AppHeader, AppHeaderSkeleton } from "@/components/layout/AppHeader";
+import type { TranslateFn } from "@/lib/i18n/translations";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { ProductPreview } from "@/components/landing/ProductPreview";
+import { FeatureGrid } from "@/components/landing/FeatureGrid";
+import { RolesSection } from "@/components/landing/RolesSection";
+import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Footer } from "@/components/layout/Footer";
-import { CreateRecordButton } from "@/components/sale-records/CreateRecordButton";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
+// The public landing page: presents the system to the distribution companies that would
+// rent it. It shows no real company's data (the preview uses made-up figures).
 export default function Home() {
   return (
-    <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <Suspense fallback={<LandingSkeleton t={defaultT} />}>
-        <LandingContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LandingSkeleton />}>
+      <LandingContent />
+    </Suspense>
   );
 }
 
 async function LandingContent() {
-  await connection();
-  const [data, session, activeUsers, { t, locale }] = await Promise.all([
-    getDailyRecordsData(),
-    auth(),
-    prisma.user.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
-    getT(),
-  ]);
-
-  const isAdmin = session?.user?.role === "ADMIN";
+  const [session, { t, locale }] = await Promise.all([auth(), getT()]);
   const isSignedIn = Boolean(session?.user?.id);
-  // A signed-in seller only sees their own records (banner, charts, Totals by User);
-  // guests still see every seller. Filtered after the day's winner/loser was worked
-  // out against every seller, so others' rows never reach the browser.
-  const userId = session?.user?.id ?? null;
-  // Guests don't get the Milk liters and price (cost data).
-  const dailyRecords = isSignedIn
-    ? recordsVisibleTo(data.dailyRecords, userId, isAdmin)
-    : withoutMilkCost(data.dailyRecords);
-  const userTotals = isSignedIn ? recordsVisibleTo(data.userTotals, userId, isAdmin) : data.userTotals;
-  // Net profit is cost/financial data per project-overview.md §3 — admin-only.
-  const netProfitInputs = isAdmin ? await getNetProfitInputs(dailyRecords) : null;
+  const primaryHref = isSignedIn ? "/dashboard" : "/login";
+  const primaryLabel = isSignedIn ? t("landing.goToPanel") : t("header.signIn");
 
   return (
-    <SelectedDayProvider defaultDay={latestWorkDay(dailyRecords)}>
-      <div className="flex flex-col gap-8">
-        <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
-          <AppHeader
-            title="Daily Sales & Stock"
-            generatedAt={data.generatedAt}
-            userName={session?.user?.name}
-            isAdmin={isAdmin}
-            isSignedIn={isSignedIn}
-            activePage="home"
-            locale={locale}
-            t={t}
-          />
-          {isSignedIn ? (
-            <p className="mt-3 text-sm text-foreground/70">
-              {t("home.welcomeBack", { name: session?.user?.name ?? "" })}
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-foreground/70">{t("home.guestTagline")}</p>
-          )}
+    <>
+      <LandingNav isSignedIn={isSignedIn} locale={locale} t={t} />
+
+      <main className="flex-1">
+        <section className="relative overflow-hidden border-b border-foreground/10">
+          <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-sky-500/15 blur-3xl" />
+          <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:items-center lg:px-8 lg:py-24">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-foreground/15 bg-background/70 px-3 py-1 text-xs font-medium text-foreground/70">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                {t("landing.hero.eyebrow")}
+              </p>
+              <h1 className="mt-5 text-4xl font-bold tracking-tight text-balance sm:text-5xl">{t("landing.hero.title")}</h1>
+              <p className="mt-5 max-w-xl text-base text-foreground/70 sm:text-lg">{t("landing.hero.text")}</p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href={primaryHref}
+                  className="rounded-lg bg-foreground px-5 py-3 text-center text-sm font-semibold text-background shadow-sm transition hover:opacity-90"
+                >
+                  {primaryLabel}
+                </Link>
+                <a
+                  href="#features"
+                  className="rounded-lg border border-foreground/20 px-5 py-3 text-center text-sm font-semibold transition hover:bg-foreground/5"
+                >
+                  {t("landing.hero.secondary")}
+                </a>
+              </div>
+              <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/65">
+                {["landing.hero.point1", "landing.hero.point2", "landing.hero.point3"].map((key) => (
+                  <li key={key} className="flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-4 w-4 text-emerald-600 dark:text-emerald-400">
+                      <path d="M5 12l5 5 9-10" />
+                    </svg>
+                    {t(key)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <ProductPreview t={t} />
+          </div>
+        </section>
+
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <FeatureGrid t={t} />
+          <RolesSection t={t} />
+          <HowItWorks t={t} />
+          <FinalCallToAction href={primaryHref} label={primaryLabel} t={t} />
+          <Footer t={t} />
         </div>
-
-        <TopSellerBanner userTotals={userTotals} isAdmin={isAdmin} t={t} />
-
-        {isAdmin ? <AdminQuickSettings t={t} /> : null}
-
-        <SalesChartsSection dailyRecords={dailyRecords} locale={locale} />
-
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-foreground/70">
-            {t("home.totalsByUser")}
-          </h2>
-          {isSignedIn ? (
-            <CreateRecordButton
-              isAdmin={isAdmin}
-              activeUsers={activeUsers}
-              currentUserName={session?.user?.name ?? null}
-              locale={locale}
-            />
-          ) : null}
-        </div>
-
-        <UserTotalsSection
-          userTotals={userTotals}
-          dailyRecords={dailyRecords}
-          currentUserId={session?.user?.id ?? null}
-          isAdmin={isAdmin}
-          unitCosts={netProfitInputs?.unitCosts ?? null}
-          deductions={netProfitInputs?.deductions ?? null}
-          hideHeading
-          locale={locale}
-        />
-
-        <Footer t={t} />
-      </div>
-    </SelectedDayProvider>
+      </main>
+    </>
   );
 }
 
-function LandingSkeleton({ t }: { t: TranslateFn }) {
+function FinalCallToAction({ href, label, t }: { href: string; label: string; t: TranslateFn }) {
   return (
-    <div className="flex flex-col gap-8">
-      <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-5 sm:p-6">
-        <AppHeaderSkeleton />
-        <Skeleton className="mt-3 h-4 w-40" />
-      </div>
-
-      <Skeleton className="h-24 w-full rounded-xl" />
-
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-4 w-64" />
-        <Skeleton className="h-40 w-full" />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-600 to-indigo-700 px-6 py-10 text-white shadow-xl sm:px-10 sm:py-14">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-20 -bottom-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+      <div className="relative flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-xl">
+          <h2 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">{t("landing.cta.title")}</h2>
+          <p className="mt-2 text-white/80">{t("landing.cta.text")}</p>
         </div>
-        <Skeleton className="h-64 w-full" />
+        <Link href={href} className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-sky-800 shadow-sm transition hover:bg-white/90">
+          {label}
+        </Link>
       </div>
+    </section>
+  );
+}
 
-      <div className="flex items-center justify-between gap-4">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-8 w-28" />
+function LandingSkeleton() {
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:px-6 lg:px-8">
+      <Skeleton className="h-10 w-full" />
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-11 w-40" />
+        </div>
+        <Skeleton className="h-72 w-full rounded-2xl" />
       </div>
-      <TableSkeleton rows={3} t={t} />
     </div>
   );
 }

@@ -81,7 +81,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - **Admin** — manages users, Queso/Yogurt sale prices and purchase costs, grain purchases; sees and edits every sale record, costs and net profit.
 - **Seller** (`VEHICLE_USER`) — records and edits their own daily sale records and sees every seller's pay. The acting user always comes from the server-side session, never from the client.
-- **Guest** — sees the public home page `/` (sales by user, no costs, profit or pay).
+- **Guest** — sees the public landing page `/`, which presents the product to distribution companies (no real data).
 
 `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`; every Server Action checks again.
 
@@ -90,7 +90,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 src/
   app/
-    page.tsx              # Public home: top seller, sales charts, totals by user
+    page.tsx              # Public product landing page
     login/
     (panel)/              # Signed-in shell: sidebar, header, breadcrumbs
       dashboard/          # Sales charts, prices & costs (admin), sale records
@@ -99,7 +99,7 @@ src/
       admin/grains/       # Admin: grain purchases
   actions/                # Server Actions, one file per feature (+ tests)
   components/
-    home/                 # Public home sections
+    landing/              # Public landing page sections
     sale-records/         # Sale Records table, cells, record forms
     sales-charts/         # Charts, selected-day context
     admin/                # users/, grain-purchases/, stock-purchases/, product-pricing/

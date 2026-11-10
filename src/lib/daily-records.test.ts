@@ -8,7 +8,6 @@ vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
 import {
   buildDailyRecords,
-  buildUserTotals,
   getDailyRecordsData,
   recordsVisibleTo,
   withoutMilkCost,
@@ -69,60 +68,6 @@ const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   milkLiters: 0,
   milkUnitCost: 0,
   ...overrides,
-});
-
-describe("buildUserTotals", () => {
-  it("builds one row per user per day with Bs revenue for Queso/Yogurt/Milk & Mote and total revenue matching buildDailyRecords", () => {
-    const records = [
-      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "Carla", product: "QUESO", unitPrice: 9, quantityTaken: 80, quantityRemaining: 12, totalSold: 3369 }),
-      record({ id: "r2", date: "2026-10-27", userId: "u1", userName: "Carla", product: "YOGURT", unitPrice: 33, quantityTaken: 60, quantityRemaining: 5, totalSold: 3369 }),
-      record({ id: "r3", date: "2026-10-27", userId: "u2", userName: "Jorge", product: "QUESO", unitPrice: 9, quantityTaken: 4, quantityRemaining: 0, totalSold: 36 }),
-      record({ id: "r4", date: "2026-10-27", userId: "u2", userName: "Jorge", product: "YOGURT", unitPrice: 33, quantityTaken: 2, quantityRemaining: 0, totalSold: 36 }),
-    ];
-
-    const totals = buildUserTotals(records);
-    const dailyRows = buildDailyRecords(records);
-    const carla = totals.find((t) => t.userId === "u1")!;
-    const jorge = totals.find((t) => t.userId === "u2")!;
-    const carlaDaily = dailyRows.find((r) => r.userId === "u1")!;
-    const jorgeDaily = dailyRows.find((r) => r.userId === "u2")!;
-
-    expect(carla.queso.revenue).toBe(68 * 9);
-    expect(carla.yogurt.revenue).toBe(55 * 33);
-    expect(carla.milkMoteRevenue).toBe(carlaDaily.milkMoteRevenue);
-    expect(carla.totalRevenue).toBe(carlaDaily.totalRevenue);
-    expect(carla.isDailyWinner).toBe(true);
-    expect(carla.winnerMargin).toBe(carlaDaily.winnerMargin);
-
-    expect(jorge.totalRevenue).toBe(jorgeDaily.totalRevenue);
-    expect(jorge.isDailyWinner).toBe(false);
-    expect(jorge.winnerMargin).toBe(jorgeDaily.winnerMargin);
-  });
-
-  it("keeps a user's rows separate per day instead of merging across days", () => {
-    const records = [
-      record({ id: "r1", date: "2026-10-26", userId: "u1", userName: "Carla", quantityTaken: 10, quantityRemaining: 2 }),
-      record({ id: "r2", date: "2026-10-27", userId: "u1", userName: "Carla", quantityTaken: 6, quantityRemaining: 1 }),
-    ];
-
-    const totals = buildUserTotals(records);
-
-    expect(totals).toHaveLength(2);
-    expect(totals.some((t) => t.date === "2026-10-26")).toBe(true);
-    expect(totals.some((t) => t.date === "2026-10-27")).toBe(true);
-  });
-
-  it("sorts rows by day descending (most recent first)", () => {
-    const records = [
-      record({ id: "r1", date: "2026-10-26", userId: "u1", userName: "Carla", quantityTaken: 10, quantityRemaining: 2 }),
-      record({ id: "r2", date: "2026-10-27", userId: "u2", userName: "Jorge", quantityTaken: 4, quantityRemaining: 0 }),
-    ];
-
-    const totals = buildUserTotals(records);
-
-    expect(totals[0].date).toBe("2026-10-27");
-    expect(totals[1].date).toBe("2026-10-26");
-  });
 });
 
 describe("buildDailyRecords", () => {
@@ -290,11 +235,11 @@ describe("getDailyRecordsData", () => {
     expect(paidByUser).toEqual({ u1: true, u2: false });
   });
 
-  it("builds one user total per user per day from every work record", async () => {
+  it("builds one row per user per day from every work record", async () => {
     const data = await getDailyRecordsData();
 
-    const sumOfUserRevenue = data.userTotals.reduce((sum, u) => sum + u.queso.revenue + u.yogurt.revenue, 0);
-    expect(data.userTotals).toHaveLength(2);
+    const sumOfUserRevenue = data.dailyRecords.reduce((sum, u) => sum + u.queso.revenue + u.yogurt.revenue, 0);
+    expect(data.dailyRecords).toHaveLength(2);
     expect(sumOfUserRevenue).toBe((80 - 12) * 9 + (60 - 5) * 33 + (70 - 20) * 9 + (50 - 18) * 33);
   });
 

@@ -57,7 +57,7 @@ describe("login", () => {
     expect(signIn).toHaveBeenCalledWith("credentials", {
       email: "a@b.com",
       password: "correct",
-      redirectTo: "/",
+      redirectTo: "/dashboard",
     });
   });
 });

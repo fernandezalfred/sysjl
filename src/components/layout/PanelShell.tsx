@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
+import { BrandMark } from "@/components/landing/BrandMark";
 import { SellerPayBar, type SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 
@@ -210,9 +211,7 @@ function SidebarContent({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <Link href="/dashboard" onClick={onNavigate} className="mb-6 flex items-center gap-3 px-1">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-sm font-bold text-white shadow-md shadow-sky-600/20">
-          JL
-        </span>
+        <BrandMark size="lg" />
         <span className="flex flex-col leading-tight">
           <span className="text-base font-semibold tracking-tight">SysJL</span>
           <span className="text-xs text-foreground/60">{t("sidebar.tagline")}</span>

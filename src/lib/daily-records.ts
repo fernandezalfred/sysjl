@@ -4,30 +4,7 @@ import type {
   DailyRecordsData,
   ProductBreakdown,
   SaleRecord,
-  UserTotal,
 } from "@/types/daily-records";
-
-export function buildUserTotals(records: SaleRecord[]): UserTotal[] {
-  // One row per user per day, reusing buildDailyRecords' totalRevenue (which already
-  // includes Milk & Mote and unsold Queso/Yogurt value) and its isDailyWinner flag,
-  // so "winner" means the same thing here as it does in the Sale Records table.
-  const rows: UserTotal[] = buildDailyRecords(records).map((row) => ({
-    date: row.date,
-    payPaid: row.payPaid,
-    userId: row.userId,
-    userName: row.userName,
-    queso: row.queso,
-    yogurt: row.yogurt,
-    milkMoteRevenue: row.milkMoteRevenue,
-    totalRevenue: row.totalRevenue,
-    isDailyWinner: row.isDailyWinner,
-    winnerMargin: row.winnerMargin,
-    lossMargin: row.lossMargin,
-  }));
-
-  // Most recent day first; same-day ties keep buildDailyRecords' own ordering.
-  return rows.sort((a, b) => b.date.localeCompare(a.date));
-}
 
 const EMPTY_BREAKDOWN: ProductBreakdown = { taken: 0, remaining: 0, sold: 0, revenue: 0, remainingValue: 0 };
 
@@ -190,7 +167,6 @@ export async function getDailyRecordsData(): Promise<DailyRecordsData> {
 
   return {
     dailyRecords: buildDailyRecords(records),
-    userTotals: buildUserTotals(records),
     generatedAt: new Date().toISOString(),
   };
 }
