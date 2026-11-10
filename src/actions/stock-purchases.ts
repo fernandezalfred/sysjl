@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
-import { formatBusinessDateKey } from "@/lib/dates";
+import { formatBusinessDateKey, moveToBusinessDate } from "@/lib/dates";
 import { planRepeatLastDay, REPEAT_PRODUCTS, type RepeatError, type RepeatKind } from "@/lib/repeat-purchases";
 import type { Product } from "@prisma/client";
 
@@ -105,7 +105,17 @@ export async function createStockPurchase(
   }
 }
 
-const updateSchema = quantityAndCost.extend({ purchaseId: z.string().min(1) });
+const updateSchema = quantityAndCost.extend({
+  purchaseId: z.string().min(1),
+  // Only sent by the Milk edit form: the purchase's new business day (YYYY-MM-DD).
+  // Only sent by the Milk edit form: the user the purchase is for.
+  forUserId: z.string().optional(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date is required.")
+    .refine((value) => !Number.isNaN(Date.parse(`${value}T00:00:00Z`)), "Date is required.")
+    .optional(),
+});
 
 export async function updateStockPurchase(
   _prevState: ActionState,
@@ -118,9 +128,15 @@ export async function updateStockPurchase(
       purchaseId: formData.get("purchaseId"),
       quantity: formData.get("quantity"),
       unitCost: formData.get("unitCost"),
+      forUserId: formData.get("forUserId") ?? undefined,
+      date: formData.get("date") ?? undefined,
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    }
+    // YYYY-MM-DD strings compare correctly as text.
+    if (parsed.data.date && parsed.data.date > formatBusinessDateKey(new Date())) {
+      return { success: false, error: "Date can't be in the future." };
     }
 
     const existing = await prisma.stockPurchase.findUnique({ where: { id: parsed.data.purchaseId } });
@@ -128,9 +144,23 @@ export async function updateStockPurchase(
       return { success: false, error: "Stock purchase not found." };
     }
 
+    let forUserId: string | undefined;
+    if (existing.product === "MILK" && parsed.data.forUserId !== undefined) {
+      const resolved = await resolveMilkForUserId(parsed.data.forUserId);
+      if ("error" in resolved) {
+        return { success: false, error: resolved.error };
+      }
+      forUserId = resolved.id;
+    }
+
     await prisma.stockPurchase.update({
       where: { id: existing.id },
-      data: { quantity: parsed.data.quantity, unitCost: parsed.data.unitCost },
+      data: {
+        quantity: parsed.data.quantity,
+        unitCost: parsed.data.unitCost,
+        ...(forUserId ? { forUserId } : {}),
+        ...(parsed.data.date ? { createdAt: moveToBusinessDate(existing.createdAt, parsed.data.date) } : {}),
+      },
     });
 
     revalidatePath(panelPathForProduct(existing.product));

@@ -13,6 +13,7 @@ import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
 import { useToast } from "@/components/ui/ToastProvider";
+import { formatBusinessDateKey } from "@/lib/dates";
 
 const initialState: ActionState = { success: false };
 
@@ -32,6 +33,10 @@ interface EditStockPurchaseFormProps {
   purchase: StockPurchaseRow;
   quantityLabel: string;
   unitCostLabel: string;
+  // Milk only: lets the admin change the user the purchase is for and move it to
+  // another day. A new purchase is always stamped with today, so the date is only
+  // editable here.
+  activeUsers?: { id: string; name: string }[];
   onSaved: () => void;
   onCancel: () => void;
   t: TranslateFn;
@@ -41,6 +46,7 @@ export function EditStockPurchaseForm({
   purchase,
   quantityLabel,
   unitCostLabel,
+  activeUsers,
   onSaved,
   onCancel,
   t,
@@ -74,6 +80,45 @@ export function EditStockPurchaseForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input type="hidden" name="purchaseId" value={purchase.id} />
+      {activeUsers ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="stock-for-user" className="text-xs font-medium text-foreground/70">
+            {t("records.userLabel")}
+          </label>
+          <select
+            id="stock-for-user"
+            name="forUserId"
+            required
+            defaultValue={purchase.forUserId ?? ""}
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
+          >
+            <option value="" disabled>
+              {t("records.selectUser")}
+            </option>
+            {activeUsers.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+      {activeUsers ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="stock-date" className="text-xs font-medium text-foreground/70">
+            {t("records.date")}
+          </label>
+          <input
+            id="stock-date"
+            name="date"
+            type="date"
+            required
+            max={formatBusinessDateKey(new Date())}
+            defaultValue={purchase.createdAtDate}
+            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
+          />
+        </div>
+      ) : null}
       <StockPurchaseFormFields defaultValues={purchase} quantityLabel={quantityLabel} unitCostLabel={unitCostLabel} />
 
       {state.error ? (

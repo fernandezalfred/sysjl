@@ -24,6 +24,7 @@ export interface StockPurchaseRow {
   // null for every other product and for pre-existing Milk purchases with no driver
   // set.
   forUserName: string | null;
+  forUserId: string | null;
   // Pre-formatted server-side (not a raw timestamp): formatting it in the client
   // component that renders this list would re-run on hydration and can mismatch
   // the server-rendered string (different ICU data between Node and the browser).

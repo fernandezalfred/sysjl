@@ -220,6 +220,7 @@ export function MilkPurchasesSection({ purchases, activeUsers, locale }: MilkPur
             purchase={mode.purchase}
             quantityLabel={quantityLabel}
             unitCostLabel={unitCostLabel}
+            activeUsers={activeUsers}
             onSaved={close}
             onCancel={close}
             t={t}

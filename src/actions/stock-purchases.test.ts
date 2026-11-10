@@ -230,6 +230,71 @@ describe("updateStockPurchase", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
+  it("moves a purchase to another day, keeping its time of day", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({
+      id: "p1",
+      product: "MILK",
+      createdAt: new Date("2026-11-05T14:00:00Z"),
+    });
+    const result = await updateStockPurchase(
+      { success: false },
+      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", date: "2026-11-02" }),
+    );
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { quantity: 20, unitCost: 4, createdAt: new Date("2026-11-02T14:00:00Z") },
+    });
+  });
+
+  it("changes the user a MILK purchase is for", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "MILK" });
+    prismaMock.user.findUnique.mockResolvedValue({ id: "user-2", isActive: true });
+    const result = await updateStockPurchase(
+      { success: false },
+      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", forUserId: "user-2" }),
+    );
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { quantity: 20, unitCost: 4, forUserId: "user-2" },
+    });
+  });
+
+  it("rejects moving a MILK purchase to a deactivated user", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "MILK" });
+    prismaMock.user.findUnique.mockResolvedValue({ id: "user-2", isActive: false });
+    const result = await updateStockPurchase(
+      { success: false },
+      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", forUserId: "user-2" }),
+    );
+    expect(result).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.stockPurchase.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a future date", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const result = await updateStockPurchase(
+      { success: false },
+      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", date: "2999-01-01" }),
+    );
+    expect(result).toEqual({ success: false, error: "Date can't be in the future." });
+    expect(prismaMock.stockPurchase.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a malformed date", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const result = await updateStockPurchase(
+      { success: false },
+      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", date: "yesterday" }),
+    );
+    expect(result).toEqual({ success: false, error: "Date is required." });
+    expect(prismaMock.stockPurchase.update).not.toHaveBeenCalled();
+  });
+
   it("only refreshes /dashboard and / when editing an old YOGURT purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p2", product: "YOGURT" });

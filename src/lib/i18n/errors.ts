@@ -16,6 +16,7 @@ const ERROR_KEYS: Record<string, DictionaryKey> = {
   "Total sold must be 0 or more.": "error.totalSoldMin",
   "Current password is incorrect.": "error.currentPasswordWrong",
   "Date is required.": "error.dateRequired",
+  "Date can't be in the future.": "error.dateInFuture",
   "Enter a valid email address.": "error.emailInvalid",
   "Enter your current password.": "error.currentPasswordRequired",
   "Invalid email or password.": "error.loginInvalid",

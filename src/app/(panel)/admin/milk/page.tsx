@@ -42,6 +42,7 @@ async function AdminMilkContent() {
     unitCost: row.unitCost,
     createdByName: row.createdBy.name,
     forUserName: row.forUser?.name ?? null,
+    forUserId: row.forUserId,
     createdAtFormatted: row.createdAt.toLocaleDateString("es-BO", { dateStyle: "medium" }),
     createdAtDate: formatBusinessDateKey(row.createdAt),
   }));
