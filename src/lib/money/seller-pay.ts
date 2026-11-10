@@ -52,3 +52,16 @@ export function pendingSellerPay(
     days: unpaid.length,
   };
 }
+
+// A seller's pay already collected: the sum of Pago over their records the admin
+// marked as paid.
+export function paidSellerPay(
+  records: { userId: string; totalSold: number; payPaid: boolean }[],
+  userId: string,
+): PayTotal {
+  const paid = records.filter((r) => r.userId === userId && r.payPaid);
+  return {
+    amount: paid.reduce((sum, r) => sum + sellerPay(r.totalSold), 0),
+    days: paid.length,
+  };
+}

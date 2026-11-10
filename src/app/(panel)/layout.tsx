@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { getT } from "@/lib/i18n/server";
 import { prisma } from "@/lib/prisma";
-import { pendingSellerPay, totalSellerPay } from "@/lib/money/seller-pay";
+import { paidSellerPay, pendingSellerPay, totalSellerPay } from "@/lib/money/seller-pay";
 import type { SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { PanelShell } from "@/components/layout/PanelShell";
 import { Footer } from "@/components/layout/Footer";
@@ -34,14 +34,19 @@ async function PanelContent({ children }: { children: ReactNode }) {
   );
 }
 
-// A seller's pay over every day they worked, and what the admin hasn't paid yet.
+// A seller's pay over every day they worked, split into what was already paid and what
+// the admin hasn't paid yet.
 async function getSellerPayTotals(userId: string): Promise<SellerPayTotals> {
   const rows = await prisma.dailyWorkRecord.findMany({
     where: { userId },
     select: { totalSold: true, payPaidAt: true },
   });
   const records = rows.map((r) => ({ userId, totalSold: r.totalSold, payPaid: Boolean(r.payPaidAt) }));
-  return { earned: totalSellerPay(records, userId), pending: pendingSellerPay(records, userId) };
+  return {
+    earned: totalSellerPay(records, userId),
+    paid: paidSellerPay(records, userId),
+    pending: pendingSellerPay(records, userId),
+  };
 }
 
 function PanelSkeleton() {

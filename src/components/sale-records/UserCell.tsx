@@ -39,11 +39,7 @@ export function UserCell({ name, totalSold, netProfit, showPay, payPaid, t }: Us
     return (
       <>
         {name}
-        {showPay ? (
-          <div className="text-xs font-normal text-foreground/70">
-            <LabeledAmount label={payLabel(t, payPaid)} amount={formatCurrency(pay)} amountClassName={amountClassName} />
-          </div>
-        ) : null}
+        {showPay ? <SellerPayBadge amount={pay} paid={payPaid} t={t} /> : null}
       </>
     );
   }
@@ -70,6 +66,35 @@ export function UserCell({ name, totalSold, netProfit, showPay, payPaid, t }: Us
           {formatCurrency(result)}
         </span>
       </div>
+    </div>
+  );
+}
+
+// A seller's own Pago for the day, as a colored badge: green with a check once the admin
+// marked it paid, amber while it's still owed.
+function SellerPayBadge({ amount, paid, t }: { amount: number; paid: boolean; t: TranslateFn }) {
+  const tone = paid
+    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+    : "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300";
+
+  return (
+    <div className={`mt-1.5 inline-flex items-center gap-2.5 rounded-lg border px-2.5 py-1.5 ${tone}`}>
+      <span className="flex flex-col leading-tight">
+        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{t("cell.pay")}</span>
+        <strong className="text-base font-bold tabular-nums">{formatCurrency(amount)}</strong>
+      </span>
+      <span
+        className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+          paid ? "bg-emerald-600 text-white" : "bg-amber-500 text-amber-950"
+        }`}
+      >
+        {paid ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-3 w-3">
+            <path d="M5 12l5 5 9-10" />
+          </svg>
+        ) : null}
+        {paid ? t("pay.paid") : t("pay.pending")}
+      </span>
     </div>
   );
 }

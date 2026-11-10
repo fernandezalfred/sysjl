@@ -31,7 +31,7 @@ Rules:
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
 - Costs, net profit and the winner's margin are admin-only (a seller sees the Milk liters and price they entered in their own record form; guests never receive them). Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
 - Signing in goes straight to `/dashboard` (also when a signed-in user opens `/login`; a non-admin opening `/admin/*` lands there too). On `/dashboard` a seller sees only their own records (charts, Sale Records). The public landing page `/` presents the product to the distribution companies that would rent it and shows no real data (its preview uses made-up figures).
-- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. On every panel page, a seller sees in place of the breadcrumbs their total earned Pago (every day worked) and what they're still owed (unpaid Pago), each with its number of days.
+- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. On every panel page, a seller sees in place of the breadcrumbs what they've collected (paid Pago), what they're still owed (unpaid Pago) and the sum of both (total earned), each with its number of days. In Sale Records each day's Pago is a green "Pagado" or amber "Por cobrar" badge.
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
 ## 4. Pages
