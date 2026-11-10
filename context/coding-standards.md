@@ -38,7 +38,7 @@ src/
   app/                 Pages (App Router); (panel)/ is the signed-in shell
   actions/             Server Actions, one file per feature, tests next to them
   components/[feature]/ComponentName.tsx
-    admin/             users, milk-purchases, grain-purchases, stock-purchases (shared), product-pricing
+    admin/             users, grain-purchases, stock-purchases (shared), product-pricing
     home/              public home page sections
     sale-records/      Sale Records table, its cells, record forms (also used by home/)
     sales-charts/      charts and the selected-day context

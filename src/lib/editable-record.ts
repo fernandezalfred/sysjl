@@ -10,5 +10,7 @@ export function toEditableRecord(row: DailyRecordRow): DailyWorkRecordRow {
     yogurtTaken: row.yogurt.taken,
     yogurtRemaining: row.yogurt.remaining,
     totalSold: row.totalSold,
+    milkLiters: row.milkLiters,
+    milkUnitCost: row.milkUnitCost,
   };
 }

@@ -17,42 +17,38 @@ enum Role {
 enum Product {
   QUESO
   YOGURT
-  MILK
   MAIZ_PELADO
   MAIZ_CASCARA
   HABA
 }
 
 // The subset of Product that ever has an admin-set sale price. Narrower than
-// Product so a ProductPrice row for MILK or a grain is unrepresentable.
+// Product so a ProductPrice row for a grain is unrepresentable.
 enum PricedProduct {
   QUESO
   YOGURT
 }
 
 model User {
-  id                String            @id @default(auto()) @map("_id") @db.ObjectId
-  name              String
-  email             String            @unique
-  passwordHash      String
-  role              Role              @default(VEHICLE_USER)
-  isActive          Boolean           @default(true)
-  workRecords       DailyWorkRecord[]
-  productPrices     ProductPrice[]
-  stockPurchases    StockPurchase[]   @relation("StockPurchaseCreatedBy")
-  // Milk purchases attributed to this user as the driver it's for (not who entered
-  // it) — see StockPurchase.forUser.
-  stockPurchasesFor StockPurchase[]   @relation("StockPurchaseForUser")
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  email          String            @unique
+  passwordHash   String
+  role           Role              @default(VEHICLE_USER)
+  isActive       Boolean           @default(true)
+  workRecords    DailyWorkRecord[]
+  productPrices  ProductPrice[]
+  stockPurchases StockPurchase[]   @relation("StockPurchaseCreatedBy")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 // One record per user per working day: quantities taken from the deposit
 // and remaining at day's end for the two currently-tracked products.
 model DailyWorkRecord {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String   @db.ObjectId
-  user            User     @relation(fields: [userId], references: [id])
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @db.ObjectId
+  user            User      @relation(fields: [userId], references: [id])
   date            DateTime
   quesoTaken      Int
   quesoRemaining  Int
@@ -61,16 +57,21 @@ model DailyWorkRecord {
   // Day's grand-total Bs revenue across all 4 products, user-entered. Independent
   // of quesoSold/yogurtSold; not cross-checked against their sum.
   // Default only guards legacy/pre-field documents from breaking reads.
-  totalSold       Int      @default(0)
+  totalSold       Int       @default(0)
   // Sale price per unit (Bs), snapshotted from the current ProductPrice at creation
   // time and never touched again, even on edit — so a later admin price change never
   // rewrites a past record's revenue. Defaults only guard legacy/pre-field documents.
-  quesoSalePrice  Float    @default(9)
-  yogurtSalePrice Float    @default(33)
+  quesoSalePrice  Float     @default(9)
+  yogurtSalePrice Float     @default(33)
+  // Milk the seller took that day and the price per liter it was bought at, entered
+  // on the record; liters x price is deducted from Net profit. Defaults keep older
+  // documents readable.
+  milkLiters      Int       @default(0)
+  milkUnitCost    Float     @default(0)
   // When the admin marked this day's seller pay as paid; null = not paid yet.
   payPaidAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@unique([userId, date])
 }
@@ -85,9 +86,9 @@ model ProductPrice {
   // saved before it existed still read; those fall back to the product's last
   // recorded StockPurchase cost (see getCurrentProductPrices).
   purchaseCost Float?
-  setById   String        @db.ObjectId
-  setBy     User          @relation(fields: [setById], references: [id])
-  updatedAt DateTime      @updatedAt
+  setById      String        @db.ObjectId
+  setBy        User          @relation(fields: [setById], references: [id])
+  updatedAt    DateTime      @updatedAt
 }
 
 // A single addition of stock to the central deposit for a product (e.g. a batch of
@@ -100,13 +101,9 @@ model StockPurchase {
   product     Product
   quantity    Int
   unitCost    Float
-  // Who actually entered this purchase — always the acting admin, for every product.
+  // Who actually entered this purchase — always the acting admin.
   createdById String   @db.ObjectId
   createdBy   User     @relation("StockPurchaseCreatedBy", fields: [createdById], references: [id])
-  // Milk only: which driver this purchase is for, picked from a dropdown on create.
-  // Distinct from createdBy/createdById, which stays the entering admin even for Milk.
-  forUserId   String?  @db.ObjectId
-  forUser     User?    @relation("StockPurchaseForUser", fields: [forUserId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

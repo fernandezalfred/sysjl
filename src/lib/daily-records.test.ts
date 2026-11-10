@@ -6,7 +6,13 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { buildDailyRecords, buildUserTotals, getDailyRecordsData, recordsVisibleTo } from "@/lib/daily-records";
+import {
+  buildDailyRecords,
+  buildUserTotals,
+  getDailyRecordsData,
+  recordsVisibleTo,
+  withoutMilkCost,
+} from "@/lib/daily-records";
 import type { SaleRecord } from "@/types/daily-records";
 
 const MOCK_WORK_RECORDS = [
@@ -19,6 +25,8 @@ const MOCK_WORK_RECORDS = [
     yogurtTaken: 60,
     yogurtRemaining: 5,
     totalSold: 123,
+    milkLiters: 30,
+    milkUnitCost: 7,
     quesoSalePrice: 9,
     yogurtSalePrice: 33,
     createdAt: new Date("2026-10-27T08:00:00.000Z"),
@@ -58,6 +66,8 @@ const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   unitPrice: 9,
   quantityTaken: 10,
   quantityRemaining: 2,
+  milkLiters: 0,
+  milkUnitCost: 0,
   ...overrides,
 });
 
@@ -320,5 +330,19 @@ describe("recordsVisibleTo", () => {
 
   it("gives a signed-out viewer nothing", () => {
     expect(recordsVisibleTo(rows, null, false)).toEqual([]);
+  });
+});
+
+describe("Milk on the record", () => {
+  it("carries the record's Milk liters and price per liter onto its row", async () => {
+    const data = await getDailyRecordsData();
+    const carla = data.dailyRecords.find((r) => r.userId === "u1")!;
+    expect(carla.milkLiters).toBe(30);
+    expect(carla.milkUnitCost).toBe(7);
+  });
+
+  it("withoutMilkCost zeroes the Milk liters and price, keeping everything else", () => {
+    const [row] = buildDailyRecords([record({ milkLiters: 30, milkUnitCost: 7 })]);
+    expect(withoutMilkCost([row])).toEqual([{ ...row, milkLiters: 0, milkUnitCost: 0 }]);
   });
 });

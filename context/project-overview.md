@@ -21,7 +21,7 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 
 | Role (`Role` enum) | Shown as             | Can do                                                                                                                         |
 | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ADMIN`            | Administrador        | Everything: manage users, prices and costs, Milk and grain purchases; see and edit every sale record; see costs and net profit |
+| `ADMIN`            | Administrador        | Everything: manage users, prices and costs, grain purchases; see and edit every sale record; see costs and net profit |
 | `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see their own pay and pending pay total, change their own password                      |
 | Guest (signed out) | —                    | See the public home page (sales by user, no costs, no profit, no pay)                                                           |
 
@@ -29,7 +29,7 @@ Rules:
 
 - The acting user always comes from the server-side session; a user id sent by the browser is never trusted.
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
-- Costs, net profit and the winner's margin are admin-only. Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
+- Costs, net profit and the winner's margin are admin-only (a seller sees the Milk liters and price they entered in their own record form; guests never receive them). Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
 - A signed-in seller sees only their own records, on `/` (top seller banner, charts, Totals by User) and `/dashboard` (charts, Sale Records). Guests on `/` still see every seller.
 - The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. A seller sees the sum of their unpaid Pago above Sale Records on `/dashboard`.
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
@@ -43,7 +43,6 @@ Rules:
 | `/dashboard`    | Signed in       | Sales by User charts, Prices & Costs (admin), Sale Records table with create / edit / delete               |
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
-| `/admin/milk`   | Admin           | Milk purchases per seller per day                                                                           |
 | `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
 Clicking a day header in either table shows that day in the charts.
@@ -54,12 +53,12 @@ Clicking a day header in either table shows that day in the charts.
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Queso, Yogurt               | Per sale record: units taken ("Sacó") and left over ("Sobró"). Sale price and purchase cost set by the admin on `/dashboard`. |
 | Milk & Mote                 | No quantities. Their revenue is what's left of the seller's "Total venta" after Queso and Yogurt revenue.                    |
-| Milk purchases              | Liters × cost per liter, entered by the admin for one seller on one day.                                                     |
+| Milk cost                   | Per sale record: liters taken × the price per liter it was bought at, entered by whoever registers the sale (required, 0 allowed). |
 | Grains                      | Quartillas × cost per quartilla, per day. Deposit inputs only, never sold.                                                   |
 
 The sale price is snapshotted on each sale record when it's created, so a later price change never rewrites past records. The current purchase cost is used for net profit (if not set, the last recorded purchase cost is the fallback).
 
-"Repeat last day" on the Milk and Grains pages copies the most recent day's purchases into today.
+"Repeat last day" on the Grains page copies the most recent day's purchases into today.
 
 The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 
@@ -74,20 +73,20 @@ The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 | Total vendidos más no vendidos | Total venta + No vendidos                                                                                                 |
 | Ganador (daily winner)         | Highest "Total vendidos más no vendidos" of the day; needs 2+ records that day; ties share; margin = gap to the runner-up |
 | Perdedor (loser)               | Everyone below the day's winner: Leche y Mote cell in red; admins see "Perdió por" = gap to the winner                  |
-| Ganancia neta (admin)          | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − that seller's Milk that day − an even share of that day's grains |
+| Ganancia neta (admin)          | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − the record's Milk liters × price per liter − an even share of that day's grains |
 | Pago (seller pay)              | Bs 150 up to 2500 of Total venta; +10 per 100 from 2500 to 3000; +20 per 100 above 3000 (amount over 2500 rounded to the nearest 100) |
 | Ganancia neta − Pago (admin)   | shown under the seller's name; display only                                                                               |
 
-The day header shows the day's total of Ganancia neta − Pago over all its records (admins). Amounts are displayed in whole bolivianos; calculations and stored values keep their cents.
+The day header shows the day's total of Ganancia neta − Pago over all its records (admins). Amounts are displayed in whole bolivianos. Each seller's grain share and Ganancia neta are calculated rounded to whole bolivianos; stored values keep their cents.
 
-The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/revenue.ts` (net profit), `src/lib/money/seller-pay.ts` (pay) and `src/lib/money/net-profit.ts` (loading Milk and grain costs).
+The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/revenue.ts` (net profit), `src/lib/money/seller-pay.ts` (pay) and `src/lib/money/net-profit.ts` (loading purchase and grain costs).
 
 ## 7. Data Model (`prisma/schema.prisma`)
 
 - **User** — name, email, bcrypt hash, role, `isActive`.
-- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, snapshotted sale prices, `payPaidAt` (when the admin marked the pay as paid). The date is fixed at creation and can't change on edit.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices, `payPaidAt` (when the admin marked the pay as paid). The date is fixed at creation and can't change on edit.
 - **ProductPrice** — one row per priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
-- **StockPurchase** — a Milk or grain purchase: product, quantity, unit cost, who entered it (`createdBy`) and, for Milk, which seller it's for (`forUser`). Old Queso/Yogurt purchases are still stored but no longer shown.
+- **StockPurchase** — a grain purchase: product, quantity, unit cost, who entered it (`createdBy`). Old Queso/Yogurt purchases are still stored but no longer shown.
 
 ## 8. Not Built (from the original spec)
 

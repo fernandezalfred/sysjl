@@ -9,11 +9,15 @@ interface RecordFormFieldsProps {
     yogurtTaken: number;
     yogurtRemaining: number;
     totalSold: number;
+    milkLiters: number;
+    milkUnitCost: number;
   };
   t: TranslateFn;
 }
 
 const inputClass = "w-full min-w-0 rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
+// Usual purchase price of Milk; prefilled on a new record, the seller can change it.
+const DEFAULT_MILK_UNIT_COST = 7;
 const labelClass = "text-xs font-medium text-foreground/70";
 
 export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
@@ -90,6 +94,39 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
             min={0}
             required
             defaultValue={defaultValues?.yogurtRemaining}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="milk-liters" className={labelClass}>
+            {t("records.milkLiters")}
+          </label>
+          <input
+            id="milk-liters"
+            name="milkLiters"
+            type="number"
+            min={0}
+            required
+            defaultValue={defaultValues?.milkLiters}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="milk-unit-cost" className={labelClass}>
+            {t("records.milkUnitCost")}
+          </label>
+          <input
+            id="milk-unit-cost"
+            name="milkUnitCost"
+            type="number"
+            min={0}
+            step="0.01"
+            required
+            defaultValue={defaultValues?.milkUnitCost ?? DEFAULT_MILK_UNIT_COST}
             className={inputClass}
           />
         </div>

@@ -11,7 +11,6 @@ const en = {
   "header.home": "Home",
   "header.dashboard": "Dashboard",
   "header.manageUsers": "Manage users",
-  "header.milk": "Milk",
   "header.grains": "Grains",
   "header.signIn": "Sign in",
   "header.signOut": "Sign out",
@@ -87,6 +86,8 @@ const en = {
   "records.yogurtTaken": "Yogurt taken out (units)",
   "records.yogurtLeft": "Yogurt left over (units)",
   "records.totalSold": "Day's total sales, all products (Bs)",
+  "records.milkLiters": "Milk (liters)",
+  "records.milkUnitCost": "Milk price (Bs/liter)",
   "records.confirmDelete": "Delete this record? This cannot be undone.",
 
   "login.title": "Sign in",
@@ -170,8 +171,6 @@ const en = {
   "pagination.pageOf": "Page {page} of {pageCount}",
 
 
-  "stock.subheadingPurchaseOnly":
-    "Record the milk bought for each seller. Its cost is deducted from that seller's Net profit for that day.",
   "stock.purchaseHistory": "Purchase History",
   "stock.noPurchases": "No purchases recorded yet.",
   "stock.newPurchase": "New purchase",
@@ -184,11 +183,8 @@ const en = {
   "repeat.error.nothingToCopy": "There are no purchases to copy.",
   "repeat.error.notAuthorized": "Admin access required.",
   "stock.editPurchase": "Edit purchase",
-  "stock.quantityLiters": "Quantity purchased (liters)",
-  "stock.quantityUnitLiters": "{quantity} liters",
   "stock.quantityQuartilla": "Quantity purchased (quartillas)",
   "stock.quantityUnitQuartilla": "{quantity} quartillas",
-  "stock.unitCostLiters": "Cost per liter (Bs)",
   "stock.unitCostQuartilla": "Cost per quartilla (Bs)",
   "stock.totalCost": "Total cost",
   "stock.save": "Save purchase",
@@ -200,7 +196,6 @@ const en = {
 
   "product.queso": "Cheese",
   "product.yogurt": "Yogurt",
-  "product.milk": "Milk",
   "product.maizPelado": "Peeled corn",
   "product.maizCascara": "Corn with husk",
   "product.haba": "Fava bean",
@@ -211,7 +206,6 @@ const en = {
   "grains.item": "Grain",
   "grains.selectItem": "Choose a grain",
 
-  "milk.forDriver": "Seller",
   "common.loading": "Loading…",
   "toast.recordCreated": "Record saved.",
   "toast.recordUpdated": "Record changes saved.",
@@ -232,9 +226,10 @@ const en = {
   "error.yogurtLeftMin": "Yogurt left must be 0 or more.",
   "error.yogurtTakenMin": "Yogurt taken must be 0 or more.",
   "error.totalSoldMin": "Total sold must be 0 or more.",
+  "error.milkLitersMin": "Milk liters must be 0 or more.",
+  "error.milkUnitCostMin": "Milk price per liter must be 0 or more.",
   "error.currentPasswordWrong": "Current password is incorrect.",
   "error.dateRequired": "Date is required.",
-  "error.dateInFuture": "Date can't be in the future.",
   "error.emailInvalid": "Enter a valid email address.",
   "error.currentPasswordRequired": "Enter your current password.",
   "error.loginInvalid": "Invalid email or password.",
@@ -261,7 +256,6 @@ const es: Record<DictionaryKey, string> = {
   "header.home": "Inicio",
   "header.dashboard": "Panel",
   "header.manageUsers": "Gestionar usuarios",
-  "header.milk": "Leche",
   "header.grains": "Granos",
   "header.signIn": "Iniciar sesión",
   "header.signOut": "Cerrar sesión",
@@ -337,6 +331,8 @@ const es: Record<DictionaryKey, string> = {
   "records.yogurtTaken": "Yogurt que sacó (unidades)",
   "records.yogurtLeft": "Yogurt que sobró (unidades)",
   "records.totalSold": "Total vendido en el día, todos los productos (Bs)",
+  "records.milkLiters": "Leche (litros)",
+  "records.milkUnitCost": "Precio leche (Bs/litro)",
   "records.confirmDelete": "¿Eliminar este registro? Esta acción no se puede deshacer.",
 
   "login.title": "Iniciar sesión",
@@ -420,8 +416,6 @@ const es: Record<DictionaryKey, string> = {
   "pagination.pageOf": "Página {page} de {pageCount}",
 
 
-  "stock.subheadingPurchaseOnly":
-    "Registra la leche comprada para cada vendedor. Su costo se descuenta de la Ganancia neta de ese vendedor en ese día.",
   "stock.purchaseHistory": "Historial de Compras",
   "stock.noPurchases": "Aún no hay compras registradas.",
   "stock.newPurchase": "Nueva compra",
@@ -434,11 +428,8 @@ const es: Record<DictionaryKey, string> = {
   "repeat.error.nothingToCopy": "No hay compras para copiar.",
   "repeat.error.notAuthorized": "Se requiere acceso de administrador.",
   "stock.editPurchase": "Editar compra",
-  "stock.quantityLiters": "Cantidad comprada (litros)",
-  "stock.quantityUnitLiters": "{quantity} litros",
   "stock.quantityQuartilla": "Cantidad comprada (cuartillas)",
   "stock.quantityUnitQuartilla": "{quantity} cuartillas",
-  "stock.unitCostLiters": "Costo por litro (Bs)",
   "stock.unitCostQuartilla": "Costo por cuartilla (Bs)",
   "stock.totalCost": "Costo total",
   "stock.save": "Guardar compra",
@@ -450,7 +441,6 @@ const es: Record<DictionaryKey, string> = {
 
   "product.queso": "Queso",
   "product.yogurt": "Yogurt",
-  "product.milk": "Leche",
   "product.maizPelado": "Maíz Pelado",
   "product.maizCascara": "Maíz con Cáscara",
   "product.haba": "Haba",
@@ -461,7 +451,6 @@ const es: Record<DictionaryKey, string> = {
   "grains.item": "Grano",
   "grains.selectItem": "Elige un grano",
 
-  "milk.forDriver": "Vendedor",
   "common.loading": "Cargando…",
   "toast.recordCreated": "Registro guardado.",
   "toast.recordUpdated": "Cambios del registro guardados.",
@@ -481,9 +470,10 @@ const es: Record<DictionaryKey, string> = {
   "error.yogurtLeftMin": "El yogurt que sobró debe ser 0 o más.",
   "error.yogurtTakenMin": "El yogurt que sacó debe ser 0 o más.",
   "error.totalSoldMin": "El total vendido debe ser 0 o más.",
+  "error.milkLitersMin": "Los litros de leche deben ser 0 o más.",
+  "error.milkUnitCostMin": "El precio de la leche por litro debe ser 0 o más.",
   "error.currentPasswordWrong": "La contraseña actual no es correcta.",
   "error.dateRequired": "Falta la fecha.",
-  "error.dateInFuture": "La fecha no puede ser futura.",
   "error.emailInvalid": "Escribe un correo electrónico válido.",
   "error.currentPasswordRequired": "Escribe tu contraseña actual.",
   "error.loginInvalid": "Correo o contraseña incorrectos.",

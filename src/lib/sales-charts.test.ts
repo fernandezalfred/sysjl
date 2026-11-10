@@ -22,6 +22,8 @@ const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   unitPrice: 9,
   quantityTaken: 10,
   quantityRemaining: 0,
+  milkLiters: 0,
+  milkUnitCost: 0,
   ...overrides,
 });
 

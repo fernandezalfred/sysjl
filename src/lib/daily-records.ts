@@ -66,6 +66,8 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
       date: record.date,
       userId: record.userId,
       userName: record.userName,
+      milkLiters: record.milkLiters,
+      milkUnitCost: record.milkUnitCost,
       queso: field === "queso" ? breakdown : EMPTY_BREAKDOWN,
       yogurt: field === "yogurt" ? breakdown : EMPTY_BREAKDOWN,
     });
@@ -141,6 +143,11 @@ export function recordsVisibleTo<T extends { userId: string }>(rows: T[], userId
   return rows.filter((row) => row.userId === userId);
 }
 
+// The Milk liters and price are cost data: guests get the rows without them.
+export function withoutMilkCost(rows: DailyRecordRow[]): DailyRecordRow[] {
+  return rows.map((row) => ({ ...row, milkLiters: 0, milkUnitCost: 0 }));
+}
+
 export async function getDailyRecordsData(): Promise<DailyRecordsData> {
   const workRecords = await prisma.dailyWorkRecord.findMany({
     include: { user: true },
@@ -154,6 +161,8 @@ export async function getDailyRecordsData(): Promise<DailyRecordsData> {
       totalSold: r.totalSold,
       payPaid: Boolean(r.payPaidAt),
       createdAt: r.createdAt.toISOString(),
+      milkLiters: r.milkLiters,
+      milkUnitCost: r.milkUnitCost,
     };
 
     return [

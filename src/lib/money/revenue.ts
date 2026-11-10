@@ -3,30 +3,20 @@ import type { DailyRecordRow, ProductCode } from "@/types/daily-records";
 
 export type UnitCosts = Record<ProductCode, number>;
 
-// Per-driver/per-day deductions applied on top of the Queso/Yogurt/Milk&Mote profit
-// below. Milk and grains have no per-record sold-quantity tracking, so these are
-// approximations rather than exact per-unit costs: `milkCostByUserDay` is a
-// driver's total Milk purchase cost (quantity*unitCost) on the record's own day,
-// keyed by milkCostKey(userId, date) (from getMilkCostByUserAndDay in
-// src/lib/money/stock.ts), and `grainsShareByDate` is a given
+// Per-day deduction applied on top of the profit below: `grainsShareByDate` is a
 // day's total grain purchase cost split evenly across that day's work records
 // (getGrainsCostByDay in src/lib/money/stock.ts, divided by that day's record count).
-// Both default to 0 for a user/day with no matching purchase.
-export interface MilkGrainsDeductions {
-  milkCostByUserDay: Record<string, number>;
+// 0 for a day with no grain purchase.
+export interface GrainsDeductions {
   grainsShareByDate: Record<string, number>;
-}
-
-// Key for MilkGrainsDeductions.milkCostByUserDay: one driver on one YYYY-MM-DD day.
-export function milkCostKey(userId: string, date: string): string {
-  return `${userId}|${date}`;
 }
 
 // Profit actually earned on one record: for Queso and Yogurt, each sold unit's
 // margin is its snapshotted sale price minus the product's purchase cost (passed
 // in, not hardcoded, since the admin can record a new purchase at a different cost
 // at any time — see getLatestUnitCost in src/lib/money/stock.ts); Milk & Mote has no cost
-// data, so its revenue is added in full, then reduced by the deductions above.
+// data, so its revenue is added in full, then reduced by the record's own Milk cost
+// (liters × price per liter, entered on the record) and the grains share above.
 // Distinct from DailyRecordRow.totalRevenue, which is sold revenue plus unsold/"left"
 // stock value, not profit — that one feeds the daily-winner comparison in
 // daily-records.ts and is intentionally left untouched.
@@ -35,17 +25,19 @@ export function milkCostKey(userId: string, date: string): string {
 // imported by a client component (SaleRecordsSection), and daily-records.ts also
 // exports the Prisma-backed getDailyRecordsData — importing from it client-side
 // bundled @prisma/client into the browser chunk.
+
 export function recordAdjustedRevenue(
   row: DailyRecordRow,
   unitCosts: UnitCosts,
-  deductions?: MilkGrainsDeductions,
+  deductions?: GrainsDeductions,
 ): number {
   const quesoProfit = row.queso.revenue - row.queso.sold * unitCosts.QUESO;
   const yogurtProfit = row.yogurt.revenue - row.yogurt.sold * unitCosts.YOGURT;
-  const milkCost = deductions?.milkCostByUserDay[milkCostKey(row.userId, row.date)] ?? 0;
+  const milkCost = row.milkLiters * row.milkUnitCost;
   const grainsShare = deductions?.grainsShareByDate[row.date] ?? 0;
 
-  return quesoProfit + yogurtProfit + row.milkMoteRevenue - milkCost - grainsShare;
+  // Rounded to whole bolivianos, like every Net profit figure.
+  return Math.round(quesoProfit + yogurtProfit + row.milkMoteRevenue - milkCost - grainsShare);
 }
 
 // Grains cost is tracked per purchase day, not per driver — split evenly across
@@ -61,7 +53,8 @@ export function buildGrainsShareByDate(
   }
   const result: Record<string, number> = {};
   for (const [date, total] of Object.entries(grainsCostByDay)) {
-    result[date] = total / (recordCountByDate.get(date) ?? 1);
+    // Each seller's share is rounded to whole bolivianos.
+    result[date] = Math.round(total / (recordCountByDate.get(date) ?? 1));
   }
   return result;
 }
@@ -75,7 +68,7 @@ export function buildGrainsShareByDate(
 export function buildNetProfitAfterPayByDate(
   rows: DailyRecordRow[],
   unitCosts: UnitCosts,
-  deductions?: MilkGrainsDeductions,
+  deductions?: GrainsDeductions,
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const row of rows) {

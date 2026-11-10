@@ -16,7 +16,7 @@ import {
   buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
   type UnitCosts,
-  type MilkGrainsDeductions,
+  type GrainsDeductions,
 } from "@/lib/money/revenue";
 import { CreateRecordForm } from "@/components/sale-records/CreateRecordForm";
 import { EditRecordForm } from "@/components/sale-records/EditRecordForm";
@@ -35,7 +35,7 @@ interface SaleRecordsSectionProps {
   activeUsers: { id: string; name: string }[];
   locale: Locale;
   unitCosts: UnitCosts | null;
-  deductions: MilkGrainsDeductions | null;
+  deductions: GrainsDeductions | null;
 }
 
 type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };

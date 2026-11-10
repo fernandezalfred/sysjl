@@ -103,7 +103,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
           {t("stock.purchaseHistory")}
         </h2>
         <div className="flex items-start gap-2">
-          <RepeatLastDayButton kind="GRAINS" t={t} />
+          <RepeatLastDayButton t={t} />
           <button
             type="button"
             onClick={openCreate}

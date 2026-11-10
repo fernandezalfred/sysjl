@@ -39,13 +39,3 @@ export function formatBusinessDateKey(date: Date): string {
 export function todayDateString(): string {
   return formatDateKey(new Date());
 }
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-// Moves a Date to another business day (YYYY-MM-DD), keeping its time of day.
-// Bolivia has no DST, so a whole-day shift lands on the same local time.
-export function moveToBusinessDate(date: Date, dateKey: string): Date {
-  const fromDay = Date.parse(`${formatBusinessDateKey(date)}T00:00:00Z`);
-  const toDay = Date.parse(`${dateKey}T00:00:00Z`);
-  return new Date(date.getTime() + Math.round((toDay - fromDay) / DAY_MS) * DAY_MS);
-}

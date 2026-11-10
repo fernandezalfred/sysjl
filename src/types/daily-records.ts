@@ -14,6 +14,8 @@ export interface SaleRecord {
   unitPrice: number;
   quantityTaken: number;
   quantityRemaining: number;
+  milkLiters: number;
+  milkUnitCost: number;
 }
 
 export interface UserTotal {
@@ -56,6 +58,10 @@ export interface DailyRecordRow {
   isDailyWinner: boolean;
   winnerMargin: number | null;
   lossMargin: number | null;
+  // Milk the seller took that day and its purchase price per liter (cost data:
+  // zeroed before reaching guests, see withoutMilkCost).
+  milkLiters: number;
+  milkUnitCost: number;
 }
 
 export interface DailyRecordsData {
@@ -72,4 +78,6 @@ export interface DailyWorkRecordRow {
   yogurtTaken: number;
   yogurtRemaining: number;
   totalSold: number;
+  milkLiters: number;
+  milkUnitCost: number;
 }

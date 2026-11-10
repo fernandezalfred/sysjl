@@ -46,6 +46,8 @@ const VALID_FIELDS = {
   yogurtTaken: "60",
   yogurtRemaining: "5",
   totalSold: "123",
+  milkLiters: "30",
+  milkUnitCost: "7.5",
 };
 
 beforeEach(() => {
@@ -108,11 +110,27 @@ describe("createDailyWorkRecord", () => {
         yogurtTaken: 60,
         yogurtRemaining: 5,
         totalSold: 123,
+        milkLiters: 30,
+        milkUnitCost: 7.5,
         quesoSalePrice: 9,
         yogurtSalePrice: 33,
       },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
+  });
+
+  it("rejects negative Milk liters", async () => {
+    authMock.mockResolvedValue(SESSION);
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, milkLiters: "-1" }));
+    expect(result).toEqual({ success: false, error: "Milk liters must be 0 or more." });
+    expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a negative Milk price per liter", async () => {
+    authMock.mockResolvedValue(SESSION);
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, milkUnitCost: "-2" }));
+    expect(result).toEqual({ success: false, error: "Milk price per liter must be 0 or more." });
+    expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
   });
 
   it("falls back to the legacy default sale prices when the admin hasn't set one yet", async () => {
@@ -282,6 +300,8 @@ describe("updateDailyWorkRecord", () => {
         yogurtTaken: 60,
         yogurtRemaining: 5,
         totalSold: 123,
+        milkLiters: 30,
+        milkUnitCost: 7.5,
       },
     });
   });

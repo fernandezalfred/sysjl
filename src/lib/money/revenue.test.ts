@@ -3,9 +3,8 @@ import { buildDailyRecords } from "@/lib/daily-records";
 import {
   buildGrainsShareByDate,
   buildNetProfitAfterPayByDate,
-  milkCostKey,
   recordAdjustedRevenue,
-  type MilkGrainsDeductions,
+  type GrainsDeductions,
   type UnitCosts,
 } from "@/lib/money/revenue";
 import type { SaleRecord } from "@/types/daily-records";
@@ -23,6 +22,8 @@ const record = (overrides: Partial<SaleRecord>): SaleRecord => ({
   unitPrice: 9,
   quantityTaken: 10,
   quantityRemaining: 2,
+  milkLiters: 0,
+  milkUnitCost: 0,
   ...overrides,
 });
 
@@ -57,61 +58,53 @@ describe("recordAdjustedRevenue", () => {
 });
 
 describe("recordAdjustedRevenue with Milk/grains deductions", () => {
-  it("subtracts the driver's same-day Milk purchase cost and the day's grains cost split across that day's records", () => {
+  it("subtracts the record's own Milk (liters × price) and the day's grains cost split across that day's records", () => {
     // Real-data regression: Daniel, 2026-11-01. Queso sold 150 @ margin 3 = 450;
     // Yogurt sold 22 @ margin 11 = 242; totalSold 2930 -> Milk & Mote 2930 - 1350 - 726 = 854.
     // Undeducted earned: 450 + 242 + 854 = 1546.
-    // Daniel's Milk purchase that same day: 30 @ unitCost 6 = 180.
+    // Daniel's Milk on the record: 30 liters @ Bs 6 = 180.
     // That day's grains cost (105 + 306.20 = 411.20) split across 2 drivers (Daniel, Raul) = 205.60.
-    // 1546 - 180 - 205.60 = 1160.40.
+    // 1546 - 180 - 205.60 = 1160.40, rounded to 1160.
     const records = [
-      record({ id: "r1", date: "2026-11-01", userId: "daniel", userName: "Daniel", product: "QUESO", unitPrice: 9, quantityTaken: 150, quantityRemaining: 0, totalSold: 2930 }),
-      record({ id: "r2", date: "2026-11-01", userId: "daniel", userName: "Daniel", product: "YOGURT", unitPrice: 33, quantityTaken: 30, quantityRemaining: 8, totalSold: 2930 }),
+      record({ id: "r1", date: "2026-11-01", userId: "daniel", userName: "Daniel", product: "QUESO", unitPrice: 9, quantityTaken: 150, quantityRemaining: 0, totalSold: 2930, milkLiters: 30, milkUnitCost: 6 }),
+      record({ id: "r2", date: "2026-11-01", userId: "daniel", userName: "Daniel", product: "YOGURT", unitPrice: 33, quantityTaken: 30, quantityRemaining: 8, totalSold: 2930, milkLiters: 30, milkUnitCost: 6 }),
     ];
     const [row] = buildDailyRecords(records);
 
-    const deductions: MilkGrainsDeductions = {
-      milkCostByUserDay: { [milkCostKey("daniel", "2026-11-01")]: 180 },
-      grainsShareByDate: { "2026-11-01": 205.6 },
-    };
+    const deductions: GrainsDeductions = { grainsShareByDate: { "2026-11-01": 205.6 } };
 
-    expect(recordAdjustedRevenue(row, unitCosts, deductions)).toBeCloseTo(1160.4, 5);
+    expect(recordAdjustedRevenue(row, unitCosts, deductions)).toBe(1160);
   });
 
-  it("ignores the same driver's Milk purchases from other days", () => {
-    const records = [
-      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "A", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
-    ];
-    const [row] = buildDailyRecords(records);
+  it("deducts the Milk even without grains", () => {
+    const [row] = buildDailyRecords([
+      record({ product: "QUESO", quantityTaken: 10, quantityRemaining: 0, totalSold: 90, milkLiters: 30, milkUnitCost: 7 }),
+    ]);
 
-    const deductions: MilkGrainsDeductions = {
-      milkCostByUserDay: { [milkCostKey("u1", "2026-10-28")]: 180, [milkCostKey("u1", "2026-10-27")]: 210 },
-      grainsShareByDate: {},
-    };
-
-    expect(recordAdjustedRevenue(row, unitCosts, deductions)).toBe(recordAdjustedRevenue(row, unitCosts) - 210);
+    expect(recordAdjustedRevenue(row, unitCosts)).toBe(30 - 210);
   });
 
-  it("deducts nothing for a user/day with no matching purchase", () => {
-    const records = [
-      record({ id: "r1", date: "2026-10-27", userId: "u1", userName: "A", product: "QUESO", unitPrice: 9, quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
-    ];
-    const [row] = buildDailyRecords(records);
+  it("deducts nothing for a record with 0 liters and a day with no grains", () => {
+    const [row] = buildDailyRecords([record({ product: "QUESO", quantityTaken: 10, quantityRemaining: 0, totalSold: 90 })]);
 
-    expect(recordAdjustedRevenue(row, unitCosts, { milkCostByUserDay: {}, grainsShareByDate: {} })).toBe(
-      recordAdjustedRevenue(row, unitCosts),
-    );
+    expect(recordAdjustedRevenue(row, unitCosts, { grainsShareByDate: {} })).toBe(30);
   });
 });
 
 describe("buildGrainsShareByDate", () => {
-  it("splits each day's grains cost evenly across that day's records", () => {
+  it("splits each day's grains cost evenly across that day's records, rounded to whole bolivianos", () => {
     const records = [{ date: "2026-11-01" }, { date: "2026-11-01" }, { date: "2026-10-31" }];
 
     expect(buildGrainsShareByDate({ "2026-11-01": 411.2, "2026-10-31": 300 }, records)).toEqual({
-      "2026-11-01": 205.6,
+      "2026-11-01": 206,
       "2026-10-31": 300,
     });
+  });
+
+  it("re-splits a day's grains when another seller adds a record that day", () => {
+    const grains = { "2026-11-09": 128.3 };
+    expect(buildGrainsShareByDate(grains, [{ date: "2026-11-09" }])).toEqual({ "2026-11-09": 128 });
+    expect(buildGrainsShareByDate(grains, [{ date: "2026-11-09" }, { date: "2026-11-09" }])).toEqual({ "2026-11-09": 64 });
   });
 
   it("keeps the full cost for a purchase day with no sale records", () => {
@@ -126,12 +119,11 @@ describe("buildNetProfitAfterPayByDate", () => {
     // minus Bs 150 pay for each seller (both sold under 2500): 7 - 300 = -293.
     // Day 2: A sells 4 Queso = 12, minus 150 pay = -138.
     const rows = buildDailyRecords([
-      record({ id: "r1", date: "2026-11-01", userId: "a", product: "QUESO", quantityTaken: 10, quantityRemaining: 0, totalSold: 90 }),
+      record({ id: "r1", date: "2026-11-01", userId: "a", product: "QUESO", quantityTaken: 10, quantityRemaining: 0, totalSold: 90, milkLiters: 1, milkUnitCost: 5 }),
       record({ id: "r2", date: "2026-11-01", userId: "b", product: "YOGURT", unitPrice: 33, quantityTaken: 2, quantityRemaining: 0, totalSold: 66 }),
       record({ id: "r3", date: "2026-11-02", userId: "a", product: "QUESO", quantityTaken: 4, quantityRemaining: 0, totalSold: 36 }),
     ]);
-    const deductions: MilkGrainsDeductions = {
-      milkCostByUserDay: { [milkCostKey("a", "2026-11-01")]: 5 },
+    const deductions: GrainsDeductions = {
       grainsShareByDate: buildGrainsShareByDate({ "2026-11-01": 40 }, rows),
     };
 

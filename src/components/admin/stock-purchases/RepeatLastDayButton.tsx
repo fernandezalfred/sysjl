@@ -2,11 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { repeatLastDayPurchases } from "@/actions/stock-purchases";
-import type { RepeatKind } from "@/lib/repeat-purchases";
 import type { TranslateFn } from "@/lib/i18n/translations";
 
 interface RepeatLastDayButtonProps {
-  kind: RepeatKind;
   t: TranslateFn;
 }
 
@@ -17,7 +15,7 @@ interface Feedback {
 
 // Copies the most recent day's purchases into today in one click (see
 // repeatLastDayPurchases), after a confirmation since it creates several entries.
-export function RepeatLastDayButton({ kind, t }: RepeatLastDayButtonProps) {
+export function RepeatLastDayButton({ t }: RepeatLastDayButtonProps) {
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
@@ -25,7 +23,7 @@ export function RepeatLastDayButton({ kind, t }: RepeatLastDayButtonProps) {
     if (!window.confirm(t("repeat.confirm"))) return;
     setFeedback(null);
     startTransition(async () => {
-      const result = await repeatLastDayPurchases(kind);
+      const result = await repeatLastDayPurchases();
       setFeedback(
         result.success
           ? { ok: true, text: t("repeat.done", { count: result.count ?? 0 }) }

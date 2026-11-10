@@ -18,7 +18,24 @@ const baseQuantities = z.object({
   yogurtTaken: z.coerce.number().int().min(0, "Yogurt taken must be 0 or more."),
   yogurtRemaining: z.coerce.number().int().min(0, "Yogurt left must be 0 or more."),
   totalSold: z.coerce.number().int().min(0, "Total sold must be 0 or more."),
+  // Milk taken that day and the price per liter it was bought at; liters × price is
+  // deducted from Net profit. Required (0 allowed).
+  milkLiters: z.coerce.number().int().min(0, "Milk liters must be 0 or more."),
+  milkUnitCost: z.coerce.number().min(0, "Milk price per liter must be 0 or more."),
 });
+
+// The quantity fields every create/update form sends.
+function readQuantities(formData: FormData) {
+  return {
+    quesoTaken: formData.get("quesoTaken"),
+    quesoRemaining: formData.get("quesoRemaining"),
+    yogurtTaken: formData.get("yogurtTaken"),
+    yogurtRemaining: formData.get("yogurtRemaining"),
+    totalSold: formData.get("totalSold"),
+    milkLiters: formData.get("milkLiters"),
+    milkUnitCost: formData.get("milkUnitCost"),
+  };
+}
 
 // Date is only ever accepted on create (stamped client-side via the JS Date API, not
 // typed by the user). Edits never carry a date, so the record's original date is
@@ -70,11 +87,7 @@ export async function createDailyWorkRecord(
 
     const parsed = createSchema.safeParse({
       date: formData.get("date"),
-      quesoTaken: formData.get("quesoTaken"),
-      quesoRemaining: formData.get("quesoRemaining"),
-      yogurtTaken: formData.get("yogurtTaken"),
-      yogurtRemaining: formData.get("yogurtRemaining"),
-      totalSold: formData.get("totalSold"),
+      ...readQuantities(formData),
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -106,6 +119,8 @@ export async function createDailyWorkRecord(
         yogurtTaken: parsed.data.yogurtTaken,
         yogurtRemaining: parsed.data.yogurtRemaining,
         totalSold: parsed.data.totalSold,
+        milkLiters: parsed.data.milkLiters,
+        milkUnitCost: parsed.data.milkUnitCost,
         quesoSalePrice: salePrices.QUESO,
         yogurtSalePrice: salePrices.YOGURT,
       },
@@ -142,11 +157,7 @@ export async function updateDailyWorkRecord(
 
     const parsed = updateSchema.safeParse({
       recordId: formData.get("recordId"),
-      quesoTaken: formData.get("quesoTaken"),
-      quesoRemaining: formData.get("quesoRemaining"),
-      yogurtTaken: formData.get("yogurtTaken"),
-      yogurtRemaining: formData.get("yogurtRemaining"),
-      totalSold: formData.get("totalSold"),
+      ...readQuantities(formData),
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -167,6 +178,8 @@ export async function updateDailyWorkRecord(
         yogurtTaken: parsed.data.yogurtTaken,
         yogurtRemaining: parsed.data.yogurtRemaining,
         totalSold: parsed.data.totalSold,
+        milkLiters: parsed.data.milkLiters,
+        milkUnitCost: parsed.data.milkUnitCost,
       },
     });
 

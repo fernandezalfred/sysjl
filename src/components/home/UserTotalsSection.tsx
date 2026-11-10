@@ -13,7 +13,7 @@ import {
   buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
   type UnitCosts,
-  type MilkGrainsDeductions,
+  type GrainsDeductions,
 } from "@/lib/money/revenue";
 import { toEditableRecord } from "@/lib/editable-record";
 import { EditRecordForm } from "@/components/sale-records/EditRecordForm";
@@ -31,7 +31,7 @@ interface UserTotalsSectionProps {
   isAdmin: boolean;
   // Admin-only cost inputs for the Net profit line; null for everyone else.
   unitCosts: UnitCosts | null;
-  deductions: MilkGrainsDeductions | null;
+  deductions: GrainsDeductions | null;
   hideHeading?: boolean;
   locale: Locale;
 }

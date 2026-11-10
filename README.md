@@ -79,7 +79,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Roles & Access
 
-- **Admin** — manages users, Queso/Yogurt sale prices and purchase costs, Milk and grain purchases; sees and edits every sale record, costs and net profit.
+- **Admin** — manages users, Queso/Yogurt sale prices and purchase costs, grain purchases; sees and edits every sale record, costs and net profit.
 - **Seller** (`VEHICLE_USER`) — records and edits their own daily sale records and sees every seller's pay. The acting user always comes from the server-side session, never from the client.
 - **Guest** — sees the public home page `/` (sales by user, no costs, profit or pay).
 
@@ -96,14 +96,13 @@ src/
       dashboard/          # Sales charts, prices & costs (admin), sale records
       account/            # Change own password
       admin/users/        # Admin: user management
-      admin/milk/         # Admin: Milk purchases per seller per day
       admin/grains/       # Admin: grain purchases
   actions/                # Server Actions, one file per feature (+ tests)
   components/
     home/                 # Public home sections
     sale-records/         # Sale Records table, cells, record forms
     sales-charts/         # Charts, selected-day context
-    admin/                # users/, milk-purchases/, grain-purchases/, stock-purchases/, product-pricing/
+    admin/                # users/, grain-purchases/, stock-purchases/, product-pricing/
     layout/ ui/ auth/ account/ i18n/
   hooks/                  # Custom React hooks
   lib/
@@ -121,9 +120,9 @@ context/                  # Spec, coding standards, workflow, current feature, h
 ## Data Model
 
 - **User** — admin or seller role, active/inactive.
-- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left over, user-entered total sold (all four products), and the sale prices snapshotted at creation so later price changes never rewrite past records.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left over, user-entered total sold (all four products), Milk liters and price per liter, and the sale prices snapshotted at creation so later price changes never rewrite past records.
 - **ProductPrice** — current sale price and purchase cost for Queso and Yogurt; one row per product, updated in place.
-- **StockPurchase** — a Milk purchase (for one seller) or grain purchase (Maíz pelado, Maíz con cáscara, Haba): quantity and unit cost. Feeds net profit.
+- **StockPurchase** — a grain purchase (Maíz pelado, Maíz con cáscara, Haba): quantity and unit cost. Feeds net profit.
 
 ## Internationalization
 

@@ -12,10 +12,6 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
       findMany: vi.fn(),
       createMany: vi.fn(),
     },
-    user: {
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-    },
   },
   revalidatePathMock: vi.fn(),
 }));
@@ -91,71 +87,10 @@ describe("createStockPurchase", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
-  it.each(["QUESO", "YOGURT"])("rejects a new %s purchase (their cost is set on /dashboard)", async (product) => {
+  it.each(["QUESO", "YOGURT", "MILK"])("rejects a new %s purchase (no longer bought on a purchase page)", async (product) => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     const result = await createStockPurchase({ success: false }, formData({ ...VALID_FIELDS, product }));
     expect(result.success).toBe(false);
-    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
-  });
-
-  it("creates a MILK stock purchase tagged with the acting admin and the selected driver", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ id: "driver-1", role: "VEHICLE_USER", isActive: true });
-    const result = await createStockPurchase(
-      { success: false },
-      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "driver-1" }),
-    );
-    expect(result).toEqual({ success: true });
-    expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
-      data: { product: "MILK", quantity: 50, unitCost: 6.5, createdById: "admin-1", forUserId: "driver-1" },
-    });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
-  });
-
-  it("rejects a MILK purchase with no driver selected", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    const result = await createStockPurchase(
-      { success: false },
-      formData({ ...VALID_FIELDS, product: "MILK" }),
-    );
-    expect(result).toEqual({ success: false, error: "Select a user." });
-    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
-  });
-
-  it("rejects a MILK purchase attributed to a non-existent user", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue(null);
-    const result = await createStockPurchase(
-      { success: false },
-      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "missing" }),
-    );
-    expect(result).toEqual({ success: false, error: "User not found." });
-    expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
-  });
-
-  it("accepts a MILK purchase attributed to an active admin", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ id: "admin-2", role: "ADMIN", isActive: true });
-    const result = await createStockPurchase(
-      { success: false },
-      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "admin-2" }),
-    );
-    expect(result).toEqual({ success: true });
-    expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ forUserId: "admin-2" }) }),
-    );
-  });
-
-  it("rejects a MILK purchase attributed to a deactivated user", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ id: "driver-2", role: "VEHICLE_USER", isActive: false });
-    const result = await createStockPurchase(
-      { success: false },
-      formData({ ...VALID_FIELDS, product: "MILK", forUserId: "driver-2" }),
-    );
-    expect(result).toEqual({ success: false, error: "User not found." });
     expect(prismaMock.stockPurchase.create).not.toHaveBeenCalled();
   });
 
@@ -230,83 +165,11 @@ describe("updateStockPurchase", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
-  it("moves a purchase to another day, keeping its time of day", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({
-      id: "p1",
-      product: "MILK",
-      createdAt: new Date("2026-11-05T14:00:00Z"),
-    });
-    const result = await updateStockPurchase(
-      { success: false },
-      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", date: "2026-11-02" }),
-    );
-    expect(result).toEqual({ success: true });
-    expect(prismaMock.stockPurchase.update).toHaveBeenCalledWith({
-      where: { id: "p1" },
-      data: { quantity: 20, unitCost: 4, createdAt: new Date("2026-11-02T14:00:00Z") },
-    });
-  });
-
-  it("changes the user a MILK purchase is for", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "MILK" });
-    prismaMock.user.findUnique.mockResolvedValue({ id: "user-2", isActive: true });
-    const result = await updateStockPurchase(
-      { success: false },
-      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", forUserId: "user-2" }),
-    );
-    expect(result).toEqual({ success: true });
-    expect(prismaMock.stockPurchase.update).toHaveBeenCalledWith({
-      where: { id: "p1" },
-      data: { quantity: 20, unitCost: 4, forUserId: "user-2" },
-    });
-  });
-
-  it("rejects moving a MILK purchase to a deactivated user", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "MILK" });
-    prismaMock.user.findUnique.mockResolvedValue({ id: "user-2", isActive: false });
-    const result = await updateStockPurchase(
-      { success: false },
-      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", forUserId: "user-2" }),
-    );
-    expect(result).toEqual({ success: false, error: "User not found." });
-    expect(prismaMock.stockPurchase.update).not.toHaveBeenCalled();
-  });
-
-  it("rejects a future date", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    const result = await updateStockPurchase(
-      { success: false },
-      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", date: "2999-01-01" }),
-    );
-    expect(result).toEqual({ success: false, error: "Date can't be in the future." });
-    expect(prismaMock.stockPurchase.update).not.toHaveBeenCalled();
-  });
-
-  it("rejects a malformed date", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    const result = await updateStockPurchase(
-      { success: false },
-      formData({ quantity: "20", unitCost: "4", purchaseId: "p1", date: "yesterday" }),
-    );
-    expect(result).toEqual({ success: false, error: "Date is required." });
-    expect(prismaMock.stockPurchase.update).not.toHaveBeenCalled();
-  });
-
   it("only refreshes /dashboard and / when editing an old YOGURT purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p2", product: "YOGURT" });
     await updateStockPurchase({ success: false }, formData({ quantity: "75", unitCost: "7", purchaseId: "p2" }));
     expect(revalidatePathMock.mock.calls.map(([path]) => path).sort()).toEqual(["/", "/dashboard", "/dashboard"]);
-  });
-
-  it("revalidates the milk page when editing a MILK purchase", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p3", product: "MILK" });
-    await updateStockPurchase({ success: false }, formData({ quantity: "20", unitCost: "4", purchaseId: "p3" }));
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
   });
 
   it("revalidates the grains page when editing a MAIZ_PELADO purchase", async () => {
@@ -356,13 +219,6 @@ describe("deleteStockPurchase", () => {
     expect(revalidatePathMock.mock.calls.map(([path]) => path).sort()).toEqual(["/", "/dashboard", "/dashboard"]);
   });
 
-  it("revalidates the milk page when deleting a MILK purchase", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p3", product: "MILK" });
-    await deleteStockPurchase("p3");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
-  });
-
   it("revalidates the grains page when deleting a MAIZ_CASCARA purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p4", product: "MAIZ_CASCARA" });
@@ -381,66 +237,45 @@ describe("repeatLastDayPurchases", () => {
     vi.useRealTimers();
   });
 
-  const LAST_DAY_MILK = [
-    { product: "MILK", quantity: 30, unitCost: 7, createdAt: new Date("2026-11-06T00:17:19Z"), forUserId: "raul" },
-    { product: "MILK", quantity: 26, unitCost: 7, createdAt: new Date("2026-11-06T00:17:39Z"), forUserId: "daniel" },
+  const LAST_DAY_GRAINS = [
+    { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdAt: new Date("2026-11-06T00:16:41Z") },
+    { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdAt: new Date("2026-11-06T00:17:03Z") },
   ];
 
   it("rejects a non-admin session without touching the database", async () => {
     authMock.mockResolvedValue(VEHICLE_SESSION);
-    expect(await repeatLastDayPurchases("MILK")).toEqual({ success: false, error: "notAuthorized" });
+    expect(await repeatLastDayPurchases()).toEqual({ success: false, error: "notAuthorized" });
     expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
-  });
-
-  it("copies the last day's Milk into today for each active user, entered by the current admin", async () => {
-    authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findFirst.mockResolvedValue({ createdAt: LAST_DAY_MILK[1].createdAt });
-    prismaMock.stockPurchase.findMany.mockResolvedValue(LAST_DAY_MILK);
-    prismaMock.user.findMany.mockResolvedValue([{ id: "raul" }, { id: "daniel" }]);
-
-    expect(await repeatLastDayPurchases("MILK")).toEqual({ success: true, count: 2 });
-    expect(prismaMock.stockPurchase.createMany).toHaveBeenCalledWith({
-      data: [
-        { product: "MILK", quantity: 30, unitCost: 7, createdById: "admin-1", forUserId: "raul" },
-        { product: "MILK", quantity: 26, unitCost: 7, createdById: "admin-1", forUserId: "daniel" },
-      ],
-    });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/milk");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
   });
 
   it("copies every grain item of the last day", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    const grains = [
-      { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdAt: new Date("2026-11-06T00:16:41Z"), forUserId: null },
-      { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdAt: new Date("2026-11-06T00:17:03Z"), forUserId: null },
-    ];
+    const grains = LAST_DAY_GRAINS;
     prismaMock.stockPurchase.findFirst.mockResolvedValue({ createdAt: grains[1].createdAt });
     prismaMock.stockPurchase.findMany.mockResolvedValue(grains);
 
-    expect(await repeatLastDayPurchases("GRAINS")).toEqual({ success: true, count: 2 });
+    expect(await repeatLastDayPurchases()).toEqual({ success: true, count: 2 });
     expect(prismaMock.stockPurchase.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ product: { in: ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"] } }) }),
     );
-    expect(prismaMock.user.findMany).not.toHaveBeenCalled();
     expect(prismaMock.stockPurchase.createMany).toHaveBeenCalledWith({
       data: [
-        { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdById: "admin-1", forUserId: null },
-        { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdById: "admin-1", forUserId: null },
+        { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdById: "admin-1" },
+        { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdById: "admin-1" },
       ],
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/");
   });
 
   it("refuses when today already has purchases", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    const today = [{ ...LAST_DAY_MILK[0], createdAt: new Date("2026-11-06T13:00:00Z") }];
+    const today = [{ ...LAST_DAY_GRAINS[0], createdAt: new Date("2026-11-06T13:00:00Z") }];
     prismaMock.stockPurchase.findFirst.mockResolvedValue({ createdAt: today[0].createdAt });
     prismaMock.stockPurchase.findMany.mockResolvedValue(today);
-    prismaMock.user.findMany.mockResolvedValue([{ id: "raul" }]);
 
-    expect(await repeatLastDayPurchases("MILK")).toEqual({ success: false, error: "alreadyToday" });
+    expect(await repeatLastDayPurchases()).toEqual({ success: false, error: "alreadyToday" });
     expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
   });
 
@@ -448,7 +283,7 @@ describe("repeatLastDayPurchases", () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.stockPurchase.findFirst.mockResolvedValue(null);
 
-    expect(await repeatLastDayPurchases("GRAINS")).toEqual({ success: false, error: "nothingToCopy" });
+    expect(await repeatLastDayPurchases()).toEqual({ success: false, error: "nothingToCopy" });
     expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
   });
 });

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getDailyRecordsData, recordsVisibleTo } from "@/lib/daily-records";
+import { getDailyRecordsData, recordsVisibleTo, withoutMilkCost } from "@/lib/daily-records";
 import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { latestWorkDay } from "@/lib/sales-charts";
 import { getT } from "@/lib/i18n/server";
@@ -47,7 +47,10 @@ async function LandingContent() {
   // guests still see every seller. Filtered after the day's winner/loser was worked
   // out against every seller, so others' rows never reach the browser.
   const userId = session?.user?.id ?? null;
-  const dailyRecords = isSignedIn ? recordsVisibleTo(data.dailyRecords, userId, isAdmin) : data.dailyRecords;
+  // Guests don't get the Milk liters and price (cost data).
+  const dailyRecords = isSignedIn
+    ? recordsVisibleTo(data.dailyRecords, userId, isAdmin)
+    : withoutMilkCost(data.dailyRecords);
   const userTotals = isSignedIn ? recordsVisibleTo(data.userTotals, userId, isAdmin) : data.userTotals;
   // Net profit is cost/financial data per project-overview.md §3 — admin-only.
   const netProfitInputs = isAdmin ? await getNetProfitInputs(dailyRecords) : null;
