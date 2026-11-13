@@ -22,7 +22,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 // Categorical slots 1 and 2 of the dataviz palette (blue, orange), validated as a pair
 // in light and dark; the result chart is a single series in violet (slot 7), the app's
 // net-profit hue.
-const FINANCE_COLORS = {
+export const FINANCE_COLORS = {
   income: { light: "#2a78d6", dark: "#3987e5" },
   expenses: { light: "#eb6834", dark: "#d95926" },
   result: { light: "#6250d6", dark: "#9085e9" },

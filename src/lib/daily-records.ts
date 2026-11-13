@@ -31,6 +31,7 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
     const existing = rowMap.get(key);
     if (existing) {
       existing[field] = breakdown;
+      existing.purchaseCosts = { ...existing.purchaseCosts, [record.product]: record.purchaseCost ?? null };
       continue;
     }
 
@@ -45,6 +46,7 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
       userName: record.userName,
       milkLiters: record.milkLiters,
       milkUnitCost: record.milkUnitCost,
+      purchaseCosts: { [record.product]: record.purchaseCost ?? null },
       queso: field === "queso" ? breakdown : EMPTY_BREAKDOWN,
       yogurt: field === "yogurt" ? breakdown : EMPTY_BREAKDOWN,
     });
@@ -120,6 +122,16 @@ export function recordsVisibleTo<T extends { userId: string }>(rows: T[], userId
   return rows.filter((row) => row.userId === userId);
 }
 
+// The Queso / Yogurt purchase costs snapshotted on each record are cost data: only
+// admins get them (a seller's Neto isn't computed in the browser).
+export function withoutPurchaseCosts(rows: DailyRecordRow[]): DailyRecordRow[] {
+  return rows.map((row) => {
+    const stripped = { ...row };
+    delete stripped.purchaseCosts;
+    return stripped;
+  });
+}
+
 // The Milk liters and price are cost data: guests get the rows without them.
 export function withoutMilkCost(rows: DailyRecordRow[]): DailyRecordRow[] {
   return rows.map((row) => ({ ...row, milkLiters: 0, milkUnitCost: 0 }));
@@ -150,6 +162,7 @@ export async function getDailyRecordsData(): Promise<DailyRecordsData> {
         product: "QUESO" as const,
         // The price snapshotted on this record at creation time, not today's price.
         unitPrice: r.quesoSalePrice,
+        purchaseCost: r.quesoPurchaseCost,
         quantityTaken: r.quesoTaken,
         quantityRemaining: r.quesoRemaining,
       },
@@ -159,6 +172,7 @@ export async function getDailyRecordsData(): Promise<DailyRecordsData> {
         workRecordId: r.id,
         product: "YOGURT" as const,
         unitPrice: r.yogurtSalePrice,
+        purchaseCost: r.yogurtPurchaseCost,
         quantityTaken: r.yogurtTaken,
         quantityRemaining: r.yogurtRemaining,
       },

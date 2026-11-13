@@ -1,4 +1,4 @@
-import type { FinanceFigures, PeriodFinance, SellerFinance } from "@/lib/money/finance";
+import { GRAINS, GRAIN_LABEL_KEYS, type FinanceFigures, type PeriodFinance, type SellerFinance } from "@/lib/money/finance";
 import type { TranslateFn } from "@/lib/i18n/translations";
 
 export type ReportCell = string | number;
@@ -18,15 +18,20 @@ function percent(part: number, whole: number): string {
 }
 
 // The three tables of the income & expenses report: the chosen period's summary, every
-// period, and every seller in the chosen period.
+// period, and every seller in the chosen period. `sinceStart`: the summary covers
+// everything since the first sale (costs read as the total investment, the result as
+// the accumulated net profit) and `periods` are running totals per month.
 export function buildFinanceReport(
   selected: { label: string; figures: FinanceFigures },
   periods: PeriodFinance[],
   periodLabel: (period: string) => string,
   sellers: SellerFinance[],
   t: TranslateFn,
+  sinceStart = false,
 ): ReportTable[] {
   const f = selected.figures;
+  const costsLabel = sinceStart ? t("finance.investment") : t("finance.costs");
+  const resultLabel = sinceStart ? t("finance.accumulatedNet") : t("finance.result");
   const summary: ReportTable = {
     title: t("finance.report.summary"),
     header: [t("finance.report.concept"), t("finance.report.amount"), t("finance.report.detail")],
@@ -48,27 +53,27 @@ export function buildFinanceReport(
       [t("finance.costQueso"), bs(f.costs.queso), ""],
       [t("finance.costYogurt"), bs(f.costs.yogurt), ""],
       [t("finance.milk"), bs(f.costs.milk), t("finance.liters", { count: f.units.milkLiters })],
-      [t("header.grains"), bs(f.costs.grains), ""],
-      [t("finance.costs"), bs(f.costs.total), ""],
+      ...GRAINS.map((g): ReportCell[] => [t(GRAIN_LABEL_KEYS[g]), bs(f.costs.grainsByProduct[g]), t("header.grains")]),
+      [costsLabel, bs(f.costs.total), percent(f.costs.total, f.income.total)],
       [t("finance.netProfit"), bs(f.netProfit), percent(f.netProfit, f.income.total)],
       [t("finance.pay"), bs(f.pay), ""],
-      [t("finance.result"), bs(f.result), percent(f.result, f.income.total)],
+      [resultLabel, bs(f.result), percent(f.result, f.income.total)],
       [t("finance.unsold"), bs(f.unsoldValue), ""],
     ],
   };
 
   const byPeriod: ReportTable = {
-    title: t("finance.report.byPeriod"),
+    title: sinceStart ? t("finance.cumulativeTableTitle") : t("finance.report.byPeriod"),
     header: [
       t("finance.period"),
       t("product.queso"),
       t("product.yogurt"),
       t("table.milkMote"),
       t("finance.income"),
-      t("finance.costs"),
+      costsLabel,
       t("finance.netProfit"),
       t("finance.pay"),
-      t("finance.result"),
+      resultLabel,
     ],
     rows: [...periods].reverse().map((p) => [
       periodLabel(p.period),

@@ -55,25 +55,34 @@ export function SellerFinanceTable({ sellers, t }: { sellers: SellerFinance[]; t
 }
 
 // Every period with income per product, costs, Neto, pay and result, newest
-// first, with a totals row.
+// first, with a totals row. `cumulative`: the periods are running totals
+// (cumulativeFinance), so there's no totals row — the newest row already is the total.
 export function PeriodFinanceTable({
   periods,
   label,
   t,
+  cumulative = false,
 }: {
   periods: PeriodFinance[];
   label: (period: string) => string;
   t: TranslateFn;
+  cumulative?: boolean;
 }) {
   const columns: { key: string; label: string; value: (f: FinanceFigures) => number; strong?: boolean; result?: boolean }[] = [
     { key: "queso", label: t("product.queso"), value: (f) => f.income.queso },
     { key: "yogurt", label: t("product.yogurt"), value: (f) => f.income.yogurt },
     { key: "milkMote", label: t("table.milkMote"), value: (f) => f.income.milkMote },
     { key: "income", label: t("finance.income"), value: (f) => f.income.total, strong: true },
-    { key: "costs", label: t("finance.costs"), value: (f) => f.costs.total },
+    { key: "costs", label: cumulative ? t("finance.investment") : t("finance.costs"), value: (f) => f.costs.total },
     { key: "netProfit", label: t("finance.netProfit"), value: (f) => f.netProfit, strong: true },
     { key: "pay", label: t("finance.pay"), value: (f) => f.pay },
-    { key: "result", label: t("finance.result"), value: (f) => f.result, strong: true, result: true },
+    {
+      key: "result",
+      label: cumulative ? t("finance.accumulatedNet") : t("finance.result"),
+      value: (f) => f.result,
+      strong: true,
+      result: true,
+    },
   ];
   const total = totalFinance(periods);
 
@@ -87,7 +96,10 @@ export function PeriodFinanceTable({
   );
 
   return (
-    <TableFrame title={t("finance.tableTitle")} hint={t("finance.tableHint")}>
+    <TableFrame
+      title={cumulative ? t("finance.cumulativeTableTitle") : t("finance.tableTitle")}
+      hint={cumulative ? t("finance.cumulativeTableHint") : t("finance.tableHint")}
+    >
       <table className="w-full min-w-[52rem] text-sm print:min-w-0">
         <thead className="bg-foreground text-left text-xs uppercase tracking-wide text-background">
           <tr>
@@ -107,12 +119,14 @@ export function PeriodFinanceTable({
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t-2 border-foreground/30 bg-foreground/[0.04]">
-          <tr>
-            <td className="px-3 py-2 font-semibold">{t("finance.total")}</td>
-            {columns.map((c) => cell(c, total, true))}
-          </tr>
-        </tfoot>
+        {cumulative ? null : (
+          <tfoot className="border-t-2 border-foreground/30 bg-foreground/[0.04]">
+            <tr>
+              <td className="px-3 py-2 font-semibold">{t("finance.total")}</td>
+              {columns.map((c) => cell(c, total, true))}
+            </tr>
+          </tfoot>
+        )}
       </table>
     </TableFrame>
   );

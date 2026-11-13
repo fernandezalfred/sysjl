@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserSession } from "@/lib/auth/require-session";
 import { NotAuthorizedError, requireAdminSession } from "@/lib/auth/require-admin";
-import { getCurrentSalePrices } from "@/lib/money/product-prices";
+import { getCurrentProductPrices } from "@/lib/money/product-prices";
 
 export interface RecordActionState {
   success: boolean;
@@ -106,9 +106,10 @@ export async function createDailyWorkRecord(
       return { success: false, error: "You already have a record for this date." };
     }
 
-    // Sale price is snapshotted here, once, from whatever the admin has it set to
-    // right now — a later price change never rewrites this record's revenue.
-    const salePrices = await getCurrentSalePrices();
+    // Sale price and purchase cost are snapshotted here, once, from whatever the
+    // admin has them set to right now — a later change never rewrites this record's
+    // revenue or Neto.
+    const prices = await getCurrentProductPrices();
 
     await prisma.dailyWorkRecord.create({
       data: {
@@ -121,8 +122,10 @@ export async function createDailyWorkRecord(
         totalSold: parsed.data.totalSold,
         milkLiters: parsed.data.milkLiters,
         milkUnitCost: parsed.data.milkUnitCost,
-        quesoSalePrice: salePrices.QUESO,
-        yogurtSalePrice: salePrices.YOGURT,
+        quesoSalePrice: prices.QUESO.salePrice,
+        yogurtSalePrice: prices.YOGURT.salePrice,
+        quesoPurchaseCost: prices.QUESO.purchaseCost,
+        yogurtPurchaseCost: prices.YOGURT.purchaseCost,
       },
     });
 

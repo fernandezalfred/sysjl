@@ -43,7 +43,7 @@ Rules:
 | `/dashboard`    | Signed in       | Sales by User charts (day, week, month), Sale Records table with create / edit / delete, Prices & Costs (admin) at the bottom                                     |
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
-| `/admin/finance` | Admin         | Income & expenses from every seller's records per day, week or month: income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
+| `/admin/finance` | Admin         | Income & expenses from every seller's records per day, week, month or since the beginning ("Desde el inicio": total investment per product incl. each grain, Ganancia neta acumulada = income − investment − pay, running totals chart and month-by-month table): income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
 | `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
 Clicking a day header in Sale Records shows that day in the charts at the top of `/dashboard`.
@@ -57,7 +57,7 @@ Clicking a day header in Sale Records shows that day in the charts at the top of
 | Milk cost                   | Per sale record: liters taken × the price per liter it was bought at, entered by whoever registers the sale (required, 0 allowed). |
 | Grains                      | Quartillas × cost per quartilla, per day. Deposit inputs only, never sold.                                                   |
 
-The sale price is snapshotted on each sale record when it's created, so a later price change never rewrites past records. The current purchase cost is used for net profit (if not set, the last recorded purchase cost is the fallback).
+The sale price and the purchase cost are snapshotted on each sale record when it's created, so a later change never rewrites past records. Records created before the purchase cost snapshot existed use the current purchase cost (if not set, the last recorded purchase cost is the fallback).
 
 "Repeat last day" on the Grains page copies the most recent day's purchases into today.
 
@@ -85,7 +85,7 @@ The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/rev
 ## 7. Data Model (`prisma/schema.prisma`)
 
 - **User** — name, email, bcrypt hash, role, `isActive`.
-- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices, `payPaidAt` (when the admin marked the pay as paid). The date is fixed at creation and can't change on edit.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices and purchase costs (`quesoPurchaseCost`, `yogurtPurchaseCost`; null on older records), `payPaidAt` (when the admin marked the pay as paid). The date is fixed at creation and can't change on edit.
 - **ProductPrice** — one row per priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
 - **StockPurchase** — a grain purchase: product, quantity, unit cost, who entered it (`createdBy`). Old Queso/Yogurt purchases are still stored but no longer shown.
 

@@ -4,6 +4,7 @@ import {
   buildGrainsShareByDate,
   buildNetProfitAfterPayByDate,
   recordAdjustedRevenue,
+  recordUnitCost,
   type GrainsDeductions,
   type UnitCosts,
 } from "@/lib/money/revenue";
@@ -144,5 +145,19 @@ describe("buildNetProfitAfterPayByDate", () => {
 
   it("is empty when there are no records", () => {
     expect(buildNetProfitAfterPayByDate([], unitCosts)).toEqual({});
+  });
+});
+
+describe("recordUnitCost", () => {
+  const unitCosts: UnitCosts = { QUESO: 6, YOGURT: 22 };
+
+  it("uses the cost snapshotted on the record", () => {
+    expect(recordUnitCost({ purchaseCosts: { QUESO: 5, YOGURT: 20 } }, "QUESO", unitCosts)).toBe(5);
+    expect(recordUnitCost({ purchaseCosts: { QUESO: 0 } }, "QUESO", unitCosts)).toBe(0);
+  });
+
+  it("falls back to the current cost for a record without a snapshot", () => {
+    expect(recordUnitCost({ purchaseCosts: { QUESO: null, YOGURT: null } }, "YOGURT", unitCosts)).toBe(22);
+    expect(recordUnitCost({}, "QUESO", unitCosts)).toBe(6);
   });
 });

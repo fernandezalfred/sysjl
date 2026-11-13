@@ -63,6 +63,12 @@ model DailyWorkRecord {
   // rewrites a past record's revenue. Defaults only guard legacy/pre-field documents.
   quesoSalePrice  Float     @default(9)
   yogurtSalePrice Float     @default(33)
+  // Purchase cost per unit (Bs), snapshotted from ProductPrice.purchaseCost at
+  // creation like the sale price, so a later cost change never rewrites this
+  // record's Neto. null on records created before the snapshot existed: those use
+  // the current purchase cost.
+  quesoPurchaseCost  Float?
+  yogurtPurchaseCost Float?
   // Milk the seller took that day and the price per liter it was bought at, entered
   // on the record; liters x price is deducted from Net profit. Defaults keep older
   // documents readable.

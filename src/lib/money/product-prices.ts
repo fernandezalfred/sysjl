@@ -49,14 +49,6 @@ export async function getCurrentProductPrices(): Promise<Record<PricedProduct, P
   return result;
 }
 
-// Just the sale price (Bs/unit) per product, for snapshotting onto a new DailyWorkRecord.
-export async function getCurrentSalePrices(): Promise<Record<PricedProduct, number>> {
-  const rows = await findPriceRows();
-  return {
-    QUESO: rows[0]?.salePrice ?? CURRENT_UNIT_PRICE.QUESO,
-    YOGURT: rows[1]?.salePrice ?? CURRENT_UNIT_PRICE.YOGURT,
-  };
-}
 
 // Just the purchase cost (Bs/unit) per product, deducted per unit sold in Net profit.
 export async function getCurrentPurchaseCosts(): Promise<Record<PricedProduct, number>> {

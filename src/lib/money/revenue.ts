@@ -3,6 +3,12 @@ import type { DailyRecordRow, ProductCode } from "@/types/daily-records";
 
 export type UnitCosts = Record<ProductCode, number>;
 
+// A record's purchase cost per unit: the one snapshotted on it when it was created,
+// or — for older records without a snapshot — the current cost.
+export function recordUnitCost(row: Pick<DailyRecordRow, "purchaseCosts">, product: ProductCode, unitCosts: UnitCosts): number {
+  return row.purchaseCosts?.[product] ?? unitCosts[product];
+}
+
 // Per-day deduction applied on top of the profit below: `grainsShareByDate` is a
 // day's total grain purchase cost split evenly across that day's work records
 // (getGrainsCostByDay in src/lib/money/stock.ts, divided by that day's record count).
@@ -12,9 +18,9 @@ export interface GrainsDeductions {
 }
 
 // Profit actually earned on one record: for Queso and Yogurt, each sold unit's
-// margin is its snapshotted sale price minus the product's purchase cost (passed
-// in, not hardcoded, since the admin can record a new purchase at a different cost
-// at any time — see getLatestUnitCost in src/lib/money/stock.ts); Milk & Mote has no cost
+// margin is its snapshotted sale price minus its purchase cost (snapshotted on the
+// record too; older records fall back to the current cost passed in — see
+// recordUnitCost); Milk & Mote has no cost
 // data, so its revenue is added in full, then reduced by the record's own Milk cost
 // (liters × price per liter, entered on the record) and the grains share above.
 // Distinct from DailyRecordRow.totalRevenue, which is sold revenue plus unsold/"left"
@@ -31,8 +37,8 @@ export function recordAdjustedRevenue(
   unitCosts: UnitCosts,
   deductions?: GrainsDeductions,
 ): number {
-  const quesoProfit = row.queso.revenue - row.queso.sold * unitCosts.QUESO;
-  const yogurtProfit = row.yogurt.revenue - row.yogurt.sold * unitCosts.YOGURT;
+  const quesoProfit = row.queso.revenue - row.queso.sold * recordUnitCost(row, "QUESO", unitCosts);
+  const yogurtProfit = row.yogurt.revenue - row.yogurt.sold * recordUnitCost(row, "YOGURT", unitCosts);
   const milkCost = row.milkLiters * row.milkUnitCost;
   const grainsShare = deductions?.grainsShareByDate[row.date] ?? 0;
 

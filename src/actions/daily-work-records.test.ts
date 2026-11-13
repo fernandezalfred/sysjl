@@ -15,6 +15,9 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
     productPrice: {
       findUnique: vi.fn(),
     },
+    stockPurchase: {
+      findFirst: vi.fn(),
+    },
   },
   revalidatePathMock: vi.fn(),
 }));
@@ -55,6 +58,8 @@ beforeEach(() => {
   // No admin-set price yet by default: createDailyWorkRecord falls back to the
   // legacy defaults (Queso 9, Yogurt 33). Individual tests override this.
   prismaMock.productPrice.findUnique.mockResolvedValue(null);
+  // …and no purchase cost anywhere, so the snapshotted cost is 0.
+  prismaMock.stockPurchase.findFirst.mockResolvedValue(null);
 });
 
 describe("createDailyWorkRecord", () => {
@@ -114,6 +119,8 @@ describe("createDailyWorkRecord", () => {
         milkUnitCost: 7.5,
         quesoSalePrice: 9,
         yogurtSalePrice: 33,
+        quesoPurchaseCost: 0,
+        yogurtPurchaseCost: 0,
       },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
@@ -146,21 +153,21 @@ describe("createDailyWorkRecord", () => {
     );
   });
 
-  it("snapshots the admin's current sale price onto the record at creation time", async () => {
+  it("snapshots the admin's current sale price and purchase cost onto the record at creation time", async () => {
     authMock.mockResolvedValue(SESSION);
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
     prismaMock.productPrice.findUnique.mockImplementation(({ where }: { where: { product: string } }) =>
       Promise.resolve(
         where.product === "QUESO"
-          ? { salePrice: 10, updatedAt: new Date(), setBy: { name: "Admin" } }
-          : { salePrice: 36, updatedAt: new Date(), setBy: { name: "Admin" } },
+          ? { salePrice: 10, purchaseCost: 6.5, updatedAt: new Date(), setBy: { name: "Admin" } }
+          : { salePrice: 36, purchaseCost: 24, updatedAt: new Date(), setBy: { name: "Admin" } },
       ),
     );
     const result = await createDailyWorkRecord({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ quesoSalePrice: 10, yogurtSalePrice: 36 }),
+        data: expect.objectContaining({ quesoSalePrice: 10, yogurtSalePrice: 36, quesoPurchaseCost: 6.5, yogurtPurchaseCost: 24 }),
       }),
     );
   });

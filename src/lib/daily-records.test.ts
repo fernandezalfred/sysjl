@@ -11,6 +11,7 @@ import {
   getDailyRecordsData,
   recordsVisibleTo,
   withoutMilkCost,
+  withoutPurchaseCosts,
 } from "@/lib/daily-records";
 import type { SaleRecord } from "@/types/daily-records";
 
@@ -289,5 +290,25 @@ describe("Milk on the record", () => {
   it("withoutMilkCost zeroes the Milk liters and price, keeping everything else", () => {
     const [row] = buildDailyRecords([record({ milkLiters: 30, milkUnitCost: 7 })]);
     expect(withoutMilkCost([row])).toEqual([{ ...row, milkLiters: 0, milkUnitCost: 0 }]);
+  });
+});
+
+describe("Purchase cost on the record", () => {
+  it("carries each record's snapshotted Queso / Yogurt purchase cost, null when it has none", async () => {
+    prismaMock.dailyWorkRecord.findMany.mockResolvedValue([
+      { ...MOCK_WORK_RECORDS[0], quesoPurchaseCost: 6.5, yogurtPurchaseCost: 24 },
+      { ...MOCK_WORK_RECORDS[1], quesoPurchaseCost: null, yogurtPurchaseCost: null },
+    ]);
+
+    const data = await getDailyRecordsData();
+    const costsByUser = Object.fromEntries(data.dailyRecords.map((r) => [r.userId, r.purchaseCosts]));
+    expect(costsByUser).toEqual({ u1: { QUESO: 6.5, YOGURT: 24 }, u2: { QUESO: null, YOGURT: null } });
+  });
+
+  it("withoutPurchaseCosts drops the purchase costs, keeping everything else", () => {
+    const [row] = buildDailyRecords([record({ purchaseCost: 6 })]);
+    const [stripped] = withoutPurchaseCosts([row]);
+    expect("purchaseCosts" in stripped).toBe(false);
+    expect({ ...stripped, purchaseCosts: row.purchaseCosts }).toEqual(row);
   });
 });

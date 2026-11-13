@@ -16,6 +16,9 @@ export interface SaleRecord {
   quantityRemaining: number;
   milkLiters: number;
   milkUnitCost: number;
+  // The purchase cost snapshotted on the record (cost data, admin only); null or
+  // missing on older records, which use the current purchase cost.
+  purchaseCost?: number | null;
 }
 
 export interface ProductBreakdown {
@@ -46,6 +49,9 @@ export interface DailyRecordRow {
   // zeroed before reaching guests, see withoutMilkCost).
   milkLiters: number;
   milkUnitCost: number;
+  // Queso / Yogurt purchase cost snapshotted on the record (admin only — stripped
+  // for sellers, see withoutPurchaseCosts); null/missing → the current cost.
+  purchaseCosts?: Partial<Record<ProductCode, number | null>>;
 }
 
 export interface DailyRecordsData {

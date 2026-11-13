@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getDailyRecordsData, recordsVisibleTo } from "@/lib/daily-records";
+import { getDailyRecordsData, recordsVisibleTo, withoutPurchaseCosts } from "@/lib/daily-records";
 import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
 import { latestWorkDay } from "@/lib/sales-charts";
@@ -41,7 +41,9 @@ async function DashboardContent() {
   // A seller only sees their own records (charts and table). Filtered here, after the
   // day's winner/loser was worked out against every seller, so others' rows never
   // reach the browser.
-  const dailyRecords = recordsVisibleTo(data.dailyRecords, session?.user?.id ?? null, isAdmin);
+  // The purchase costs snapshotted on each record are cost data: admins only.
+  const visibleRecords = recordsVisibleTo(data.dailyRecords, session?.user?.id ?? null, isAdmin);
+  const dailyRecords = isAdmin ? visibleRecords : withoutPurchaseCosts(visibleRecords);
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
   const [prices, netProfitInputs] = isAdmin

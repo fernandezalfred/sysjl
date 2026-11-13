@@ -9,7 +9,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { getCurrentPurchaseCosts, getCurrentSalePrices } from "@/lib/money/product-prices";
+import { getCurrentPurchaseCosts } from "@/lib/money/product-prices";
 
 const UPDATED_AT = new Date("2026-11-06T14:00:00Z");
 
@@ -47,16 +47,5 @@ describe("getCurrentPurchaseCosts", () => {
     prismaMock.stockPurchase.findFirst.mockResolvedValue(null);
 
     expect(await getCurrentPurchaseCosts()).toEqual({ QUESO: 0, YOGURT: 0 });
-  });
-});
-
-describe("getCurrentSalePrices", () => {
-  it("reads only the price rows, never the purchase history", async () => {
-    prismaMock.productPrice.findUnique.mockImplementation(({ where }) =>
-      Promise.resolve(where.product === "QUESO" ? priceRow(12, 9) : null),
-    );
-
-    expect(await getCurrentSalePrices()).toEqual({ QUESO: 12, YOGURT: 33 });
-    expect(prismaMock.stockPurchase.findFirst).not.toHaveBeenCalled();
   });
 });

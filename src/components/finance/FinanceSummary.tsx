@@ -1,5 +1,5 @@
 import { formatCurrency } from "@/lib/money/pricing";
-import type { FinanceFigures } from "@/lib/money/finance";
+import { GRAINS, GRAIN_LABEL_KEYS, type FinanceFigures } from "@/lib/money/finance";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import { EXPENSES_DOT, INCOME_DOT, RESULT_DOT } from "@/components/finance/FinanceCharts";
 
@@ -17,16 +17,35 @@ function percentText(part: number, whole: number): string {
   return `${Math.round(share(part, whole) * 100)}%`;
 }
 
-// The chosen period at a glance: five key figures, then income by product and where
-// the money went (costs and pay), each line with its share.
-export function FinanceSummary({ figures, t }: { figures: FinanceFigures; t: TranslateFn }) {
+interface FinanceSummaryProps {
+  figures: FinanceFigures;
+  // "Desde el inicio": costs read as the total investment and the result as the
+  // accumulated net profit.
+  sinceStart?: boolean;
+  t: TranslateFn;
+}
+
+// The chosen period at a glance: five key figures, then income by product and what
+// was spent on each product (the investment), each line with its share.
+export function FinanceSummary({ figures, sinceStart = false, t }: FinanceSummaryProps) {
   const f = figures;
   const tiles = [
     { label: t("finance.income"), value: f.income.total, dot: INCOME_DOT, hint: t("finance.report.records") + `: ${f.records}` },
-    { label: t("finance.costs"), value: f.costs.total, dot: EXPENSES_DOT, hint: t("finance.ofIncome", { percent: percentText(f.costs.total, f.income.total) }) },
+    {
+      label: sinceStart ? t("finance.investment") : t("finance.costs"),
+      value: f.costs.total,
+      dot: EXPENSES_DOT,
+      hint: t("finance.ofIncome", { percent: percentText(f.costs.total, f.income.total) }),
+    },
     { label: t("finance.netProfit"), value: f.netProfit, dot: RESULT_DOT, hint: t("finance.netProfitHint"), accent: true },
     { label: t("finance.pay"), value: f.pay, dot: EXPENSES_DOT, hint: t("finance.ofIncome", { percent: percentText(f.pay, f.income.total) }) },
-    { label: t("finance.result"), value: f.result, dot: RESULT_DOT, hint: t("finance.resultHint"), accent: true },
+    {
+      label: sinceStart ? t("finance.accumulatedNet") : t("finance.result"),
+      value: f.result,
+      dot: RESULT_DOT,
+      hint: sinceStart ? t("finance.accumulatedNetHint") : t("finance.resultHint"),
+      accent: true,
+    },
   ];
 
   const incomeLines = [
@@ -46,8 +65,7 @@ export function FinanceSummary({ figures, t }: { figures: FinanceFigures; t: Tra
     { label: t("finance.costQueso"), value: f.costs.queso, detail: "" },
     { label: t("finance.costYogurt"), value: f.costs.yogurt, detail: "" },
     { label: t("finance.milk"), value: f.costs.milk, detail: t("finance.liters", { count: f.units.milkLiters }) },
-    { label: t("header.grains"), value: f.costs.grains, detail: "" },
-    { label: t("finance.pay"), value: f.pay, detail: "" },
+    ...GRAINS.map((g) => ({ label: t(GRAIN_LABEL_KEYS[g]), value: f.costs.grainsByProduct[g], detail: t("header.grains") })),
   ];
 
   return (
@@ -85,7 +103,14 @@ export function FinanceSummary({ figures, t }: { figures: FinanceFigures; t: Tra
           totalLabel={t("finance.totalSold")}
           t={t}
         />
-        <BreakdownCard title={t("finance.costsBreakdown")} total={f.income.total} lines={outLines} barClass={EXPENSES_DOT} t={t} />
+        <BreakdownCard
+          title={t("finance.costsBreakdown")}
+          total={f.income.total}
+          lines={outLines}
+          barClass={EXPENSES_DOT}
+          totalLabel={sinceStart ? t("finance.investment") : t("finance.costsTotal")}
+          t={t}
+        />
       </div>
     </div>
   );
@@ -103,10 +128,11 @@ function BreakdownCard({
   total: number;
   lines: { label: string; value: number; detail: string }[];
   barClass: string;
-  // A closing row with the sum of the lines (the sold total of every product).
+  // A closing row with the sum of the lines (e.g. the sold total of every product).
   totalLabel?: string;
   t: TranslateFn;
 }) {
+  const lineSum = lines.reduce((sum, l) => sum + l.value, 0);
   return (
     <section className="rounded-xl border border-foreground/10 p-4 break-inside-avoid">
       <div className="flex items-baseline justify-between gap-3">
@@ -136,8 +162,8 @@ function BreakdownCard({
         <div className="mt-4 flex items-baseline justify-between gap-3 border-t-2 border-foreground/20 pt-3 text-sm">
           <span className="font-semibold">{totalLabel}</span>
           <span className="flex items-baseline gap-2 whitespace-nowrap">
-            <strong className="text-base tabular-nums">{formatCurrency(lines.reduce((sum, l) => sum + l.value, 0))}</strong>
-            <span className="w-9 text-right text-xs text-foreground/55 tabular-nums">100%</span>
+            <strong className="text-base tabular-nums">{formatCurrency(lineSum)}</strong>
+            <span className="w-9 text-right text-xs text-foreground/55 tabular-nums">{percentText(lineSum, total)}</span>
           </span>
         </div>
       ) : null}

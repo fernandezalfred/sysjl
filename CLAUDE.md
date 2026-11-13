@@ -37,7 +37,7 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - **Prices & Costs** (admin, bottom): Queso/Yogurt sale price and purchase cost. `src/components/admin/product-pricing/`, `src/actions/product-prices.ts`
 
 ### Admin pages
-- **Ingresos y egresos `/admin/finance`** — per day/week/month: income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports. `src/lib/money/finance.ts`, `src/lib/reports.ts`, `src/components/finance/`
+- **Ingresos y egresos `/admin/finance`** — per day/week/month or "Desde el inicio" (total investment per product, Ganancia neta acumulada, running totals): income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports. `src/lib/money/finance.ts`, `src/lib/reports.ts`, `src/components/finance/`
 - **Gestionar usuarios `/admin/users`** — create, edit, deactivate/reactivate (with confirmation). `src/components/admin/users/`, `src/actions/admin-users.ts`
 - **Granos `/admin/grains`** — grain purchases per day (Maíz pelado, Maíz con cáscara, Haba), "repeat last day". `src/components/admin/grain-purchases/`, `src/actions/stock-purchases.ts`, `src/lib/repeat-purchases.ts`
 
