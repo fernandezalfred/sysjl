@@ -1,5 +1,5 @@
-import { setUserActive } from "@/actions/admin-users";
 import { EditUserForm } from "@/components/admin/users/EditUserForm";
+import { ToggleUserActiveButton } from "@/components/admin/users/ToggleUserActiveButton";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
 
@@ -10,7 +10,6 @@ interface UserListItemProps {
 
 export function UserListItem({ user, locale }: UserListItemProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const toggleActive = setUserActive.bind(null, user.id, !user.isActive);
   const roleLabel = user.role === "ADMIN" ? t("adminUsers.roleAdmin") : t("adminUsers.roleVehicleUser");
 
   return (
@@ -32,11 +31,7 @@ export function UserListItem({ user, locale }: UserListItemProps) {
         <div className="mt-4 flex flex-col gap-4 border-t border-foreground/10 pt-4">
           <EditUserForm user={user} locale={locale} />
 
-          <form action={toggleActive}>
-            <button type="submit" className="text-sm text-foreground/70 underline hover:text-foreground">
-              {user.isActive ? t("adminUsers.deactivate") : t("adminUsers.reactivate")}
-            </button>
-          </form>
+          <ToggleUserActiveButton user={user} locale={locale} />
         </div>
       </details>
     </li>

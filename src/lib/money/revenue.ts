@@ -60,7 +60,7 @@ export function buildGrainsShareByDate(
 }
 
 // A day's total Net profit after paying the sellers: the sum, over that day's records,
-// of each record's Net profit minus its seller pay (the same "Ganancia neta − Pago"
+// of each record's Net profit minus its seller pay (the same "Neto − Pago"
 // shown under each seller's name), keyed by YYYY-MM-DD. Shown in each day header of
 // Sale Records and Totals by User (admin-only, like every Net profit figure). Since
 // grains are split evenly across the day's records, the sum deducts the day's full

@@ -75,10 +75,10 @@ function finish(f: FinanceFigures): FinanceFigures {
   return f;
 }
 
-// Income, costs, Ganancia neta and pay of every seller's records per day, week or
+// Income, costs, Neto and pay of every seller's records per day, week or
 // month, oldest first. A period appears when it has a sale record or a grain purchase.
-// On a day with records, netProfit and result match that day's Ganancia neta and
-// Ganancia neta − Pago (before the per-seller rounding).
+// On a day with records, netProfit and result match that day's Neto and
+// Neto − Pago (before the per-seller rounding).
 export function buildFinanceByPeriod(
   rows: DailyRecordRow[],
   unitCosts: UnitCosts,
@@ -146,7 +146,7 @@ export interface SellerFinance {
   days: number;
   // Total venta.
   sales: number;
-  // Sum of the records' Ganancia neta (grains split among that day's sellers).
+  // Sum of the records' Neto (grains split among that day's sellers).
   netProfit: number;
   pay: number;
   result: number;

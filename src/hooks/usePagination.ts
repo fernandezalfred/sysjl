@@ -14,7 +14,8 @@ export function usePagination<T>(items: T[], pageSize = RECORDS_PER_PAGE) {
   return { pageItems, page, pageCount, setPage };
 }
 
-// Same, but counts the rows inside groups (e.g. records grouped by day) — see paginateGroups.
+// Same, but pages over groups (e.g. records grouped by day) by their row count without
+// ever splitting a group across pages — see paginateGroups.
 export function useGroupedPagination<K extends string, G extends Record<K, unknown[]>>(
   groups: G[],
   key: K,

@@ -1,10 +1,15 @@
-export function formatShortDate(isoDate: string): string {
+import type { TranslateFn } from "@/lib/i18n/translations";
+
+// "Nov 12, 26 jueves": the short date followed by its day of the week in the
+// user's language.
+export function formatShortDate(isoDate: string, t: TranslateFn): string {
   const date = new Date(`${isoDate}T00:00:00`);
-  return new Intl.DateTimeFormat("en-US", {
+  const short = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "2-digit",
   }).format(date);
+  return `${short} ${t(`weekday.${date.getDay()}`)}`;
 }
 
 // A Date's local calendar day as YYYY-MM-DD. Deliberately not `toISOString()`,

@@ -29,7 +29,7 @@
 - Theme and global styles live in `src/app/globals.css` (`@theme`, CSS custom properties)
 - Tailwind classes for all styling; no inline styles
 - Dark mode first, light mode supported
-- Shared UI pieces live in `src/components/ui/` (no component library)
+- Shared UI pieces live in `src/components/ui/` (no component library; SweetAlert2 is the one exception, for popups)
 
 ## File Organization
 
@@ -74,7 +74,8 @@ src/
 - Validate every input with Zod in the Server Action
 - `try/catch` in Server Actions; return `{ success, data?, error? }`
 - Forms use `useActionState` + `useSubmitWithoutReset` so fields keep their values when validation fails
-- Modals show a confirmation toast after save/delete (`useSuccessToast`); other forms show an inline message
+- Popups go through `src/lib/alerts.ts` (SweetAlert2): `confirmAlert` before deleting or changing state (never `window.confirm`), `successToast` after every save/delete (`useSuccessToast` for `useActionState` forms), `errorAlert` when a button action fails
+- Form validation errors stay inline under the fields
 
 ## Testing
 

@@ -9,7 +9,7 @@ interface UserCellProps {
   name: ReactNode;
   // The record's Total venta (sold revenue), which seller pay is computed from.
   totalSold: number;
-  // The record's Ganancia neta; null when the viewer may not see cost data.
+  // The record's Neto; null when the viewer may not see cost data.
   netProfit: number | null;
   // Whether the viewer may see this row's Pago (admins: every row; sellers: their own).
   showPay: boolean;
@@ -22,7 +22,7 @@ interface UserCellProps {
 }
 
 // The User cell in Sale Records and Totals by User. With net profit (admins): a
-// subtraction written like on paper — Ganancia neta, "−" Pago, a line, and on the last row
+// subtraction written like on paper — Neto, "−" Pago, a line, and on the last row
 // the seller's name on the left and the result in bold purple on the right (label kept as
 // tooltip / screen-reader text). Without it: the name, then just the "Pago" line.
 // Callers use it for every signed-in viewer on every row (admins get the subtraction,

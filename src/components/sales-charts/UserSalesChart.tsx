@@ -71,7 +71,7 @@ export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">
         <div className="inline-flex rounded-lg border border-foreground/15 p-1">
           {GRANULARITIES.map((g) => (

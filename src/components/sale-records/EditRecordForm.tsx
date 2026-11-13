@@ -12,7 +12,7 @@ import type { DailyWorkRecordRow } from "@/types/daily-records";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
-import { useToast } from "@/components/ui/ToastProvider";
+import { confirmAlert, errorAlert, successToast } from "@/lib/alerts";
 
 const initialState: RecordActionState = { success: false };
 
@@ -39,26 +39,23 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
   const [state, formAction, pending] = useActionState(updateDailyWorkRecord, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
   useSuccessToast(state, t("toast.recordUpdated"));
-  const { showToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (state.success) onSaved();
   }, [state, onSaved]);
 
   async function handleDelete() {
-    if (!window.confirm(t("records.confirmDelete"))) return;
+    if (!(await confirmAlert(t, t("records.confirmDelete"), { danger: true }))) return;
 
     setIsDeleting(true);
-    setDeleteError(undefined);
     const result = await deleteDailyWorkRecord(record.id);
     if (result.success) {
-      showToast(t("toast.recordDeleted"));
+      successToast(t("toast.recordDeleted"));
       onSaved();
       return;
     }
-    setDeleteError(result.error);
+    errorAlert(t, localizeError(t, result.error ?? ""));
     setIsDeleting(false);
   }
 
@@ -83,11 +80,6 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {localizeError(t, state.error)}
-        </p>
-      ) : null}
-      {deleteError ? (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {localizeError(t, deleteError)}
         </p>
       ) : null}
 

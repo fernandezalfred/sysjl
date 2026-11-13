@@ -46,12 +46,6 @@ function getBreadcrumbs(pathname: string, t: TranslateFn): NavItem[] {
       { href: "/account", label: t("header.account") },
     ];
   }
-  if (pathname.startsWith("/charts")) {
-    return [
-      { href: "/charts", label: t("sidebar.overview") },
-      { href: "/charts", label: t("header.charts") },
-    ];
-  }
   if (pathname.startsWith("/admin/finance")) {
     return [
       { href: "/admin/finance", label: t("sidebar.administration") },
@@ -94,7 +88,6 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, adminPending,
       label: t("sidebar.overview"),
       items: [
         { href: "/dashboard", label: t("header.dashboard"), icon: "dashboard" },
-        { href: "/charts", label: t("header.charts"), icon: "charts" },
         { href: "/account", label: t("header.account"), icon: "account" },
       ],
     },

@@ -5,6 +5,7 @@ import { changeOwnPassword, type ChangePasswordState } from "@/actions/account";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
 
 const initialState: ChangePasswordState = { success: false };
 
@@ -58,6 +59,7 @@ export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction, pending] = useActionState(changeOwnPassword, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("account.passwordChanged"));
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -110,9 +112,6 @@ export function ChangePasswordForm({ email, locale }: ChangePasswordFormProps) {
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {localizeError(t, state.error)}
         </p>
-      ) : null}
-      {state.success ? (
-        <p className="text-sm text-green-600 dark:text-green-400">{t("account.passwordChanged")}</p>
       ) : null}
 
       <div>

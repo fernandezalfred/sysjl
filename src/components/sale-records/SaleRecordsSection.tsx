@@ -5,7 +5,7 @@ import { Fragment, useRef, useState } from "react";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
 import { ProductCell } from "@/components/sale-records/ProductCell";
 import { formatCurrency } from "@/lib/money/pricing";
-import { DayHeaderLink } from "@/components/sale-records/DayHeaderLink";
+import { DayHeaderButton } from "@/components/sale-records/DayHeaderButton";
 import { toEditableRecord } from "@/lib/editable-record";
 import { UserCell } from "@/components/sale-records/UserCell";
 import { PayPaidToggle } from "@/components/sale-records/PayPaidToggle";
@@ -39,6 +39,12 @@ type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
 
 function UserName({ name }: { name: string }) {
   return <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{name}</div>;
+}
+
+// Every other day is shaded, so it's easy to tell where one day ends and the
+// next begins (e.g. Monday's records from Tuesday's).
+function dayShadeClass(dayIndex: number): string {
+  return dayIndex % 2 === 1 ? "bg-foreground/[0.06] dark:bg-foreground/[0.09]" : "";
 }
 
 function TotalRevenueCell({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {
@@ -191,20 +197,20 @@ export function SaleRecordsSection({
             </tr>
           </thead>
           <tbody className="divide-y divide-foreground/10">
-            {dayGroups.map((group) => (
+            {dayGroups.map((group, index) => (
               <Fragment key={group.date}>
                 <tr>
                   <td colSpan={6} className="p-0">
-                    <DayHeaderLink
+                    <DayHeaderButton
                       date={group.date}
-                      title={t("salesCharts.showDay")}
+                      t={t}
                       className="px-4 py-2"
                       trailing={dayNetProfit(group.date)}
                     />
                   </td>
                 </tr>
                 {group.rows.map((row) => (
-                  <tr key={row.id} className="divide-x divide-foreground/15 align-top">
+                  <tr key={row.id} className={`divide-x divide-foreground/15 align-top ${dayShadeClass(index)}`}>
                     <td className="px-4 py-2">
                       {currentUserId ? (
                         <UserCell
@@ -255,11 +261,11 @@ export function SaleRecordsSection({
       {/* Cards when the table doesn't fit: one column, two once the section is 44rem
           (704px) wide so each card still has ~350px. */}
       <div className="flex flex-col gap-3 @min-[70rem]/records:hidden">
-        {dayGroups.map((group) => (
-          <div key={group.date} className="fluid-text flex flex-col gap-2">
-            <DayHeaderLink
+        {dayGroups.map((group, index) => (
+          <div key={group.date} className={`fluid-text flex flex-col gap-2 rounded-lg ${dayShadeClass(index)} ${index % 2 === 1 ? "p-2" : ""}`}>
+            <DayHeaderButton
               date={group.date}
-              title={t("salesCharts.showDay")}
+              t={t}
               className="rounded-md px-3 py-1.5"
               trailing={dayNetProfit(group.date)}
             />
@@ -283,7 +289,7 @@ export function SaleRecordsSection({
                         netProfit={netProfitOf(row)}
                         showPay={canSeePay(row)}
                         payPaid={row.payPaid}
-                          payToggle={isAdmin ? <PayPaidToggle row={row} t={t} /> : undefined}
+                        payToggle={isAdmin ? <PayPaidToggle row={row} t={t} /> : undefined}
                         t={t}
                       />
                     ) : (

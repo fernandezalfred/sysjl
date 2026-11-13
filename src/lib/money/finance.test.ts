@@ -34,7 +34,7 @@ function raulDay(overrides: Partial<SaleRecord> = {}) {
 const raul = buildDailyRecords(raulDay());
 
 describe("buildFinanceByPeriod", () => {
-  it("splits a day into income per product, units, costs, Ganancia neta, pay and result", () => {
+  it("splits a day into income per product, units, costs, Neto, pay and result", () => {
     const [day] = buildFinanceByPeriod(raul, unitCosts, { "2026-11-09": 128 }, "day");
 
     expect(day).toEqual({
@@ -50,7 +50,7 @@ describe("buildFinanceByPeriod", () => {
     });
   });
 
-  it("matches the day's Ganancia neta and Ganancia neta − Pago", () => {
+  it("matches the day's Neto and Neto − Pago", () => {
     const grains = { "2026-11-09": 128 };
     const deductions = { grainsShareByDate: buildGrainsShareByDate(grains, raul) };
     const [day] = buildFinanceByPeriod(raul, unitCosts, grains, "day");
@@ -92,7 +92,7 @@ describe("buildFinanceByPeriod", () => {
 });
 
 describe("buildSellerFinance", () => {
-  it("sums each seller's sales, Ganancia neta and pay in the period, most sold first", () => {
+  it("sums each seller's sales, Neto and pay in the period, most sold first", () => {
     const rows = buildDailyRecords([
       ...raulDay(),
       ...raulDay({ userId: "u2", userName: "Daniel", totalSold: 3000 }),

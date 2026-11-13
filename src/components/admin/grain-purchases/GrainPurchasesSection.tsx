@@ -139,7 +139,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
                         className="px-4 py-2 text-sm font-semibold uppercase tracking-wide text-foreground"
                       >
                         <div className="flex items-center justify-between">
-                          <span>{formatShortDate(group.date)}</span>
+                          <span>{formatShortDate(group.date, t)}</span>
                           <span>
                             {t("stock.totalCost")}: {formatCurrency(group.totalCost)}
                           </span>
@@ -170,7 +170,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
             {dayGroups.map((group) => (
               <div key={group.date} className="flex flex-col gap-2">
                 <p className="flex items-center justify-between rounded-md bg-foreground/10 px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-foreground dark:bg-foreground/15">
-                  <span>{formatShortDate(group.date)}</span>
+                  <span>{formatShortDate(group.date, t)}</span>
                   <span>{formatCurrency(group.totalCost)}</span>
                 </p>
                 <ul className="flex flex-col gap-2">

@@ -32,7 +32,7 @@ interface FinanceSectionProps {
 }
 
 // Admin only: what a branch administrator needs from every seller's sale records — for
-// the chosen day, week or month: income per product, costs, Ganancia neta, pay and
+// the chosen day, week or month: income per product, costs, Neto, pay and
 // result, per seller too; charts and a table over every period; CSV / Excel / print.
 export function FinanceSection({ dailyRecords, unitCosts, grainsCostByDay, generatedAt, locale }: FinanceSectionProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);

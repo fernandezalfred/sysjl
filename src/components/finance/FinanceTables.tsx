@@ -22,7 +22,7 @@ function TableFrame({ title, hint, children }: { title: string; hint?: string; c
   );
 }
 
-// Each seller in the chosen period: days, sales, Ganancia neta, pay and result.
+// Each seller in the chosen period: days, sales, Neto, pay and result.
 export function SellerFinanceTable({ sellers, t }: { sellers: SellerFinance[]; t: TranslateFn }) {
   return (
     <TableFrame title={t("finance.bySellerTitle")} hint={t("finance.bySellerHint")}>
@@ -54,7 +54,7 @@ export function SellerFinanceTable({ sellers, t }: { sellers: SellerFinance[]; t
   );
 }
 
-// Every period with income per product, costs, Ganancia neta, pay and result, newest
+// Every period with income per product, costs, Neto, pay and result, newest
 // first, with a totals row.
 export function PeriodFinanceTable({
   periods,

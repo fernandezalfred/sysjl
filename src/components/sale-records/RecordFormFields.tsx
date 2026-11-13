@@ -31,7 +31,7 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
     <div className="grid grid-cols-1 gap-3">
       <div className="flex flex-col gap-1">
         <span className={labelClass}>{t("records.date")}</span>
-        <p className="text-sm">{formatShortDate(date)}</p>
+        <p className="text-sm">{formatShortDate(date, t)}</p>
         {defaultValues ? null : <input type="hidden" name="date" value={date} />}
       </div>
 

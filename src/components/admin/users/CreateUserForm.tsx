@@ -5,6 +5,7 @@ import { createUser, type ActionState } from "@/actions/admin-users";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
 
 const initialState: ActionState = { success: false };
 
@@ -28,6 +29,7 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction, pending] = useActionState(createUser, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("adminUsers.userCreated"));
   const formRef = useRef<HTMLFormElement>(null);
 
   // Clear the fields only after a successful save; on an error they keep what was typed.
@@ -100,9 +102,6 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {localizeError(t, state.error)}
           </p>
-        ) : null}
-        {state.success ? (
-          <p className="text-sm text-green-600 dark:text-green-400">{t("adminUsers.userCreated")}</p>
         ) : null}
 
         <div>

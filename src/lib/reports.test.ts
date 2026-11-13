@@ -44,7 +44,7 @@ describe("buildFinanceReport", () => {
     expect(summary["Total vendido (todos los productos)"]).toBe(2700);
     expect(tables[0].rows.find(([concept]) => concept === "Queso")).toEqual(["Queso", 1053, "Sacó 150 · Vendió 117 · Sobró 33"]);
     expect(summary["Granos"]).toBe(128);
-    expect(summary["Ganancia neta"]).toBe(1286);
+    expect(summary["Neto"]).toBe(1286);
     expect(summary["Resultado"]).toBe(1116);
 
     expect(tables[1].rows).toEqual([["9 nov", 1053, 561, 1086, 2700, 1414, 1286, 170, 1116]]);

@@ -8,6 +8,7 @@ import type { PricedProduct } from "@prisma/client";
 import type { ProductPriceInfo } from "@/lib/money/product-prices";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
 
 const initialState: ActionState = { success: false };
 
@@ -33,6 +34,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction, pending] = useActionState(setProductPrice, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("adminProducts.priceUpdated"));
 
   return (
     <div className="rounded-lg border border-foreground/10 p-4">
@@ -87,9 +89,6 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {localizeError(t, state.error)}
           </p>
-        ) : null}
-        {state.success ? (
-          <p className="text-sm text-green-600 dark:text-green-400">{t("adminProducts.priceUpdated")}</p>
         ) : null}
 
         <div>

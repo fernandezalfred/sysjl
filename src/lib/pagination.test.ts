@@ -38,26 +38,31 @@ describe("paginateGroups", () => {
     { date: "2026-11-01", total: 10, rows: ["f"] },
   ];
 
-  it("counts rows, not groups, and keeps each touched group's header", () => {
+  it("never splits a group: the group that reaches the limit stays whole on the page", () => {
     expect(paginateGroups(groups, "rows", 1, 4)).toEqual({
       items: [
         { date: "2026-11-03", total: 30, rows: ["a", "b", "c"] },
-        { date: "2026-11-02", total: 20, rows: ["d"] },
+        { date: "2026-11-02", total: 20, rows: ["d", "e"] },
       ],
       page: 1,
       pageCount: 2,
     });
-  });
-
-  it("continues a split group on the next page with its other fields intact", () => {
     expect(paginateGroups(groups, "rows", 2, 4)).toEqual({
-      items: [
-        { date: "2026-11-02", total: 20, rows: ["e"] },
-        { date: "2026-11-01", total: 10, rows: ["f"] },
-      ],
+      items: [{ date: "2026-11-01", total: 10, rows: ["f"] }],
       page: 2,
       pageCount: 2,
     });
+  });
+
+  it("starts a new page once a page is exactly full", () => {
+    expect(paginateGroups(groups, "rows", 1, 3).items.map((g) => g.date)).toEqual(["2026-11-03"]);
+    expect(paginateGroups(groups, "rows", 2, 3).items.map((g) => g.date)).toEqual(["2026-11-02", "2026-11-01"]);
+  });
+
+  it("keeps a group bigger than the page size whole on its own page", () => {
+    const result = paginateGroups(groups, "rows", 1, 2);
+    expect(result.items).toEqual([groups[0]]);
+    expect(result.pageCount).toBe(3);
   });
 
   it("clamps a page past the end and treats no groups as one empty page", () => {

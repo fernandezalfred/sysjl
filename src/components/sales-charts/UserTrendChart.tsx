@@ -122,7 +122,7 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <div className="inline-flex self-start rounded-lg border border-foreground/15 p-1">
         {GRANULARITIES.map((g) => (
           <button

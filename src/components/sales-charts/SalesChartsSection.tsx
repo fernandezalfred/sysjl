@@ -9,6 +9,7 @@ import { LastDayProductCharts } from "@/components/sales-charts/LastDayProductCh
 import { UserTrendChart } from "@/components/sales-charts/UserTrendChart";
 import { formatDayLabel } from "@/components/sales-charts/chart-theme";
 import { useSelectedDay } from "@/components/sales-charts/SelectedDayProvider";
+import { SALES_CHARTS_SECTION_ID } from "@/components/sale-records/DayHeaderButton";
 
 interface SalesChartsSectionProps {
   dailyRecords: DailyRecordRow[];
@@ -28,29 +29,23 @@ export function SalesChartsSection({ dailyRecords, locale }: SalesChartsSectionP
   );
 
   return (
-    <section aria-labelledby="sales-charts-heading" className="flex flex-col gap-6">
-      <div>
-        <h2 id="sales-charts-heading" className="text-sm font-medium uppercase tracking-wide text-foreground/70">
-          {t("salesCharts.heading")}
-        </h2>
-        <p className="text-sm text-foreground/70">{t("salesCharts.subheading")}</p>
-      </div>
+    <section id={SALES_CHARTS_SECTION_ID} aria-label={t("salesCharts.heading")} className="flex scroll-mt-20 flex-col gap-4">
 
       {userSalesByPeriod && lastDayProductSales ? (
         <>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <h3 className="text-sm font-medium text-foreground/80">{t("salesCharts.byUserTitle")}</h3>
             <UserSalesChart periods={userSalesByPeriod} locale={locale} />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <h3 className="text-sm font-medium text-foreground/80">
               {t("salesCharts.productsTitle", { date: formatDayLabel(lastDayProductSales.date, locale) })}
             </h3>
             <LastDayProductCharts users={lastDayProductSales.users} locale={locale} />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <h3 className="text-sm font-medium text-foreground/80">{t("salesCharts.trendTitle")}</h3>
             <UserTrendChart trends={userTrends} locale={locale} />
           </div>

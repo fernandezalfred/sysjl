@@ -14,7 +14,7 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 - Prisma 6 on MongoDB (replica set required; schema changes via `prisma db push`, no migrations)
 - Auth.js v5: Credentials provider, bcrypt, JWT sessions
 - Tailwind CSS v4 (CSS-based config in `src/app/globals.css`)
-- Zod for input validation, Chart.js (`react-chartjs-2`) for charts, `write-excel-file` for Excel reports, Vitest for unit tests
+- Zod for input validation, SweetAlert2 for confirmations, success toasts and error popups, Chart.js (`react-chartjs-2`) for charts, `write-excel-file` for Excel reports, Vitest for unit tests
 - Deployed on Vercel
 
 ## 3. Roles and Access
@@ -40,14 +40,13 @@ Rules:
 | --------------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
 | `/`             | Everyone        | Public product landing page for distribution companies: hero with a panel preview (made-up figures), features, roles (admin, sub-admin, seller), how it works, sign-in call to action |
 | `/login`        | Everyone        | Sign in                                                                                                     |
-| `/dashboard`    | Signed in       | Prices & Costs (admin), Sale Records table with create / edit / delete                                     |
-| `/charts`       | Signed in       | Sales by User charts (day, week, month; a seller only sees their own); opened on a day from Sale Records |
+| `/dashboard`    | Signed in       | Sales by User charts (day, week, month), Sale Records table with create / edit / delete, Prices & Costs (admin) at the bottom                                     |
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
-| `/admin/finance` | Admin         | Income & expenses from every seller's records per day, week or month: income by product, costs, Ganancia neta, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
+| `/admin/finance` | Admin         | Income & expenses from every seller's records per day, week or month: income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
 | `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
-Clicking a day header in Sale Records opens `/charts` on that day.
+Clicking a day header in Sale Records shows that day in the charts at the top of `/dashboard`.
 
 ## 5. Products and Inputs
 
@@ -75,11 +74,11 @@ The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 | Total vendidos más no vendidos | Total venta + No vendidos                                                                                                 |
 | Ganador (daily winner)         | Highest "Total vendidos más no vendidos" of the day; needs 2+ records that day; ties share; margin = gap to the runner-up |
 | Perdedor (loser)               | Everyone below the day's winner: Leche y Mote cell in red; admins see "Diferencia" = gap to the winner                  |
-| Ganancia neta (admin)          | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − the record's Milk liters × price per liter − an even share of that day's grains |
+| Neto (admin)                  | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − the record's Milk liters × price per liter − an even share of that day's grains |
 | Pago (seller pay)              | Bs 150 up to 2500 of Total venta; +10 per 100 from 2500 to 3000; +20 per 100 above 3000 (amount over 2500 rounded to the nearest 100) |
-| Ganancia neta − Pago (admin)   | shown under the seller's name; display only                                                                               |
+| Neto − Pago (admin)           | shown under the seller's name; display only                                                                               |
 
-The day header shows the day's total of Ganancia neta − Pago over all its records (admins). Amounts are displayed in whole bolivianos. Each seller's grain share and Ganancia neta are calculated rounded to whole bolivianos; stored values keep their cents.
+The day header shows the day's total of Neto − Pago over all its records (admins). Amounts are displayed in whole bolivianos. Each seller's grain share and Neto are calculated rounded to whole bolivianos; stored values keep their cents.
 
 The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/revenue.ts` (net profit), `src/lib/money/seller-pay.ts` (pay) and `src/lib/money/net-profit.ts` (loading purchase and grain costs).
 

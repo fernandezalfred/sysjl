@@ -7,6 +7,7 @@ import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translation
 import type { AdminUserRow } from "@/types/admin";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
+import { useSuccessToast } from "@/hooks/useSuccessToast";
 
 const initialState: ActionState = { success: false };
 
@@ -31,6 +32,7 @@ export function EditUserForm({ user, locale }: EditUserFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction, pending] = useActionState(updateUser, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
+  useSuccessToast(state, t("adminUsers.saved"));
   const formRef = useRef<HTMLFormElement>(null);
 
   // Clear the fields only after a successful save; on an error they keep what was typed.
@@ -45,16 +47,13 @@ export function EditUserForm({ user, locale }: EditUserFormProps) {
       {/* Keyed on the user's data so these uncontrolled inputs' defaultValue
           resync after a save or deactivate revalidates the page — but keyed
           only on this inner piece, not the form, so useActionState's
-          success/error message (below) survives the remount. */}
+          error message (below) survives the remount. */}
       <EditUserFields key={JSON.stringify(user)} user={user} t={t} />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {localizeError(t, state.error)}
         </p>
-      ) : null}
-      {state.success ? (
-        <p className="text-sm text-green-600 dark:text-green-400">{t("adminUsers.saved")}</p>
       ) : null}
 
       <div>
