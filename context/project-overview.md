@@ -74,7 +74,7 @@ The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 | Leche y Mote                   | Total venta − Queso revenue − Yogurt revenue                                                                              |
 | Total vendidos más no vendidos | Total venta + No vendidos                                                                                                 |
 | Ganador (daily winner)         | Highest "Total vendidos más no vendidos" of the day; needs 2+ records that day; ties share; margin = gap to the runner-up |
-| Perdedor (loser)               | Everyone below the day's winner: Leche y Mote cell in red; admins see "Perdió por" = gap to the winner                  |
+| Perdedor (loser)               | Everyone below the day's winner: Leche y Mote cell in red; admins see "Diferencia" = gap to the winner                  |
 | Ganancia neta (admin)          | Queso/Yogurt sold × (sale price − purchase cost) + Leche y Mote − the record's Milk liters × price per liter − an even share of that day's grains |
 | Pago (seller pay)              | Bs 150 up to 2500 of Total venta; +10 per 100 from 2500 to 3000; +20 per 100 above 3000 (amount over 2500 rounded to the nearest 100) |
 | Ganancia neta − Pago (admin)   | shown under the seller's name; display only                                                                               |
