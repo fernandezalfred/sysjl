@@ -65,3 +65,25 @@ export function paidSellerPay(
     days: paid.length,
   };
 }
+
+export interface SellerPending extends PayTotal {
+  userId: string;
+  userName: string;
+}
+
+// Every seller with records and what each is still owed (unpaid Pago), most owed first;
+// sellers with nothing pending stay in the list with 0, last.
+export function pendingPayBySeller(
+  records: { userId: string; userName: string; totalSold: number; payPaid: boolean }[],
+): SellerPending[] {
+  const bySeller = new Map<string, SellerPending>();
+  for (const r of records) {
+    const entry = bySeller.get(r.userId) ?? { userId: r.userId, userName: r.userName, amount: 0, days: 0 };
+    if (!r.payPaid) {
+      entry.amount += sellerPay(r.totalSold);
+      entry.days += 1;
+    }
+    bySeller.set(r.userId, entry);
+  }
+  return [...bySeller.values()].sort((a, b) => b.amount - a.amount || a.userName.localeCompare(b.userName));
+}

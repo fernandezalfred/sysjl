@@ -14,7 +14,7 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 - Prisma 6 on MongoDB (replica set required; schema changes via `prisma db push`, no migrations)
 - Auth.js v5: Credentials provider, bcrypt, JWT sessions
 - Tailwind CSS v4 (CSS-based config in `src/app/globals.css`)
-- Zod for input validation, Chart.js (`react-chartjs-2`) for charts, Vitest for unit tests
+- Zod for input validation, Chart.js (`react-chartjs-2`) for charts, `write-excel-file` for Excel reports, Vitest for unit tests
 - Deployed on Vercel
 
 ## 3. Roles and Access
@@ -31,7 +31,7 @@ Rules:
 - `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
 - Costs, net profit and the winner's margin are admin-only (a seller sees the Milk liters and price they entered in their own record form; guests never receive them). Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
 - Signing in goes straight to `/dashboard` (also when a signed-in user opens `/login`; a non-admin opening `/admin/*` lands there too). On `/dashboard` a seller sees only their own records (charts, Sale Records). The public landing page `/` presents the product to the distribution companies that would rent it and shows no real data (its preview uses made-up figures).
-- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago is shown struck through. On every panel page, a seller sees in place of the breadcrumbs what they've collected (paid Pago), what they're still owed (unpaid Pago) and the sum of both (total earned), each with its number of days. In Sale Records each day's Pago is a green "Pagado" or amber "Por cobrar" badge.
+- The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago shows a green "Pagado" pill, an unpaid one a blue "Pagar" button (the pill itself marks it paid). The admin's panel header shows the total still owed to all sellers, with a dropdown of what each seller is owed. On every panel page, a seller sees in place of the breadcrumbs what they've collected (paid Pago), what they're still owed (unpaid Pago) and the sum of both (total earned), each with its number of days. In Sale Records each day's Pago is a green "Pagado" or amber "Por cobrar" badge.
 - Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
 
 ## 4. Pages
@@ -40,12 +40,14 @@ Rules:
 | --------------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
 | `/`             | Everyone        | Public product landing page for distribution companies: hero with a panel preview (made-up figures), features, roles (admin, sub-admin, seller), how it works, sign-in call to action |
 | `/login`        | Everyone        | Sign in                                                                                                     |
-| `/dashboard`    | Signed in       | Sales by User charts, Prices & Costs (admin), Sale Records table with create / edit / delete               |
+| `/dashboard`    | Signed in       | Prices & Costs (admin), Sale Records table with create / edit / delete                                     |
+| `/charts`       | Signed in       | Sales by User charts (day, week, month; a seller only sees their own); opened on a day from Sale Records |
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
+| `/admin/finance` | Admin         | Income & expenses from every seller's records per day, week or month: income by product, costs, Ganancia neta, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
 | `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
-Clicking a day header in Sale Records shows that day in the charts.
+Clicking a day header in Sale Records opens `/charts` on that day.
 
 ## 5. Products and Inputs
 

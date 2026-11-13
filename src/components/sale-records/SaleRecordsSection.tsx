@@ -5,7 +5,7 @@ import { Fragment, useRef, useState } from "react";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
 import { ProductCell } from "@/components/sale-records/ProductCell";
 import { formatCurrency } from "@/lib/money/pricing";
-import { DayHeaderButton } from "@/components/sales-charts/DayHeaderButton";
+import { DayHeaderLink } from "@/components/sale-records/DayHeaderLink";
 import { toEditableRecord } from "@/lib/editable-record";
 import { UserCell } from "@/components/sale-records/UserCell";
 import { PayPaidToggle } from "@/components/sale-records/PayPaidToggle";
@@ -195,7 +195,7 @@ export function SaleRecordsSection({
               <Fragment key={group.date}>
                 <tr>
                   <td colSpan={6} className="p-0">
-                    <DayHeaderButton
+                    <DayHeaderLink
                       date={group.date}
                       title={t("salesCharts.showDay")}
                       className="px-4 py-2"
@@ -213,6 +213,7 @@ export function SaleRecordsSection({
                           netProfit={netProfitOf(row)}
                           showPay={canSeePay(row)}
                           payPaid={row.payPaid}
+                          payToggle={isAdmin ? <PayPaidToggle row={row} t={t} /> : undefined}
                           t={t}
                         />
                       ) : (
@@ -228,7 +229,6 @@ export function SaleRecordsSection({
                     <td className={`px-4 py-2 ${loserBackgroundClass(row.lossMargin)}`}>
                       <div className="text-amount whitespace-nowrap font-semibold">{formatCurrency(row.milkMoteRevenue)}</div>
                       {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
-                      {isAdmin ? <PayPaidToggle row={row} t={t} /> : null}
                     </td>
                     <td
                       className={
@@ -257,7 +257,7 @@ export function SaleRecordsSection({
       <div className="flex flex-col gap-3 @min-[70rem]/records:hidden">
         {dayGroups.map((group) => (
           <div key={group.date} className="fluid-text flex flex-col gap-2">
-            <DayHeaderButton
+            <DayHeaderLink
               date={group.date}
               title={t("salesCharts.showDay")}
               className="rounded-md px-3 py-1.5"
@@ -283,6 +283,7 @@ export function SaleRecordsSection({
                         netProfit={netProfitOf(row)}
                         showPay={canSeePay(row)}
                         payPaid={row.payPaid}
+                          payToggle={isAdmin ? <PayPaidToggle row={row} t={t} /> : undefined}
                         t={t}
                       />
                     ) : (
@@ -307,8 +308,7 @@ export function SaleRecordsSection({
                           </div>
                         </div>
                         {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
-                        {isAdmin ? <PayPaidToggle row={row} t={t} /> : null}
-                      </div>
+                        </div>
                     </div>
                     {/* The winner's green background bleeds 8px past the column (-mx-2 px-2)
                         so its amounts stay aligned with the rows above. */}

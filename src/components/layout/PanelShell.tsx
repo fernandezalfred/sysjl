@@ -8,6 +8,8 @@ import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 import { BrandMark } from "@/components/landing/BrandMark";
 import { SellerPayBar, type SellerPayTotals } from "@/components/layout/SellerPayBar";
+import { AdminPendingPay } from "@/components/layout/AdminPendingPay";
+import type { SellerPending } from "@/lib/money/seller-pay";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 
 interface NavItem {
@@ -27,6 +29,8 @@ interface PanelShellProps {
   locale: Locale;
   // A seller's pay totals, shown instead of the breadcrumbs; null for admins.
   payTotals: SellerPayTotals | null;
+  // Admins: what each seller is still owed (header dropdown); null for sellers.
+  adminPending: SellerPending[] | null;
   children: ReactNode;
 }
 
@@ -40,6 +44,18 @@ function getBreadcrumbs(pathname: string, t: TranslateFn): NavItem[] {
     return [
       { href: "/account", label: t("sidebar.overview") },
       { href: "/account", label: t("header.account") },
+    ];
+  }
+  if (pathname.startsWith("/charts")) {
+    return [
+      { href: "/charts", label: t("sidebar.overview") },
+      { href: "/charts", label: t("header.charts") },
+    ];
+  }
+  if (pathname.startsWith("/admin/finance")) {
+    return [
+      { href: "/admin/finance", label: t("sidebar.administration") },
+      { href: "/admin/finance", label: t("header.finance") },
     ];
   }
   if (pathname.startsWith("/admin/users")) {
@@ -68,7 +84,7 @@ function initialsOf(name: string | null | undefined): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-export function PanelShell({ isAdmin, userName, locale, payTotals, children }: PanelShellProps) {
+export function PanelShell({ isAdmin, userName, locale, payTotals, adminPending, children }: PanelShellProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const pathname = usePathname();
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -78,6 +94,7 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, children }: P
       label: t("sidebar.overview"),
       items: [
         { href: "/dashboard", label: t("header.dashboard"), icon: "dashboard" },
+        { href: "/charts", label: t("header.charts"), icon: "charts" },
         { href: "/account", label: t("header.account"), icon: "account" },
       ],
     },
@@ -86,6 +103,7 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, children }: P
           {
             label: t("sidebar.administration"),
             items: [
+              { href: "/admin/finance", label: t("header.finance"), icon: "finance" as const },
               { href: "/admin/users", label: t("header.manageUsers"), icon: "users" as const },
               { href: "/admin/grains", label: t("header.grains"), icon: "grains" as const },
             ],
@@ -117,7 +135,7 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, children }: P
   return (
     <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:gap-8">
       {/* Phone / tablet bar. */}
-      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-3 border-b border-foreground/10 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:-mx-6 sm:px-6 lg:hidden">
+      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-3 print:hidden border-b border-foreground/10 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:-mx-6 sm:px-6 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -138,6 +156,7 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, children }: P
           <Avatar initials={user.initials} name={user.name} />
         </div>
         {payTotals ? <SellerPayBar totals={payTotals} t={t} /> : null}
+        {adminPending ? <AdminPendingPay sellers={adminPending} t={t} /> : null}
       </div>
 
       {isNavOpen ? (
@@ -163,7 +182,7 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, children }: P
       ) : null}
 
       {/* Desktop sidebar: a card pinned to the viewport height while the page scrolls. */}
-      <nav className="hidden w-64 flex-shrink-0 lg:sticky lg:top-8 lg:flex lg:h-[calc(100dvh-4rem)] lg:self-start">
+      <nav className="hidden w-64 flex-shrink-0 print:!hidden lg:sticky lg:top-8 lg:flex lg:h-[calc(100dvh-4rem)] lg:self-start">
         <div className="flex w-full flex-col rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-4 shadow-sm">
           {sidebar()}
         </div>
@@ -172,12 +191,13 @@ export function PanelShell({ isAdmin, userName, locale, payTotals, children }: P
       {/* --sticky-offset: height of the pinned header bar below (lg+), so pinned table
           headers inside the page sit just under it instead of behind it. */}
       <div className="flex min-w-0 flex-1 flex-col gap-8 lg:[--sticky-offset:5rem]">
-        <header className="sticky top-0 z-20 hidden h-20 items-center justify-between gap-6 border-b border-foreground/10 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:flex">
+        <header className="sticky top-0 z-20 hidden h-20 print:!hidden items-center justify-between gap-6 border-b border-foreground/10 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:flex">
           <div className="min-w-0">
             {payTotals ? null : <Breadcrumbs items={breadcrumbs} label={t("sidebar.breadcrumbLabel")} />}
             <p className="truncate text-xl font-semibold tracking-tight">{greeting}</p>
           </div>
           {payTotals ? <SellerPayBar totals={payTotals} t={t} /> : null}
+          {adminPending ? <AdminPendingPay sellers={adminPending} t={t} /> : null}
         </header>
         {children}
       </div>

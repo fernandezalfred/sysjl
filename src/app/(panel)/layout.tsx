@@ -3,7 +3,13 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { getT } from "@/lib/i18n/server";
 import { prisma } from "@/lib/prisma";
-import { paidSellerPay, pendingSellerPay, totalSellerPay } from "@/lib/money/seller-pay";
+import {
+  paidSellerPay,
+  pendingPayBySeller,
+  pendingSellerPay,
+  totalSellerPay,
+  type SellerPending,
+} from "@/lib/money/seller-pay";
 import type { SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { PanelShell } from "@/components/layout/PanelShell";
 import { Footer } from "@/components/layout/Footer";
@@ -24,10 +30,13 @@ async function PanelContent({ children }: { children: ReactNode }) {
   const [session, { t, locale }] = await Promise.all([auth(), getT()]);
   const isAdmin = session?.user?.role === "ADMIN";
   const userId = session?.user?.id;
-  const payTotals = userId && !isAdmin ? await getSellerPayTotals(userId) : null;
+  const [payTotals, adminPending] = await Promise.all([
+    userId && !isAdmin ? getSellerPayTotals(userId) : null,
+    isAdmin ? getPendingPayBySeller() : null,
+  ]);
 
   return (
-    <PanelShell isAdmin={isAdmin} userName={session?.user?.name} locale={locale} payTotals={payTotals}>
+    <PanelShell isAdmin={isAdmin} userName={session?.user?.name} locale={locale} payTotals={payTotals} adminPending={adminPending}>
       {children}
       <Footer t={t} />
     </PanelShell>
@@ -47,6 +56,16 @@ async function getSellerPayTotals(userId: string): Promise<SellerPayTotals> {
     paid: paidSellerPay(records, userId),
     pending: pendingSellerPay(records, userId),
   };
+}
+
+// Admins: what every seller is still owed, for the header's dropdown.
+async function getPendingPayBySeller(): Promise<SellerPending[]> {
+  const rows = await prisma.dailyWorkRecord.findMany({
+    select: { userId: true, totalSold: true, payPaidAt: true, user: { select: { name: true } } },
+  });
+  return pendingPayBySeller(
+    rows.map((r) => ({ userId: r.userId, userName: r.user.name, totalSold: r.totalSold, payPaid: Boolean(r.payPaidAt) })),
+  );
 }
 
 function PanelSkeleton() {

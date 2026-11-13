@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { netProfitAfterPay, paidSellerPay, pendingSellerPay, sellerPay, totalSellerPay } from "@/lib/money/seller-pay";
+import {
+  netProfitAfterPay,
+  paidSellerPay,
+  pendingPayBySeller,
+  pendingSellerPay,
+  sellerPay,
+  totalSellerPay,
+} from "@/lib/money/seller-pay";
 
 describe("sellerPay", () => {
   it("is 150 for sales up to 2500", () => {
@@ -88,5 +95,23 @@ describe("paidSellerPay", () => {
     const pending = pendingSellerPay(records, "u1");
     expect(paid.amount + pending.amount).toBe(totalSellerPay(records, "u1").amount);
     expect(paid.days + pending.days).toBe(totalSellerPay(records, "u1").days);
+  });
+});
+
+describe("pendingPayBySeller", () => {
+  it("lists every seller with their unpaid Pago and days, most owed first", () => {
+    const records = [
+      { userId: "u1", userName: "Raul", totalSold: 2000, payPaid: false },
+      { userId: "u1", userName: "Raul", totalSold: 3000, payPaid: true },
+      { userId: "u2", userName: "Daniel", totalSold: 2700, payPaid: false },
+      { userId: "u2", userName: "Daniel", totalSold: 2000, payPaid: false },
+      { userId: "u3", userName: "Fabia", totalSold: 2000, payPaid: true },
+    ];
+
+    expect(pendingPayBySeller(records)).toEqual([
+      { userId: "u2", userName: "Daniel", amount: 170 + 150, days: 2 },
+      { userId: "u1", userName: "Raul", amount: 150, days: 1 },
+      { userId: "u3", userName: "Fabia", amount: 0, days: 0 },
+    ]);
   });
 });

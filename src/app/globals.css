@@ -147,3 +147,20 @@ dialog:modal {
   background: var(--scroll-thumb-hover);
   background-clip: padding-box;
 }
+
+/* Printing (Ingresos y egresos report, "Imprimir / PDF"): white paper, keep the colors of
+   bars and tiles, and don't split a card or table across pages when it fits on one. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+  }
+  html,
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
