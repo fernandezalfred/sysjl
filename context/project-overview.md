@@ -61,6 +61,8 @@ The sale price and the purchase cost are snapshotted on each sale record when it
 
 "Repeat last day" on the Grains page copies the most recent day's purchases into today.
 
+A new grain purchase is always dated today; editing one can move it to another day (never a future one), keeping its time of day.
+
 The business day for purchases is computed in Bolivia time (`America/La_Paz`).
 
 ## 6. Calculations (per sale record)

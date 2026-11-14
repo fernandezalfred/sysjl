@@ -71,7 +71,12 @@ export function EditStockPurchaseForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input type="hidden" name="purchaseId" value={purchase.id} />
-      <StockPurchaseFormFields defaultValues={purchase} quantityLabel={quantityLabel} unitCostLabel={unitCostLabel} />
+      <StockPurchaseFormFields
+        defaultValues={purchase}
+        quantityLabel={quantityLabel}
+        unitCostLabel={unitCostLabel}
+        date={{ value: purchase.createdAtDate, label: t("records.date") }}
+      />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">

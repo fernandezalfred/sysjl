@@ -18,6 +18,7 @@ const ERROR_KEYS: Record<string, DictionaryKey> = {
   "Milk price per liter must be 0 or more.": "error.milkUnitCostMin",
   "Current password is incorrect.": "error.currentPasswordWrong",
   "Date is required.": "error.dateRequired",
+  "Date can't be in the future.": "error.dateInFuture",
   "Enter a valid email address.": "error.emailInvalid",
   "Enter your current password.": "error.currentPasswordRequired",
   "Invalid email or password.": "error.loginInvalid",

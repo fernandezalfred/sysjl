@@ -44,3 +44,14 @@ export function formatBusinessDateKey(date: Date): string {
 export function todayDateString(): string {
   return formatDateKey(new Date());
 }
+
+// Bolivia is UTC−4 all year (no daylight saving time).
+const BUSINESS_UTC_OFFSET = "-04:00";
+
+// The same instant moved to another business day (YYYY-MM-DD), keeping its time of
+// day in Bolivia, so a purchase dated on edit keeps its order within the day.
+export function moveToBusinessDay(date: Date, dayKey: string): Date {
+  const startOf = (key: string) => Date.parse(`${key}T00:00:00${BUSINESS_UTC_OFFSET}`);
+  const timeOfDay = date.getTime() - startOf(formatBusinessDateKey(date));
+  return new Date(startOf(dayKey) + timeOfDay);
+}

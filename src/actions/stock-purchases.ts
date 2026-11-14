@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
-import { formatBusinessDateKey } from "@/lib/dates";
+import { formatBusinessDateKey, moveToBusinessDay } from "@/lib/dates";
 import { GRAIN_PRODUCTS, planRepeatLastDay, type RepeatError } from "@/lib/repeat-purchases";
 import type { Product } from "@prisma/client";
 
@@ -74,8 +74,14 @@ export async function createStockPurchase(
   }
 }
 
+// The purchase's Bolivia day (YYYY-MM-DD); only editing can change it, creating is
+// always today. Never a future day.
 const updateSchema = quantityAndCost.extend({
   purchaseId: z.string().min(1),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date is required.")
+    .refine((date) => date <= formatBusinessDateKey(new Date()), "Date can't be in the future."),
 });
 
 export async function updateStockPurchase(
@@ -89,6 +95,7 @@ export async function updateStockPurchase(
       purchaseId: formData.get("purchaseId"),
       quantity: formData.get("quantity"),
       unitCost: formData.get("unitCost"),
+      date: formData.get("date") ?? "",
     });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -104,6 +111,7 @@ export async function updateStockPurchase(
       data: {
         quantity: parsed.data.quantity,
         unitCost: parsed.data.unitCost,
+        createdAt: moveToBusinessDay(existing.createdAt, parsed.data.date),
       },
     });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { dayShadeClass } from "@/components/ui/day-shade";
 import { LossMargin, loserBackgroundClass } from "@/components/sale-records/LossMargin";
 import { Fragment, useRef, useState } from "react";
 import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
@@ -39,12 +40,6 @@ type Mode = { type: "create" } | { type: "edit"; record: DailyWorkRecordRow };
 
 function UserName({ name }: { name: string }) {
   return <div className="text-sm font-medium break-words uppercase text-sky-700 dark:text-sky-400">{name}</div>;
-}
-
-// Every other day is shaded, so it's easy to tell where one day ends and the
-// next begins (e.g. Monday's records from Tuesday's).
-function dayShadeClass(dayIndex: number): string {
-  return dayIndex % 2 === 1 ? "bg-foreground/[0.06] dark:bg-foreground/[0.09]" : "";
 }
 
 function TotalRevenueCell({ row, t }: { row: DailyRecordRow; t: TranslateFn }) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { dayShadeClass } from "@/components/ui/day-shade";
 import { Fragment, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/money/pricing";
 import { formatShortDate } from "@/lib/dates";
@@ -131,7 +132,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/10">
-                {dayGroups.map((group) => (
+                {dayGroups.map((group, index) => (
                   <Fragment key={group.date}>
                     <tr className="bg-foreground/10 dark:bg-foreground/15">
                       <td
@@ -147,7 +148,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
                       </td>
                     </tr>
                     {group.purchases.map((purchase) => (
-                      <tr key={purchase.id}>
+                      <tr key={purchase.id} className={dayShadeClass(index)}>
                         <td className="px-4 py-2 font-medium">{itemLabel(purchase, t)}</td>
                         <td className="px-4 py-2">{purchase.quantity}</td>
                         <td className="px-4 py-2">{formatCurrency(purchase.unitCost)}</td>
@@ -167,8 +168,8 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
           </div>
 
           <div className="flex flex-col gap-3 md:hidden">
-            {dayGroups.map((group) => (
-              <div key={group.date} className="flex flex-col gap-2">
+            {dayGroups.map((group, index) => (
+              <div key={group.date} className={`flex flex-col gap-2 rounded-lg ${dayShadeClass(index)} ${index % 2 === 1 ? "p-2" : ""}`}>
                 <p className="flex items-center justify-between rounded-md bg-foreground/10 px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-foreground dark:bg-foreground/15">
                   <span>{formatShortDate(group.date, t)}</span>
                   <span>{formatCurrency(group.totalCost)}</span>
