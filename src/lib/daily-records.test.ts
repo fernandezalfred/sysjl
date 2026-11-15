@@ -231,13 +231,14 @@ describe("getDailyRecordsData", () => {
       { ...MOCK_WORK_RECORDS[0], payPaidAt: new Date("2026-10-28T12:00:00.000Z") },
       { ...MOCK_WORK_RECORDS[1], payPaidAt: null },
     ]);
-    const data = await getDailyRecordsData();
+    const data = await getDailyRecordsData("c1");
+    expect(prismaMock.dailyWorkRecord.findMany.mock.calls[0][0].where).toEqual({ companyId: "c1" });
     const paidByUser = Object.fromEntries(data.dailyRecords.map((r) => [r.userId, r.payPaid]));
     expect(paidByUser).toEqual({ u1: true, u2: false });
   });
 
   it("builds one row per user per day from every work record", async () => {
-    const data = await getDailyRecordsData();
+    const data = await getDailyRecordsData("c1");
 
     const sumOfUserRevenue = data.dailyRecords.reduce((sum, u) => sum + u.queso.revenue + u.yogurt.revenue, 0);
     expect(data.dailyRecords).toHaveLength(2);
@@ -249,7 +250,7 @@ describe("getDailyRecordsData", () => {
       { ...MOCK_WORK_RECORDS[0], quesoSalePrice: 15, yogurtSalePrice: 40 },
     ]);
 
-    const data = await getDailyRecordsData();
+    const data = await getDailyRecordsData("c1");
     const row = data.dailyRecords.find((r) => r.userId === "u1")!;
 
     expect(row.queso.revenue).toBe((80 - 12) * 15);
@@ -281,7 +282,7 @@ describe("recordsVisibleTo", () => {
 
 describe("Milk on the record", () => {
   it("carries the record's Milk liters and price per liter onto its row", async () => {
-    const data = await getDailyRecordsData();
+    const data = await getDailyRecordsData("c1");
     const carla = data.dailyRecords.find((r) => r.userId === "u1")!;
     expect(carla.milkLiters).toBe(30);
     expect(carla.milkUnitCost).toBe(7);
@@ -300,7 +301,7 @@ describe("Purchase cost on the record", () => {
       { ...MOCK_WORK_RECORDS[1], quesoPurchaseCost: null, yogurtPurchaseCost: null },
     ]);
 
-    const data = await getDailyRecordsData();
+    const data = await getDailyRecordsData("c1");
     const costsByUser = Object.fromEntries(data.dailyRecords.map((r) => [r.userId, r.purchaseCosts]));
     expect(costsByUser).toEqual({ u1: { QUESO: 6.5, YOGURT: 24 }, u2: { QUESO: null, YOGURT: null } });
   });

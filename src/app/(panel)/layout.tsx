@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import { connection } from "next/server";
 import { auth } from "@/auth";
+import { getAccess } from "@/lib/auth/access";
 import { getT } from "@/lib/i18n/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -11,7 +12,7 @@ import {
   type SellerPending,
 } from "@/lib/money/seller-pay";
 import type { SellerPayTotals } from "@/components/layout/SellerPayBar";
-import { PanelShell } from "@/components/layout/PanelShell";
+import { PanelShell, type PanelAccess } from "@/components/layout/PanelShell";
 import { Footer } from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -27,16 +28,26 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
 
 async function PanelContent({ children }: { children: ReactNode }) {
   await connection();
-  const [session, { t, locale }] = await Promise.all([auth(), getT()]);
-  const isAdmin = session?.user?.role === "ADMIN";
-  const userId = session?.user?.id;
-  const [payTotals, adminPending] = await Promise.all([
-    userId && !isAdmin ? getSellerPayTotals(userId) : null,
-    isAdmin ? getPendingPayBySeller() : null,
+  const [session, access, { t, locale }] = await Promise.all([auth(), getAccess(), getT()]);
+  const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
+  const [payTotals, adminPending, company, companies] = await Promise.all([
+    access && !access.isAdmin ? getSellerPayTotals(access.userId) : null,
+    access?.isAdmin ? getPendingPayBySeller(access.companyId) : null,
+    access ? prisma.company.findUnique({ where: { id: access.companyId }, select: { name: true } }) : null,
+    isSuperAdmin
+      ? prisma.company.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, isActive: true } })
+      : null,
   ]);
+  const panelAccess: PanelAccess = {
+    role: session?.user?.role ?? "VEHICLE_USER",
+    permissions: session?.user?.permissions ?? [],
+    companyName: company?.name ?? null,
+    companies,
+    activeCompanyId: access?.companyId ?? null,
+  };
 
   return (
-    <PanelShell isAdmin={isAdmin} userName={session?.user?.name} locale={locale} payTotals={payTotals} adminPending={adminPending}>
+    <PanelShell access={panelAccess} userName={session?.user?.name} locale={locale} payTotals={payTotals} adminPending={adminPending}>
       {children}
       <Footer t={t} />
     </PanelShell>
@@ -58,9 +69,10 @@ async function getSellerPayTotals(userId: string): Promise<SellerPayTotals> {
   };
 }
 
-// Admins: what every seller is still owed, for the header's dropdown.
-async function getPendingPayBySeller(): Promise<SellerPending[]> {
+// Admins: what every seller of the company is still owed, for the header's dropdown.
+async function getPendingPayBySeller(companyId: string): Promise<SellerPending[]> {
   const rows = await prisma.dailyWorkRecord.findMany({
+    where: { companyId },
     select: { userId: true, totalSold: true, payPaidAt: true, user: { select: { name: true } } },
   });
   return pendingPayBySeller(

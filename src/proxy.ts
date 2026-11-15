@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
+import { isAdminRole } from "@/lib/auth/permissions";
 
 const PUBLIC_PATH_PREFIXES = ["/login"];
 const PUBLIC_EXACT_PATHS = ["/"];
 const ADMIN_PATH_PREFIX = "/admin";
+const COMPANIES_PATH = "/admin/companies";
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
@@ -21,7 +23,13 @@ export const proxy = auth((req) => {
     return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
-  if (pathname.startsWith(ADMIN_PATH_PREFIX) && req.auth?.user.role !== "ADMIN") {
+  // Pages check each admin's permissions themselves (requirePageAccess); here only
+  // the role: /admin for admins and the super admin, Companies for the super admin.
+  const role = req.auth?.user.role;
+  if (pathname.startsWith(ADMIN_PATH_PREFIX) && !(role && isAdminRole(role))) {
+    return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
+  }
+  if (pathname.startsWith(COMPANIES_PATH) && role !== "SUPER_ADMIN") {
     return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 });

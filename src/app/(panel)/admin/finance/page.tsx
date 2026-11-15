@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { getDailyRecordsData } from "@/lib/daily-records";
+import { requirePageAccess } from "@/lib/auth/access";
 import { getCurrentPurchaseCosts } from "@/lib/money/product-prices";
 import { getGrainsCostByDayAndProduct } from "@/lib/money/stock";
 import { getT } from "@/lib/i18n/server";
@@ -8,7 +9,7 @@ import { BUSINESS_TIME_ZONE } from "@/lib/dates";
 import { FinanceSection } from "@/components/finance/FinanceSection";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-// Admin only (src/proxy.ts guards /admin): income and expenses by day, week, month or since the beginning.
+// Admins with the Finance permission (src/proxy.ts guards /admin): income and expenses by day, week, month or since the beginning.
 export default function FinancePage() {
   return (
     <Suspense fallback={<FinanceSkeleton />}>
@@ -19,10 +20,11 @@ export default function FinancePage() {
 
 async function FinanceContent() {
   await connection();
+  const { companyId } = await requirePageAccess("FINANCE");
   const [data, unitCosts, grainsCostByDay, { t, locale }] = await Promise.all([
-    getDailyRecordsData(),
-    getCurrentPurchaseCosts(),
-    getGrainsCostByDayAndProduct(),
+    getDailyRecordsData(companyId),
+    getCurrentPurchaseCosts(companyId),
+    getGrainsCostByDayAndProduct(companyId),
     getT(),
   ]);
 

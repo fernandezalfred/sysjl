@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { requirePageAccess } from "@/lib/auth/access";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getDailyRecordsData, recordsVisibleTo, withoutPurchaseCosts } from "@/lib/daily-records";
 import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
@@ -26,29 +27,31 @@ export default function Dashboard() {
 
 async function DashboardContent() {
   await connection();
-  const [data, session, activeUsers, { t, locale }] = await Promise.all([
-    getDailyRecordsData(),
-    auth(),
+  const access = await requirePageAccess();
+  const [data, activeUsers, { t, locale }] = await Promise.all([
+    getDailyRecordsData(access.companyId),
     prisma.user.findMany({
-      where: { isActive: true },
+      where: { companyId: access.companyId, isActive: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     getT(),
   ]);
 
-  const isAdmin = session?.user?.role === "ADMIN";
+  const { isAdmin } = access;
+  const canSetPrices = hasPermission(access, "PRICES");
   // A seller only sees their own records (charts and table). Filtered here, after the
   // day's winner/loser was worked out against every seller, so others' rows never
   // reach the browser.
   // The purchase costs snapshotted on each record are cost data: admins only.
-  const visibleRecords = recordsVisibleTo(data.dailyRecords, session?.user?.id ?? null, isAdmin);
+  const visibleRecords = recordsVisibleTo(data.dailyRecords, access.userId, isAdmin);
   const dailyRecords = isAdmin ? visibleRecords : withoutPurchaseCosts(visibleRecords);
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
-  const [prices, netProfitInputs] = isAdmin
-    ? await Promise.all([getCurrentProductPrices(), getNetProfitInputs(data.dailyRecords)])
-    : [null, null];
+  const [prices, netProfitInputs] = await Promise.all([
+    canSetPrices ? getCurrentProductPrices(access.companyId) : null,
+    isAdmin ? getNetProfitInputs(data.dailyRecords, access.companyId) : null,
+  ]);
 
   const unitCosts = netProfitInputs?.unitCosts ?? null;
   const deductions = netProfitInputs?.deductions ?? null;
@@ -65,8 +68,8 @@ async function DashboardContent() {
 
         <SaleRecordsSection
           dailyRecords={dailyRecords}
-          currentUserId={session?.user?.id ?? null}
-          currentUserName={session?.user?.name ?? null}
+          currentUserId={access.userId}
+          currentUserName={access.userName}
           isAdmin={isAdmin}
           activeUsers={activeUsers}
           locale={locale}
@@ -74,7 +77,7 @@ async function DashboardContent() {
           deductions={deductions}
         />
 
-        {isAdmin && prices ? (
+        {prices ? (
           <section aria-labelledby="sale-prices-heading" className="flex flex-col gap-3">
             <h2
               id="sale-prices-heading"

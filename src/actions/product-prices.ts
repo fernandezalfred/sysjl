@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { PricedProduct } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
+import { NotAuthorizedError, requireAdminAccess } from "@/lib/auth/access";
 
 export interface ActionState {
   success: boolean;
@@ -21,7 +21,7 @@ const setPriceSchema = z.object({
 // history is kept, just who last set it and when.
 export async function setProductPrice(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const session = await requireAdminSession();
+    const access = await requireAdminAccess("PRICES");
 
     const parsed = setPriceSchema.safeParse({
       product: formData.get("product"),
@@ -33,17 +33,18 @@ export async function setProductPrice(_prevState: ActionState, formData: FormDat
     }
 
     await prisma.productPrice.upsert({
-      where: { product: parsed.data.product },
+      where: { companyId_product: { companyId: access.companyId, product: parsed.data.product } },
       update: {
         salePrice: parsed.data.salePrice,
         purchaseCost: parsed.data.purchaseCost,
-        setById: session.user.id,
+        setById: access.userId,
       },
       create: {
+        companyId: access.companyId,
         product: parsed.data.product,
         salePrice: parsed.data.salePrice,
         purchaseCost: parsed.data.purchaseCost,
-        setById: session.user.id,
+        setById: access.userId,
       },
     });
 

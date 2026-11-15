@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { setUserActive } from "@/actions/admin-users";
 import { confirmAlert, errorAlert, successToast } from "@/lib/alerts";
+import { localizeError } from "@/lib/i18n/errors";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
 
@@ -24,8 +25,9 @@ export function ToggleUserActiveButton({ user, locale }: ToggleUserActiveButtonP
 
     startTransition(async () => {
       try {
-        await setUserActive(user.id, activate);
-        successToast(t(activate ? "toast.userReactivated" : "toast.userDeactivated"));
+        const result = await setUserActive(user.id, activate);
+        if (result.success) successToast(t(activate ? "toast.userReactivated" : "toast.userDeactivated"));
+        else errorAlert(t, localizeError(t, result.error ?? ""));
       } catch {
         errorAlert(t, t("alert.unexpectedError"));
       }

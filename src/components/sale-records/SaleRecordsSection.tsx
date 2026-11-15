@@ -336,9 +336,9 @@ export function SaleRecordsSection({
       <dialog
         ref={dialogRef}
         {...backdropClose}
-        className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
+        className="w-[calc(100%-1.5rem)] max-h-[90dvh] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground sm:p-6"
       >
-        <h3 className="mb-4 text-sm font-medium">
+        <h3 className="mb-4 text-base font-semibold">
           {mode.type === "create" ? t("records.newRecord") : t("records.editRecord")}
         </h3>
         {mode.type === "create" ? (

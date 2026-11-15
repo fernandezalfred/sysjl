@@ -63,9 +63,9 @@ describe("login", () => {
 });
 
 describe("logout", () => {
-  it("calls signOut with a redirect to /login", async () => {
+  it("calls signOut with a redirect to the landing page", async () => {
     signOut.mockResolvedValueOnce(undefined);
     await logout();
-    expect(signOut).toHaveBeenCalledWith({ redirectTo: "/login" });
+    expect(signOut).toHaveBeenCalledWith({ redirectTo: "/" });
   });
 });

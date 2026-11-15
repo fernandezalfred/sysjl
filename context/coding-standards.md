@@ -19,7 +19,8 @@
 - Server Components fetch data directly (Prisma, via `src/lib/`)
 - Server Actions (`src/actions/`) for every form and mutation
 - API routes only for things Server Actions can't do (today: only Auth.js at `src/app/api/auth`)
-- Route protection lives in `src/proxy.ts`; every Server Action re-checks the session/role itself (`src/lib/auth/require-session.ts`, `src/lib/auth/require-admin.ts`)
+- Route protection lives in `src/proxy.ts`; every Server Action re-checks access itself with `src/lib/auth/access.ts` (`requireCompanyAccess`, `requireAdminAccess(permission)`, `requireSuperAdmin`), pages with `requirePageAccess(permission)`
+- Multi-company: every query filters by `access.companyId` and every create sets it; a record of another company is answered as "not found". Never take a company id from the browser (the super admin's switcher cookie is read only for the super admin)
 - A Server Component can't pass functions to a Client Component: pass the `locale` string and build the translator (`translate`) in the client
 - Client Components must never import a `src/lib` module that imports Prisma (it would bundle `@prisma/client` into the browser). Keep pure logic in Prisma-free files (e.g. `revenue.ts`, `editable-record.ts`)
 

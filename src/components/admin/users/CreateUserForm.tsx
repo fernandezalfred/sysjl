@@ -6,6 +6,7 @@ import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translation
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
+import { RoleFields } from "@/components/admin/users/RoleFields";
 
 const initialState: ActionState = { success: false };
 
@@ -22,10 +23,11 @@ function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
 }
 
 interface CreateUserFormProps {
+  canManageAdmins: boolean;
   locale: Locale;
 }
 
-export function CreateUserForm({ locale }: CreateUserFormProps) {
+export function CreateUserForm({ canManageAdmins, locale }: CreateUserFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction, pending] = useActionState(createUser, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
@@ -82,20 +84,13 @@ export function CreateUserForm({ locale }: CreateUserFormProps) {
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="new-role" className="text-xs font-medium text-foreground/70">
-              {t("adminUsers.role")}
-            </label>
-            <select
-              id="new-role"
-              name="role"
-              defaultValue="VEHICLE_USER"
-              className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
-            >
-              <option value="VEHICLE_USER">{t("adminUsers.roleVehicleUser")}</option>
-              <option value="ADMIN">{t("adminUsers.roleAdmin")}</option>
-            </select>
-          </div>
+          <RoleFields
+            idPrefix="new"
+            defaultRole="VEHICLE_USER"
+            defaultPermissions={[]}
+            canManageAdmins={canManageAdmins}
+            t={t}
+          />
         </div>
 
         {state.error ? (

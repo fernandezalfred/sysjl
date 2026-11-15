@@ -27,8 +27,8 @@ import {
   updateStockPurchase,
 } from "@/actions/stock-purchases";
 
-const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN" } };
-const VEHICLE_SESSION = { user: { id: "user-1", role: "VEHICLE_USER" } };
+const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN", companyId: "c1", permissions: ["FINANCE", "USERS", "GRAINS", "PRICES"] } };
+const VEHICLE_SESSION = { user: { id: "user-1", role: "VEHICLE_USER", companyId: "c1", permissions: [] } };
 
 function formData(fields: Record<string, string>) {
   const fd = new FormData();
@@ -82,7 +82,7 @@ describe("createStockPurchase", () => {
     const result = await createStockPurchase({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: true });
     expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
-      data: { product: "HABA", quantity: 50, unitCost: 6.5, createdById: "admin-1" },
+      data: { product: "HABA", quantity: 50, unitCost: 6.5, companyId: "c1", createdById: "admin-1" },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
@@ -102,7 +102,7 @@ describe("createStockPurchase", () => {
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.stockPurchase.create).toHaveBeenCalledWith({
-      data: { product: "MAIZ_PELADO", quantity: 50, unitCost: 6.5, createdById: "admin-1" },
+      data: { product: "MAIZ_PELADO", quantity: 50, unitCost: 6.5, companyId: "c1", createdById: "admin-1" },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
@@ -153,7 +153,7 @@ describe("updateStockPurchase", () => {
   it("updates quantity, unit cost and date in place for an admin, keeping the time of day", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     // 2026-11-05 20:17 in Bolivia, moved to 2026-11-03.
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "HABA", createdAt: new Date("2026-11-06T00:17:00Z") });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p1", product: "HABA", createdAt: new Date("2026-11-06T00:17:00Z") });
     const result = await updateStockPurchase(
       { success: false },
       formData({ quantity: "75", unitCost: "7", purchaseId: "p1", date: "2026-11-03" }),
@@ -180,21 +180,21 @@ describe("updateStockPurchase", () => {
 
   it("only refreshes /dashboard and / when editing an old YOGURT purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p2", product: "YOGURT", createdAt: new Date("2026-11-05T15:00:00Z") });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p2", product: "YOGURT", createdAt: new Date("2026-11-05T15:00:00Z") });
     await updateStockPurchase({ success: false }, formData({ quantity: "75", unitCost: "7", purchaseId: "p2", date: "2026-11-05" }));
     expect(revalidatePathMock.mock.calls.map(([path]) => path).sort()).toEqual(["/", "/dashboard", "/dashboard"]);
   });
 
   it("revalidates the grains page when editing a MAIZ_PELADO purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p4", product: "MAIZ_PELADO", createdAt: new Date("2026-11-05T15:00:00Z") });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p4", product: "MAIZ_PELADO", createdAt: new Date("2026-11-05T15:00:00Z") });
     await updateStockPurchase({ success: false }, formData({ quantity: "10", unitCost: "150", purchaseId: "p4", date: "2026-11-05" }));
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
 
   it("revalidates the grains page when editing a HABA purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p5", product: "HABA", createdAt: new Date("2026-11-05T15:00:00Z") });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p5", product: "HABA", createdAt: new Date("2026-11-05T15:00:00Z") });
     await updateStockPurchase({ success: false }, formData({ quantity: "5", unitCost: "200", purchaseId: "p5", date: "2026-11-05" }));
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
@@ -216,9 +216,22 @@ describe("deleteStockPurchase", () => {
     expect(prismaMock.stockPurchase.delete).not.toHaveBeenCalled();
   });
 
+  it("treats another company's purchase as not found", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c2", id: "p1", product: "HABA" });
+    expect(await deleteStockPurchase("p1")).toEqual({ success: false, error: "Stock purchase not found." });
+    expect(prismaMock.stockPurchase.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects an admin without the Grains permission", async () => {
+    authMock.mockResolvedValue({ user: { ...ADMIN_SESSION.user, permissions: ["FINANCE"] } });
+    expect(await deleteStockPurchase("p1")).toEqual({ success: false, error: "Admin access required." });
+    expect(prismaMock.stockPurchase.findUnique).not.toHaveBeenCalled();
+  });
+
   it("deletes the purchase for an admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p1", product: "HABA" });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p1", product: "HABA" });
     const result = await deleteStockPurchase("p1");
     expect(result).toEqual({ success: true });
     expect(prismaMock.stockPurchase.delete).toHaveBeenCalledWith({ where: { id: "p1" } });
@@ -227,14 +240,14 @@ describe("deleteStockPurchase", () => {
 
   it("only refreshes /dashboard and / when deleting an old YOGURT purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p2", product: "YOGURT", createdAt: new Date("2026-11-05T15:00:00Z") });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p2", product: "YOGURT", createdAt: new Date("2026-11-05T15:00:00Z") });
     await deleteStockPurchase("p2");
     expect(revalidatePathMock.mock.calls.map(([path]) => path).sort()).toEqual(["/", "/dashboard", "/dashboard"]);
   });
 
   it("revalidates the grains page when deleting a MAIZ_CASCARA purchase", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.stockPurchase.findUnique.mockResolvedValue({ id: "p4", product: "MAIZ_CASCARA", createdAt: new Date("2026-11-05T15:00:00Z") });
+    prismaMock.stockPurchase.findUnique.mockResolvedValue({ companyId: "c1", id: "p4", product: "MAIZ_CASCARA", createdAt: new Date("2026-11-05T15:00:00Z") });
     await deleteStockPurchase("p4");
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
   });
@@ -269,12 +282,14 @@ describe("repeatLastDayPurchases", () => {
 
     expect(await repeatLastDayPurchases()).toEqual({ success: true, count: 2 });
     expect(prismaMock.stockPurchase.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ product: { in: ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"] } }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({ companyId: "c1", product: { in: ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"] } }),
+      }),
     );
     expect(prismaMock.stockPurchase.createMany).toHaveBeenCalledWith({
       data: [
-        { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, createdById: "admin-1" },
-        { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, createdById: "admin-1" },
+        { product: "MAIZ_PELADO", quantity: 4, unitCost: 26.25, companyId: "c1", createdById: "admin-1" },
+        { product: "MAIZ_CASCARA", quantity: 10, unitCost: 30.62, companyId: "c1", createdById: "admin-1" },
       ],
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");

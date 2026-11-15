@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePageAccess } from "@/lib/auth/access";
 import { CreateUserForm } from "@/components/admin/users/CreateUserForm";
 import { UserList } from "@/components/admin/users/UserList";
 import { getT } from "@/lib/i18n/server";
@@ -16,9 +17,11 @@ export default function AdminUsersPage() {
 
 async function AdminUsersContent() {
   await connection();
+  const { companyId, isSuperAdmin } = await requirePageAccess("USERS");
 
+  // The company's users; the super admin (no company) is never listed.
   const [users, { t, locale }] = await Promise.all([
-    prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.user.findMany({ where: { companyId }, orderBy: [{ role: "asc" }, { name: "asc" }] }),
     getT(),
   ]);
 
@@ -29,7 +32,7 @@ async function AdminUsersContent() {
         <p className="text-sm text-foreground/70">{t("adminUsers.subheading")}</p>
       </header>
 
-      <CreateUserForm locale={locale} />
+      <CreateUserForm canManageAdmins={isSuperAdmin} locale={locale} />
 
       <UserList
         users={users.map((u) => ({
@@ -37,8 +40,10 @@ async function AdminUsersContent() {
           name: u.name,
           email: u.email,
           role: u.role,
+          permissions: u.permissions,
           isActive: u.isActive,
         }))}
+        canManageAdmins={isSuperAdmin}
         locale={locale}
       />
     </div>

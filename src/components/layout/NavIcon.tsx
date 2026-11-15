@@ -1,6 +1,6 @@
 // Small line icons for the panel navigation (24×24 viewBox, drawn with currentColor so
 // they follow the link's text color).
-export type NavIconName = "dashboard" | "finance" | "account" | "users" | "grains" | "home" | "signOut";
+export type NavIconName = "dashboard" | "finance" | "account" | "users" | "grains" | "companies" | "signOut";
 
 const PATHS: Record<NavIconName, string[]> = {
   dashboard: ["M4 4h7v7H4z", "M13 4h7v4h-7z", "M13 10h7v10h-7z", "M4 13h7v7H4z"],
@@ -13,7 +13,7 @@ const PATHS: Record<NavIconName, string[]> = {
     "M18 14a6.5 6.5 0 0 1 3.5 6",
   ],
   grains: ["M12 21V9", "M12 9c0-3 2-5 5-5 0 3-2 5-5 5z", "M12 9c0-3-2-5-5-5 0 3 2 5 5 5z", "M12 15c0-3 2-5 5-5 0 3-2 5-5 5z", "M12 15c0-3-2-5-5-5 0 3 2 5 5 5z"],
-  home: ["M3 11l9-7 9 7", "M5 9.5V20h14V9.5", "M10 20v-5h4v5"],
+  companies: ["M4 21V5l8-2v18", "M12 8h8v13", "M2 21h20", "M7 8h2", "M7 12h2", "M7 16h2", "M15 12h2", "M15 16h2"],
   signOut: ["M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3", "M10 16l-4-4 4-4", "M6 12h10"],
 };
 

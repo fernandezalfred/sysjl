@@ -15,7 +15,7 @@ function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
+      className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background disabled:opacity-60"
     >
       {pending ? t("records.saving") : t("records.save")}
     </button>
@@ -54,7 +54,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
             name="userId"
             required
             defaultValue=""
-            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
+            className="rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base"
           >
             <option value="" disabled>
               {t("records.selectUser")}
@@ -71,7 +71,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
           <select
             id="record-user"
             defaultValue="self"
-            className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
+            className="rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base"
           >
             <option value="self">{currentUserName ?? ""}</option>
           </select>
@@ -86,11 +86,11 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
         </p>
       ) : null}
 
-      <div className="flex justify-end gap-2">
+      <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground"
+          className="rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:border-transparent"
         >
           {t("records.cancel")}
         </button>

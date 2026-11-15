@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePageAccess } from "@/lib/auth/access";
 import { getT } from "@/lib/i18n/server";
 import { formatBusinessDateKey } from "@/lib/dates";
 import { GrainPurchasesSection } from "@/components/admin/grain-purchases/GrainPurchasesSection";
@@ -19,10 +20,11 @@ export default function AdminGrainsPage() {
 
 async function AdminGrainsContent() {
   await connection();
+  const { companyId } = await requirePageAccess("GRAINS");
 
   const [purchaseRows, { t, locale }] = await Promise.all([
     prisma.stockPurchase.findMany({
-      where: { product: { in: GRAIN_PRODUCTS } },
+      where: { companyId, product: { in: GRAIN_PRODUCTS } },
       orderBy: { createdAt: "desc" },
       include: { createdBy: { select: { name: true } } },
     }),

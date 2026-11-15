@@ -1,10 +1,12 @@
-import type { Product, Role } from "@prisma/client";
+import type { AdminPermission, Product, Role } from "@prisma/client";
 
 export interface AdminUserRow {
   id: string;
   name: string;
   email: string;
   role: Role;
+  // ADMIN only: the modules the super admin granted.
+  permissions: AdminPermission[];
   isActive: boolean;
 }
 

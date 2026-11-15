@@ -16,7 +16,13 @@ import { translate, type Locale } from "@/lib/i18n/translations";
 import type { Granularity } from "@/lib/date-buckets";
 import type { UserSalesPeriod } from "@/lib/sales-charts";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
-import { CHART_COLORS, chartHeightClass, formatDayLabel, formatMonthLabel } from "@/components/sales-charts/chart-theme";
+import {
+  CHART_COLORS,
+  chartHeightClass,
+  chartScrollFrameClass,
+  formatDayLabel,
+  formatMonthLabel,
+} from "@/components/sales-charts/chart-theme";
 import { horizontalBarLabels } from "@/components/sales-charts/chart-labels";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -91,6 +97,7 @@ export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
         <p className="text-sm text-foreground/70">{periodLabel}</p>
       </div>
 
+      <div className={chartScrollFrameClass(users.length * 2)}>
       <div className={chartHeightClass(users.length * 2)}>
         <Bar
           options={options}
@@ -116,6 +123,7 @@ export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
             ],
           }}
         />
+      </div>
       </div>
     </div>
   );

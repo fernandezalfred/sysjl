@@ -41,5 +41,5 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
 }
 
 export async function logout() {
-  await signOut({ redirectTo: "/login" });
+  await signOut({ redirectTo: "/" });
 }

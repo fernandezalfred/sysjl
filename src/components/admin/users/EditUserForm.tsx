@@ -25,10 +25,11 @@ function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
 
 interface EditUserFormProps {
   user: AdminUserRow;
+  canManageAdmins: boolean;
   locale: Locale;
 }
 
-export function EditUserForm({ user, locale }: EditUserFormProps) {
+export function EditUserForm({ user, canManageAdmins, locale }: EditUserFormProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const [state, formAction, pending] = useActionState(updateUser, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
@@ -48,7 +49,7 @@ export function EditUserForm({ user, locale }: EditUserFormProps) {
           resync after a save or deactivate revalidates the page — but keyed
           only on this inner piece, not the form, so useActionState's
           error message (below) survives the remount. */}
-      <EditUserFields key={JSON.stringify(user)} user={user} t={t} />
+      <EditUserFields key={JSON.stringify(user)} user={user} canManageAdmins={canManageAdmins} t={t} />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">

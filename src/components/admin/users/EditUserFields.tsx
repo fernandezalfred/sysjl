@@ -1,12 +1,14 @@
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";
+import { RoleFields } from "@/components/admin/users/RoleFields";
 
 interface EditUserFieldsProps {
   user: AdminUserRow;
+  canManageAdmins: boolean;
   t: TranslateFn;
 }
 
-export function EditUserFields({ user, t }: EditUserFieldsProps) {
+export function EditUserFields({ user, canManageAdmins, t }: EditUserFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="flex flex-col gap-1">
@@ -36,20 +38,13 @@ export function EditUserFields({ user, t }: EditUserFieldsProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`role-${user.id}`} className="text-xs font-medium text-foreground/70">
-          {t("adminUsers.role")}
-        </label>
-        <select
-          id={`role-${user.id}`}
-          name="role"
-          defaultValue={user.role}
-          className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
-        >
-          <option value="VEHICLE_USER">{t("adminUsers.roleVehicleUser")}</option>
-          <option value="ADMIN">{t("adminUsers.roleAdmin")}</option>
-        </select>
-      </div>
+      <RoleFields
+        idPrefix={`user-${user.id}`}
+        defaultRole={user.role}
+        defaultPermissions={user.permissions}
+        canManageAdmins={canManageAdmins}
+        t={t}
+      />
 
       <div className="flex flex-col gap-1 sm:col-span-2">
         <label htmlFor={`newPassword-${user.id}`} className="text-xs font-medium text-foreground/70">

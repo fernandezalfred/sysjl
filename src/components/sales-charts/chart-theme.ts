@@ -39,9 +39,45 @@ export function formatMonthLabel(month: string, locale: Locale): string {
   );
 }
 
-// Horizontal bars (one per user): the chart grows with the user count so bars stay readable.
-export function chartHeightClass(userCount: number): string {
-  if (userCount <= 3) return "h-40";
-  if (userCount <= 6) return "h-64";
-  return "h-96";
+// Horizontal bars: the chart grows with the bar count (~1.6rem a bar) so bars stay
+// readable with any number of sellers; past 24 bars its frame scrolls (see
+// CHART_SCROLL_FRAME). Full class strings so Tailwind generates them.
+const BAR_CHART_HEIGHTS: { maxBars: number; className: string }[] = [
+  { maxBars: 3, className: "h-40" },
+  { maxBars: 6, className: "h-64" },
+  { maxBars: 12, className: "h-96" },
+  { maxBars: 24, className: "h-[40rem]" },
+  { maxBars: 40, className: "h-[64rem]" },
+  { maxBars: 60, className: "h-[96rem]" },
+  { maxBars: 100, className: "h-[160rem]" },
+  { maxBars: 160, className: "h-[256rem]" },
+];
+
+export function chartHeightClass(barCount: number): string {
+  return BAR_CHART_HEIGHTS.find((h) => barCount <= h.maxBars)?.className ?? "h-[400rem]";
+}
+
+// A tall bar chart scrolls inside this frame instead of stretching the page.
+export function chartScrollFrameClass(barCount: number): string {
+  return barCount > 24 ? "styled-scroll max-h-[40rem] overflow-y-auto overscroll-y-contain pr-1" : "";
+}
+
+// The dataviz palette's eight categorical slots first, so the first eight users look
+// as before; after that each user gets a generated hue (golden-angle steps keep
+// neighbours apart), lighter in dark mode.
+const USER_PALETTE = [
+  { light: "#2a78d6", dark: "#3987e5" },
+  { light: "#eb6834", dark: "#d95926" },
+  { light: "#1baf7a", dark: "#199e70" },
+  { light: "#eda100", dark: "#c98500" },
+  { light: "#e87ba4", dark: "#d55181" },
+  { light: "#008300", dark: "#008300" },
+  { light: "#6250d6", dark: "#9085e9" },
+  { light: "#e34948", dark: "#e66767" },
+];
+
+export function userColor(index: number, mode: "light" | "dark"): string {
+  if (index < USER_PALETTE.length) return USER_PALETTE[index][mode];
+  const hue = Math.round((index * 137.508) % 360);
+  return mode === "dark" ? `hsl(${hue} 65% 62%)` : `hsl(${hue} 70% 42%)`;
 }

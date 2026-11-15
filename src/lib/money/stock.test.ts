@@ -22,7 +22,7 @@ describe("getGrainsCostByDay", () => {
       { product: "MAIZ_CASCARA", quantity: 2, unitCost: 10, createdAt: new Date("2026-11-06T15:00:00Z") },
     ]);
 
-    expect(await getGrainsCostByDay()).toEqual({ "2026-11-05": 405, "2026-11-06": 20 });
+    expect(await getGrainsCostByDay("c1")).toEqual({ "2026-11-05": 405, "2026-11-06": 20 });
   });
 });
 
@@ -34,8 +34,9 @@ describe("getGrainsCostByDayAndProduct", () => {
       { product: "HABA", quantity: 2, unitCost: 30, createdAt: new Date("2026-11-06T17:00:00Z") },
     ]);
 
-    expect(await getGrainsCostByDayAndProduct()).toEqual({
+    expect(await getGrainsCostByDayAndProduct("c1")).toEqual({
       "2026-11-06": { MAIZ_PELADO: 125, MAIZ_CASCARA: 0, HABA: 60 },
     });
+    expect(prismaMock.stockPurchase.findMany.mock.calls[0][0].where.companyId).toBe("c1");
   });
 });

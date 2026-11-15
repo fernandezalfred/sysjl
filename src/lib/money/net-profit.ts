@@ -11,8 +11,11 @@ export interface NetProfitInputs {
 // Everything recordAdjustedRevenue needs to compute each Sale Record's Net profit,
 // read live from the database so a changed purchase cost or quantity is reflected
 // immediately. Cost data is admin-only — callers must gate this on the admin role.
-export async function getNetProfitInputs(records: DailyRecordRow[]): Promise<NetProfitInputs> {
-  const [purchaseCosts, grainsCostByDay] = await Promise.all([getCurrentPurchaseCosts(), getGrainsCostByDay()]);
+export async function getNetProfitInputs(records: DailyRecordRow[], companyId: string): Promise<NetProfitInputs> {
+  const [purchaseCosts, grainsCostByDay] = await Promise.all([
+    getCurrentPurchaseCosts(companyId),
+    getGrainsCostByDay(companyId),
+  ]);
 
   return {
     unitCosts: purchaseCosts,

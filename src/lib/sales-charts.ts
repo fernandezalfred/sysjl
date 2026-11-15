@@ -154,3 +154,17 @@ export function buildSalesChartsData(records: DailyRecordRow[], selectedDay: str
     },
   };
 }
+
+// The trend chart starts with this many lines; with more sellers the rest are
+// switched on from the legend.
+export const DEFAULT_TREND_LINES = 8;
+
+// The userIds of the `max` sellers with the highest total over every period (ties by
+// name), the lines the trend chart shows first.
+export function topTrendSeries(series: UserTrendSeries[], max = DEFAULT_TREND_LINES): string[] {
+  const sum = (s: UserTrendSeries) => s.totals.reduce((a, b) => a + b, 0);
+  return [...series]
+    .sort((a, b) => sum(b) - sum(a) || a.userName.localeCompare(b.userName))
+    .slice(0, max)
+    .map((s) => s.userId);
+}

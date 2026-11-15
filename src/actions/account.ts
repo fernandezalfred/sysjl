@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { NotAuthorizedError } from "@/lib/auth/require-admin";
+import { NotAuthorizedError } from "@/lib/auth/access";
 import { requireUserSession } from "@/lib/auth/require-session";
 
 export interface ChangePasswordState {

@@ -21,7 +21,7 @@ function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
+      className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background disabled:opacity-60"
     >
       {pending ? t("records.saving") : t("records.save")}
     </button>
@@ -72,7 +72,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
           type="text"
           value={record.userName}
           disabled
-          className="cursor-not-allowed rounded-md border border-foreground/10 bg-foreground/10 px-3 py-2 text-base text-foreground/60"
+          className="cursor-not-allowed rounded-lg border border-foreground/10 bg-foreground/10 px-3 py-2.5 text-base text-foreground/60"
         />
       </div>
       <RecordFormFields defaultValues={record} t={t} />
@@ -83,21 +83,21 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
         </p>
       ) : null}
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={handleDelete}
           disabled={isDeleting}
-          className="rounded-md px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-60 dark:text-red-400 dark:hover:text-red-300"
+          className="rounded-lg px-4 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-60 dark:text-red-400 dark:hover:text-red-300"
         >
           {isDeleting ? t("records.deleting") : t("records.delete")}
         </button>
 
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground"
+            className="rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:border-transparent"
           >
             {t("records.cancel")}
           </button>

@@ -15,27 +15,14 @@ import { Line } from "react-chartjs-2";
 import { formatCurrency } from "@/lib/money/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { Granularity } from "@/lib/date-buckets";
-import type { UserTrend } from "@/lib/sales-charts";
+import { DEFAULT_TREND_LINES, topTrendSeries, type UserTrend } from "@/lib/sales-charts";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
-import { CHART_COLORS, formatDayLabel, formatMonthLabel } from "@/components/sales-charts/chart-theme";
+import { CHART_COLORS, formatDayLabel, formatMonthLabel, userColor } from "@/components/sales-charts/chart-theme";
 import { linePointLabels } from "@/components/sales-charts/chart-labels";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 const GRANULARITIES: Granularity[] = ["day", "week", "month"];
-
-// The dataviz skill's categorical slots, in fixed order (validated for lines on the
-// adjacent pairlist). Users are sorted by name, so each keeps the same color.
-const USER_COLORS = [
-  { light: "#2a78d6", dark: "#3987e5" },
-  { light: "#eb6834", dark: "#d95926" },
-  { light: "#1baf7a", dark: "#199e70" },
-  { light: "#eda100", dark: "#c98500" },
-  { light: "#e87ba4", dark: "#d55181" },
-  { light: "#008300", dark: "#008300" },
-  { light: "#6250d6", dark: "#9085e9" },
-  { light: "#e34948", dark: "#e66767" },
-];
 
 // On every screen the chart gets at least ~4rem per period (day/week/month) so points
 // and their amount labels don't pile up; when that's wider than the container, the frame
@@ -55,18 +42,6 @@ function chartMinWidthClass(periodCount: number): string {
   return CHART_MIN_WIDTHS.find((w) => periodCount <= w.maxPeriods)?.className ?? CHART_MIN_WIDTH_MAX;
 }
 
-// Legend dots matching USER_COLORS, light then dark (Tailwind needs literal classes).
-const USER_DOT_CLASSES = [
-  "bg-[#2a78d6] dark:bg-[#3987e5]",
-  "bg-[#eb6834] dark:bg-[#d95926]",
-  "bg-[#1baf7a] dark:bg-[#199e70]",
-  "bg-[#eda100] dark:bg-[#c98500]",
-  "bg-[#e87ba4] dark:bg-[#d55181]",
-  "bg-[#008300] dark:bg-[#008300]",
-  "bg-[#6250d6] dark:bg-[#9085e9]",
-  "bg-[#e34948] dark:bg-[#e66767]",
-];
-
 function periodLabel(period: string, granularity: Granularity, locale: Locale, t: TranslateFn): string {
   if (granularity === "month") return formatMonthLabel(period, locale);
   if (granularity === "week") return t("trend.weekOf", { date: formatDayLabel(period, locale) });
@@ -85,6 +60,20 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
   const { periods, series } = trends[granularity];
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Which sellers' lines are on: the top DEFAULT_TREND_LINES until the viewer picks.
+  const [picked, setPicked] = useState<Set<string> | null>(null);
+  const shown = picked ?? new Set(topTrendSeries(trends.month.series));
+  // Colors follow the name order, so a seller keeps theirs when others are hidden.
+  const colorOf = (userId: string) => userColor(Math.max(0, series.findIndex((s) => s.userId === userId)), mode);
+  const visibleSeries = series.filter((s) => shown.has(s.userId));
+  const hasMore = series.length > DEFAULT_TREND_LINES;
+
+  function toggle(userId: string) {
+    const next = new Set(shown);
+    if (next.has(userId)) next.delete(userId);
+    else next.add(userId);
+    setPicked(next);
+  }
 
   // Start scrolled to the newest period (the right end) whenever the data or the
   // day/week/month choice changes; does nothing when nothing overflows.
@@ -139,17 +128,41 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
         ))}
       </div>
 
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-foreground/80">
-        {series.map((s, i) => (
-          <li key={s.userName} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className={`h-2.5 w-2.5 rounded-full ${USER_DOT_CLASSES[i % USER_DOT_CLASSES.length]}`}
-            />
-            {s.userName}
-          </li>
-        ))}
-      </ul>
+      {/* The legend switches lines on and off; with many sellers it scrolls. */}
+      <div className="flex flex-col gap-1.5">
+        <ul className="styled-scroll flex max-h-28 flex-wrap gap-x-1 gap-y-1 overflow-y-auto text-xs">
+          {series.map((s) => {
+            const on = shown.has(s.userId);
+            return (
+              <li key={s.userId}>
+                <button
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggle(s.userId)}
+                  className={`flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-foreground/5 ${
+                    on ? "text-foreground/80" : "text-foreground/40 line-through"
+                  }`}
+                >
+                  <svg viewBox="0 0 10 10" aria-hidden="true" className="h-2.5 w-2.5 flex-shrink-0">
+                    <circle cx="5" cy="5" r="5" fill={colorOf(s.userId)} opacity={on ? 1 : 0.35} />
+                  </svg>
+                  {s.userName}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        {hasMore ? (
+          <div className="flex flex-wrap gap-3 text-xs">
+            <button type="button" onClick={() => setPicked(new Set(series.map((s) => s.userId)))} className="text-sky-700 hover:underline dark:text-sky-300">
+              {t("trend.showAll", { count: series.length })}
+            </button>
+            <button type="button" onClick={() => setPicked(null)} className="text-sky-700 hover:underline dark:text-sky-300">
+              {t("trend.showTop", { count: DEFAULT_TREND_LINES })}
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       <div ref={scrollRef} className="styled-scroll overflow-x-auto overscroll-x-contain pb-2">
         <div className={`h-72 md:h-64 ${chartMinWidthClass(periods.length)}`}>
@@ -159,8 +172,8 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
             aria-label={t("salesCharts.trendTitle")}
             data={{
               labels: periods.map((p) => periodLabel(p, granularity, locale, t)),
-              datasets: series.map((s, i) => {
-                const color = USER_COLORS[i % USER_COLORS.length][mode];
+              datasets: visibleSeries.map((s) => {
+                const color = colorOf(s.userId);
                 return {
                   label: s.userName,
                   data: s.totals,

@@ -137,9 +137,11 @@ export function withoutMilkCost(rows: DailyRecordRow[]): DailyRecordRow[] {
   return rows.map((row) => ({ ...row, milkLiters: 0, milkUnitCost: 0 }));
 }
 
-export async function getDailyRecordsData(): Promise<DailyRecordsData> {
+// Every sale record of one company.
+export async function getDailyRecordsData(companyId: string): Promise<DailyRecordsData> {
   const workRecords = await prisma.dailyWorkRecord.findMany({
-    include: { user: true },
+    where: { companyId },
+    include: { user: { select: { name: true } } },
   });
 
   const records: SaleRecord[] = workRecords.flatMap((r) => {

@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserSession } from "@/lib/auth/require-session";
-import { NotAuthorizedError, requireAdminSession } from "@/lib/auth/require-admin";
+import { NotAuthorizedError, requireAdminAccess, requireCompanyAccess, type Access } from "@/lib/auth/access";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
 
 export interface RecordActionState {
@@ -57,12 +56,10 @@ function parseRecordDate(raw: string): Date {
 
 type TargetUserResult = { userId: string } | { error: string };
 
-async function resolveTargetUserId(
-  session: Awaited<ReturnType<typeof requireUserSession>>,
-  formData: FormData,
-): Promise<TargetUserResult> {
-  if (session.user.role !== "ADMIN") {
-    return { userId: session.user.id };
+// A seller records their own day; an admin picks any active user of the same company.
+async function resolveTargetUserId(access: Access, formData: FormData): Promise<TargetUserResult> {
+  if (!access.isAdmin) {
+    return { userId: access.userId };
   }
 
   const raw = formData.get("userId");
@@ -71,11 +68,17 @@ async function resolveTargetUserId(
   }
 
   const target = await prisma.user.findUnique({ where: { id: raw } });
-  if (!target || !target.isActive) {
+  if (!target || !target.isActive || target.companyId !== access.companyId) {
     return { error: "User not found." };
   }
 
   return { userId: target.id };
+}
+
+// A record of the acting company, and the acting user's own unless they're an admin.
+// Another company's record reads as not found.
+function canChangeRecord(access: Access, record: { userId: string; companyId: string | null }): boolean {
+  return record.companyId === access.companyId && (access.isAdmin || record.userId === access.userId);
 }
 
 export async function createDailyWorkRecord(
@@ -83,7 +86,7 @@ export async function createDailyWorkRecord(
   formData: FormData,
 ): Promise<RecordActionState> {
   try {
-    const session = await requireUserSession();
+    const access = await requireCompanyAccess();
 
     const parsed = createSchema.safeParse({
       date: formData.get("date"),
@@ -93,7 +96,7 @@ export async function createDailyWorkRecord(
       return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
     }
 
-    const targetUser = await resolveTargetUserId(session, formData);
+    const targetUser = await resolveTargetUserId(access, formData);
     if ("error" in targetUser) {
       return { success: false, error: targetUser.error };
     }
@@ -109,11 +112,12 @@ export async function createDailyWorkRecord(
     // Sale price and purchase cost are snapshotted here, once, from whatever the
     // admin has them set to right now — a later change never rewrites this record's
     // revenue or Neto.
-    const prices = await getCurrentProductPrices();
+    const prices = await getCurrentProductPrices(access.companyId);
 
     await prisma.dailyWorkRecord.create({
       data: {
         userId,
+        companyId: access.companyId,
         date,
         quesoTaken: parsed.data.quesoTaken,
         quesoRemaining: parsed.data.quesoRemaining,
@@ -156,7 +160,7 @@ export async function updateDailyWorkRecord(
   formData: FormData,
 ): Promise<RecordActionState> {
   try {
-    const session = await requireUserSession();
+    const access = await requireCompanyAccess();
 
     const parsed = updateSchema.safeParse({
       recordId: formData.get("recordId"),
@@ -167,8 +171,7 @@ export async function updateDailyWorkRecord(
     }
 
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: parsed.data.recordId } });
-    const isOwner = existing?.userId === session.user.id;
-    if (!existing || (!isOwner && session.user.role !== "ADMIN")) {
+    if (!existing || !canChangeRecord(access, existing)) {
       return { success: false, error: "Record not found." };
     }
 
@@ -199,11 +202,10 @@ export async function updateDailyWorkRecord(
 
 export async function deleteDailyWorkRecord(recordId: string): Promise<RecordActionState> {
   try {
-    const session = await requireUserSession();
+    const access = await requireCompanyAccess();
 
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: recordId } });
-    const isOwner = existing?.userId === session.user.id;
-    if (!existing || (!isOwner && session.user.role !== "ADMIN")) {
+    if (!existing || !canChangeRecord(access, existing)) {
       return { success: false, error: "Record not found." };
     }
 
@@ -226,7 +228,7 @@ const payPaidSchema = z.object({ recordId: z.string().min(1), paid: z.boolean() 
 // amount changes, the Pago is just shown struck through and leaves the pending total.
 export async function setRecordPayPaid(recordId: string, paid: boolean): Promise<RecordActionState> {
   try {
-    await requireAdminSession();
+    const access = await requireAdminAccess();
 
     const parsed = payPaidSchema.safeParse({ recordId, paid });
     if (!parsed.success) {
@@ -234,7 +236,7 @@ export async function setRecordPayPaid(recordId: string, paid: boolean): Promise
     }
 
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: parsed.data.recordId } });
-    if (!existing) {
+    if (!existing || existing.companyId !== access.companyId) {
       return { success: false, error: "Record not found." };
     }
 

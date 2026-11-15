@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdminSession, NotAuthorizedError } from "@/lib/auth/require-admin";
+import { NotAuthorizedError, requireAdminAccess } from "@/lib/auth/access";
 import { formatBusinessDateKey, moveToBusinessDay } from "@/lib/dates";
 import { GRAIN_PRODUCTS, planRepeatLastDay, type RepeatError } from "@/lib/repeat-purchases";
 import type { Product } from "@prisma/client";
@@ -41,7 +41,7 @@ export async function createStockPurchase(
   formData: FormData,
 ): Promise<ActionState> {
   try {
-    const session = await requireAdminSession();
+    const access = await requireAdminAccess("GRAINS");
 
     const parsed = createSchema.safeParse({
       product: formData.get("product"),
@@ -57,7 +57,8 @@ export async function createStockPurchase(
         product: parsed.data.product,
         quantity: parsed.data.quantity,
         unitCost: parsed.data.unitCost,
-        createdById: session.user.id,
+        companyId: access.companyId,
+        createdById: access.userId,
       },
     });
 
@@ -89,7 +90,7 @@ export async function updateStockPurchase(
   formData: FormData,
 ): Promise<ActionState> {
   try {
-    await requireAdminSession();
+    const access = await requireAdminAccess("GRAINS");
 
     const parsed = updateSchema.safeParse({
       purchaseId: formData.get("purchaseId"),
@@ -102,7 +103,7 @@ export async function updateStockPurchase(
     }
 
     const existing = await prisma.stockPurchase.findUnique({ where: { id: parsed.data.purchaseId } });
-    if (!existing) {
+    if (!existing || existing.companyId !== access.companyId) {
       return { success: false, error: "Stock purchase not found." };
     }
 
@@ -130,10 +131,10 @@ export async function updateStockPurchase(
 
 export async function deleteStockPurchase(purchaseId: string): Promise<ActionState> {
   try {
-    await requireAdminSession();
+    const access = await requireAdminAccess("GRAINS");
 
     const existing = await prisma.stockPurchase.findUnique({ where: { id: purchaseId } });
-    if (!existing) {
+    if (!existing || existing.companyId !== access.companyId) {
       return { success: false, error: "Stock purchase not found." };
     }
 
@@ -167,10 +168,10 @@ const LAST_DAY_WINDOW_MS = 36 * 60 * 60 * 1000;
 // hand. Refuses if today already has purchases.
 export async function repeatLastDayPurchases(): Promise<RepeatActionState> {
   try {
-    const session = await requireAdminSession();
+    const access = await requireAdminAccess("GRAINS");
 
     const latest = await prisma.stockPurchase.findFirst({
-      where: { product: { in: GRAIN_PRODUCTS } },
+      where: { companyId: access.companyId, product: { in: GRAIN_PRODUCTS } },
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
@@ -178,6 +179,7 @@ export async function repeatLastDayPurchases(): Promise<RepeatActionState> {
 
     const recent = await prisma.stockPurchase.findMany({
       where: {
+        companyId: access.companyId,
         product: { in: GRAIN_PRODUCTS },
         createdAt: { gte: new Date(latest.createdAt.getTime() - LAST_DAY_WINDOW_MS) },
       },
@@ -193,7 +195,8 @@ export async function repeatLastDayPurchases(): Promise<RepeatActionState> {
         product: p.product,
         quantity: p.quantity,
         unitCost: p.unitCost,
-        createdById: session.user.id,
+        companyId: access.companyId,
+        createdById: access.userId,
       })),
     });
 

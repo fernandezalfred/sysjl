@@ -9,7 +9,10 @@ import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 import { BrandMark } from "@/components/landing/BrandMark";
 import { SellerPayBar, type SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { AdminPendingPay } from "@/components/layout/AdminPendingPay";
+import { CompanySwitcher, type CompanyOption } from "@/components/layout/CompanySwitcher";
 import type { SellerPending } from "@/lib/money/seller-pay";
+import { hasPermission, isAdminRole } from "@/lib/auth/permissions";
+import type { AdminPermission, Role } from "@prisma/client";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 
 interface NavItem {
@@ -23,8 +26,19 @@ interface NavGroup {
   items: NavItem[];
 }
 
+// Who is signed in and in which company, for the navigation.
+export interface PanelAccess {
+  role: Role;
+  permissions: AdminPermission[];
+  // The company the panel shows; null for the super admin before any company exists.
+  companyName: string | null;
+  // Super admin only: every company, for the switcher.
+  companies: CompanyOption[] | null;
+  activeCompanyId: string | null;
+}
+
 interface PanelShellProps {
-  isAdmin: boolean;
+  access: PanelAccess;
   userName: string | null | undefined;
   locale: Locale;
   // A seller's pay totals, shown instead of the breadcrumbs; null for admins.
@@ -58,6 +72,12 @@ function getBreadcrumbs(pathname: string, t: TranslateFn): NavItem[] {
       { href: "/admin/users", label: t("header.manageUsers") },
     ];
   }
+  if (pathname.startsWith("/admin/companies")) {
+    return [
+      { href: "/admin/companies", label: t("sidebar.platform") },
+      { href: "/admin/companies", label: t("header.companies") },
+    ];
+  }
   if (pathname.startsWith("/admin/grains")) {
     return [
       { href: "/admin/grains", label: t("sidebar.administration") },
@@ -78,47 +98,60 @@ function initialsOf(name: string | null | undefined): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-export function PanelShell({ isAdmin, userName, locale, payTotals, adminPending, children }: PanelShellProps) {
-  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
-  const pathname = usePathname();
-  const [isNavOpen, setIsNavOpen] = useState(false);
+function roleLabel(role: Role, t: TranslateFn): string {
+  if (role === "SUPER_ADMIN") return t("adminUsers.roleSuperAdmin");
+  return role === "ADMIN" ? t("adminUsers.roleAdmin") : t("adminUsers.roleVehicleUser");
+}
 
+// The sidebar groups this user may open: admin modules by permission, Companies for
+// the super admin only.
+function navGroups(access: PanelAccess, t: TranslateFn): NavGroup[] {
+  const adminItems: NavItem[] = [
+    ...(hasPermission(access, "FINANCE") ? [{ href: "/admin/finance", label: t("header.finance"), icon: "finance" as const }] : []),
+    ...(hasPermission(access, "USERS") ? [{ href: "/admin/users", label: t("header.manageUsers"), icon: "users" as const }] : []),
+    ...(hasPermission(access, "GRAINS") ? [{ href: "/admin/grains", label: t("header.grains"), icon: "grains" as const }] : []),
+  ];
   const groups: NavGroup[] = [
     {
       label: t("sidebar.overview"),
       items: [
-        { href: "/dashboard", label: t("header.dashboard"), icon: "dashboard" },
+        ...(access.companyName ? [{ href: "/dashboard", label: t("header.dashboard"), icon: "dashboard" as const }] : []),
         { href: "/account", label: t("header.account"), icon: "account" },
       ],
     },
-    ...(isAdmin
-      ? [
-          {
-            label: t("sidebar.administration"),
-            items: [
-              { href: "/admin/finance", label: t("header.finance"), icon: "finance" as const },
-              { href: "/admin/users", label: t("header.manageUsers"), icon: "users" as const },
-              { href: "/admin/grains", label: t("header.grains"), icon: "grains" as const },
-            ],
-          },
-        ]
-      : []),
   ];
-  const homeItem: NavItem = { href: "/", label: t("header.home"), icon: "home" };
+  if (isAdminRole(access.role) && access.companyName && adminItems.length > 0) {
+    groups.push({ label: t("sidebar.administration"), items: adminItems });
+  }
+  if (access.role === "SUPER_ADMIN") {
+    groups.push({
+      label: t("sidebar.platform"),
+      items: [{ href: "/admin/companies", label: t("header.companies"), icon: "companies" }],
+    });
+  }
+  return groups;
+}
+
+export function PanelShell({ access, userName, locale, payTotals, adminPending, children }: PanelShellProps) {
+  const t: TranslateFn = (key, vars) => translate(locale, key, vars);
+  const pathname = usePathname();
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
+  const groups = navGroups(access, t);
   const breadcrumbs = getBreadcrumbs(pathname, t);
   const greeting = t("sidebar.greeting", { name: (userName ?? "").trim().split(/\s+/)[0] ?? "" });
   const user: UserInfo = {
     name: userName ?? "",
     initials: initialsOf(userName),
-    role: isAdmin ? t("adminUsers.roleAdmin") : t("adminUsers.roleVehicleUser"),
+    role: roleLabel(access.role, t),
   };
 
   const sidebar = (onNavigate?: () => void) => (
     <SidebarContent
       groups={groups}
-      homeItem={homeItem}
       pathname={pathname}
       user={user}
+      access={access}
       locale={locale}
       onNavigate={onNavigate}
       t={t}
@@ -206,17 +239,17 @@ interface UserInfo {
 
 function SidebarContent({
   groups,
-  homeItem,
   pathname,
   user,
+  access,
   locale,
   onNavigate,
   t,
 }: {
   groups: NavGroup[];
-  homeItem: NavItem;
   pathname: string;
   user: UserInfo;
+  access: PanelAccess;
   locale: Locale;
   onNavigate?: () => void;
   t: TranslateFn;
@@ -231,13 +264,19 @@ function SidebarContent({
         </span>
       </Link>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+      {access.companies ? (
+        <CompanySwitcher companies={access.companies} activeCompanyId={access.activeCompanyId} t={t} />
+      ) : access.companyName ? (
+        <div className="mb-5 rounded-xl border border-foreground/10 bg-background px-3 py-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">{t("sidebar.company")}</p>
+          <p className="truncate text-sm font-medium">{access.companyName}</p>
+        </div>
+      ) : null}
+
+      <div className="sidebar-scroll -mr-2 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         {groups.map((group) => (
           <NavGroupBlock key={group.label} group={group} pathname={pathname} onNavigate={onNavigate} />
         ))}
-        <div className="border-t border-foreground/10 pt-4">
-          <PanelNavLink item={homeItem} isActive={isNavItemActive(pathname, homeItem.href)} onNavigate={onNavigate} />
-        </div>
       </div>
 
       <div className="mt-4 flex flex-col gap-3 border-t border-foreground/10 pt-4">

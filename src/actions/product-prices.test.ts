@@ -16,8 +16,8 @@ vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 
 import { setProductPrice } from "@/actions/product-prices";
 
-const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN" } };
-const VEHICLE_SESSION = { user: { id: "user-1", role: "VEHICLE_USER" } };
+const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN", companyId: "c1", permissions: ["FINANCE", "USERS", "GRAINS", "PRICES"] } };
+const VEHICLE_SESSION = { user: { id: "user-1", role: "VEHICLE_USER", companyId: "c1", permissions: [] } };
 
 function formData(fields: Record<string, string>) {
   const fd = new FormData();
@@ -41,6 +41,13 @@ describe("setProductPrice", () => {
 
   it("rejects a non-admin session", async () => {
     authMock.mockResolvedValue(VEHICLE_SESSION);
+    const result = await setProductPrice({ success: false }, formData(VALID_FIELDS));
+    expect(result).toEqual({ success: false, error: "Admin access required." });
+    expect(prismaMock.productPrice.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects an admin without the Prices permission", async () => {
+    authMock.mockResolvedValue({ user: { ...ADMIN_SESSION.user, permissions: ["FINANCE", "GRAINS"] } });
     const result = await setProductPrice({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: false, error: "Admin access required." });
     expect(prismaMock.productPrice.upsert).not.toHaveBeenCalled();
@@ -75,9 +82,9 @@ describe("setProductPrice", () => {
     const result = await setProductPrice({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: true });
     expect(prismaMock.productPrice.upsert).toHaveBeenCalledWith({
-      where: { product: "QUESO" },
+      where: { companyId_product: { companyId: "c1", product: "QUESO" } },
       update: { salePrice: 10, purchaseCost: 9, setById: "admin-1" },
-      create: { product: "QUESO", salePrice: 10, purchaseCost: 9, setById: "admin-1" },
+      create: { companyId: "c1", product: "QUESO", salePrice: 10, purchaseCost: 9, setById: "admin-1" },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
     expect(revalidatePathMock).toHaveBeenCalledWith("/");

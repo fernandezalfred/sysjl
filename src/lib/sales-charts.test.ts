@@ -6,6 +6,7 @@ import {
   buildUserSalesByPeriod,
   buildUserTrend,
   latestWorkDay,
+  topTrendSeries,
 } from "@/lib/sales-charts";
 import type { SaleRecord } from "@/types/daily-records";
 
@@ -182,5 +183,18 @@ describe("buildSalesChartsData", () => {
     expect(data.userSalesByPeriod).toBeNull();
     expect(data.lastDayProductSales).toBeNull();
     expect(data.userTrends.day).toEqual({ periods: [], series: [] });
+  });
+});
+
+describe("topTrendSeries", () => {
+  it("keeps the sellers with the highest total, ties by name", () => {
+    const series = [
+      { userId: "a", userName: "Ana", totals: [100, 0] },
+      { userId: "b", userName: "Beto", totals: [50, 300] },
+      { userId: "c", userName: "Carla", totals: [10] },
+      { userId: "d", userName: "Dani", totals: [60, 40] },
+    ];
+    expect(topTrendSeries(series, 2)).toEqual(["b", "a"]);
+    expect(topTrendSeries(series, 10)).toEqual(["b", "a", "d", "c"]);
   });
 });

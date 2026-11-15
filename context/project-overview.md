@@ -19,20 +19,24 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 
 ## 3. Roles and Access
 
+The app is multi-company: each distribution company (branch) renting it has its own sellers, admins, sale records, prices and grain purchases (`companyId`), and never sees another company's data. There's no limit on companies or sellers.
+
 | Role (`Role` enum) | Shown as             | Can do                                                                                                                         |
 | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ADMIN`            | Administrador        | Everything: manage users, prices and costs, grain purchases; see and edit every sale record; see costs and net profit |
+| `SUPER_ADMIN`      | Super administrador  | Exactly one, belongs to no company. Every company: create, rename, deactivate, open one (switcher) and act in it as an admin with every module; create its admins and grant their permissions |
+| `ADMIN`            | Administrador        | One company: see and edit every sale record, costs, Neto and pay; plus the modules the super admin granted: Ingresos y egresos (`FINANCE`), Gestionar usuarios (`USERS`, sellers only), Granos (`GRAINS`), Precios y costos (`PRICES`) |
 | `VEHICLE_USER`     | Vendedor (Seller)    | Create and edit their own sale records, see their own pay and pending pay total, change their own password                      |
 | Guest (signed out) | —                    | See the public landing page `/` (presents the product; no company data)                                                        |
 
 Rules:
 
-- The acting user always comes from the server-side session; a user id sent by the browser is never trusted.
-- `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, and the admin role for `/admin/*`. Every Server Action checks again on its own.
+- The acting user and their company always come from the server-side session; a user or company id sent by the browser is never trusted (the super admin's company switcher choice is the one exception, and only for the super admin).
+- The role, company and permissions are re-read from the database on every request, so a permission change, a deactivated user or a deactivated company applies right away (the user is signed out).
+- `src/proxy.ts` requires sign-in everywhere except `/` and `/login`, an admin role for `/admin/*` and the super admin for `/admin/companies`; each admin page checks its permission. Every Server Action checks again on its own, and treats another company's data as not found.
 - Costs, net profit and the winner's margin are admin-only (a seller sees the Milk liters and price they entered in their own record form; guests never receive them). Seller pay is shown to admins on every row and to a seller on their own rows (not to guests).
-- Signing in goes straight to `/dashboard` (also when a signed-in user opens `/login`; a non-admin opening `/admin/*` lands there too). On `/dashboard` a seller sees only their own records (charts, Sale Records). The public landing page `/` presents the product to the distribution companies that would rent it and shows no real data (its preview uses made-up figures).
+- Signing out goes to the landing page `/`. Signing in goes straight to `/dashboard` (also when a signed-in user opens `/login`; a non-admin opening `/admin/*` lands there too). On `/dashboard` a seller sees only their own records (charts, Sale Records). The public landing page `/` presents the product to the distribution companies that would rent it and shows no real data (its preview uses made-up figures).
 - The admin marks each day's pay as paid (after a confirmation, can be undone); a paid Pago shows a green "Pagado" pill, an unpaid one a blue "Pagar" button (the pill itself marks it paid). The admin's panel header shows the total still owed to all sellers, with a dropdown of what each seller is owed. On every panel page, a seller sees in place of the breadcrumbs what they've collected (paid Pago), what they're still owed (unpaid Pago) and the sum of both (total earned), each with its number of days. In Sale Records each day's Pago is a green "Pagado" or amber "Por cobrar" badge.
-- Deactivated users can't sign in (open JWT sessions aren't revoked until they expire).
+- Deactivated users, and every user of a deactivated company, can't sign in; open sessions end on their next request.
 
 ## 4. Pages
 
@@ -42,9 +46,10 @@ Rules:
 | `/login`        | Everyone        | Sign in                                                                                                     |
 | `/dashboard`    | Signed in       | Sales by User charts (day, week, month), Sale Records table with create / edit / delete, Prices & Costs (admin) at the bottom                                     |
 | `/account`      | Signed in       | Change own password                                                                                         |
-| `/admin/users`  | Admin           | Create, edit, deactivate users                                                                              |
-| `/admin/finance` | Admin         | Income & expenses from every seller's records per day, week, month or since the beginning ("Desde el inicio": total investment per product incl. each grain, Ganancia neta acumulada = income − investment − pay, running totals chart and month-by-month table): income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
-| `/admin/grains` | Admin           | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
+| `/admin/users`  | Admin (`USERS`) | The company's users: search, create, edit, deactivate; admins and their permissions by the super admin only |
+| `/admin/companies` | Super admin  | Every company with its sellers, admins and last 30 days' sales; create, rename, deactivate, open            |
+| `/admin/finance` | Admin (`FINANCE`) | Income & expenses from every seller's records per day, week, month or since the beginning ("Desde el inicio": total investment per product incl. each grain, Ganancia neta acumulada = income − investment − pay, running totals chart and month-by-month table): income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
+| `/admin/grains` | Admin (`GRAINS`) | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
 Clicking a day header in Sale Records shows that day in the charts at the top of `/dashboard`.
 
@@ -86,9 +91,11 @@ The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/rev
 
 ## 7. Data Model (`prisma/schema.prisma`)
 
-- **User** — name, email, bcrypt hash, role, `isActive`.
+- **Company** — name, `isActive`.
+- **User** — name, email (unique across the app), bcrypt hash, role, `companyId` (null only for the super admin), `permissions` (admins), `isActive`.
+- Every **DailyWorkRecord**, **ProductPrice** and **StockPurchase** has the `companyId` of its company.
 - **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices and purchase costs (`quesoPurchaseCost`, `yogurtPurchaseCost`; null on older records), `payPaidAt` (when the admin marked the pay as paid). The date is fixed at creation and can't change on edit.
-- **ProductPrice** — one row per priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
+- **ProductPrice** — one row per company and priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
 - **StockPurchase** — a grain purchase: product, quantity, unit cost, who entered it (`createdBy`). Old Queso/Yogurt purchases are still stored but no longer shown.
 
 ## 8. Not Built (from the original spec)
@@ -99,4 +106,4 @@ These were in the first version of this document and are deliberately not implem
 - An inventory movement history.
 - A history of price and cost changes (only the current value and who set it are kept).
 - Vehicles as their own entity (removed; sellers are users).
-- Multiple companies / branches and the sub-administrator role. The landing page already describes them (platform admin → one sub-admin per company → its sellers), but today the app runs a single company with `ADMIN` and `VEHICLE_USER`.
+- Per-company settings beyond prices (e.g. other expenses, own branding).

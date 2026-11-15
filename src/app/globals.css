@@ -148,6 +148,46 @@ dialog:modal {
   background-clip: padding-box;
 }
 
+/* A thin vertical scrollbar for the sidebar nav, matching .styled-scroll: a black thumb
+   on a light gray track (a mid gray in dark mode, so the black thumb still stands out),
+   dark gray on hover. */
+.sidebar-scroll {
+  --scroll-track: var(--color-neutral-200);
+  --scroll-thumb: var(--color-black);
+  --scroll-thumb-hover: var(--color-neutral-700);
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-scroll {
+    --scroll-track: var(--color-neutral-500);
+    --scroll-thumb-hover: var(--color-neutral-800);
+  }
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+  border-radius: 9999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  background-clip: padding-box;
+}
+
 /* Printing (Ingresos y egresos report, "Imprimir / PDF"): white paper, keep the colors of
    bars and tiles, and don't split a card or table across pages when it fits on one. */
 @media print {
