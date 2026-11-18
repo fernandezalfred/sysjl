@@ -73,7 +73,8 @@ src/
 ## Forms and Errors
 
 - Validate every input with Zod in the Server Action
-- `try/catch` in Server Actions; return `{ success, data?, error? }`
+- `try/catch` in Server Actions; return `ActionState` (`src/types/actions.ts`), and end with `catch (error) { return authErrorState(error); }`
+- Shared rules live in `src/lib/validation.ts`: check every id with `objectIdSchema` (or `OBJECT_ID`) before querying, including plain arguments like `deleteX(id)`, and check boolean arguments; show `firstIssue(parsed.error)`
 - Forms use `useActionState` + `useSubmitWithoutReset` so fields keep their values when validation fails
 - Popups go through `src/lib/alerts.ts` (SweetAlert2): `confirmAlert` before deleting or changing state (never `window.confirm`), `successToast` after every save/delete (`useSuccessToast` for `useActionState` forms), `errorAlert` when a button action fails
 - Form validation errors stay inline under the fields

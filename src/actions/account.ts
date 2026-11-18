@@ -3,18 +3,15 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { NotAuthorizedError } from "@/lib/auth/access";
+import { authErrorState } from "@/lib/auth/access";
 import { requireUserSession } from "@/lib/auth/require-session";
-
-export interface ChangePasswordState {
-  success: boolean;
-  error?: string;
-}
+import { firstIssue, NEW_PASSWORD } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
 const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Enter your current password."),
-    newPassword: z.string().min(8, "Password must be at least 8 characters."),
+    newPassword: NEW_PASSWORD,
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -25,9 +22,9 @@ const changePasswordSchema = z
   });
 
 export async function changeOwnPassword(
-  _prevState: ChangePasswordState,
+  _prevState: ActionState,
   formData: FormData,
-): Promise<ChangePasswordState> {
+): Promise<ActionState> {
   try {
     const session = await requireUserSession();
 
@@ -37,7 +34,7 @@ export async function changeOwnPassword(
       confirmPassword: formData.get("confirmPassword") ?? "",
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     const user = await prisma.user.findUnique({ where: { id: session.user.id } });
@@ -57,9 +54,6 @@ export async function changeOwnPassword(
 
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }

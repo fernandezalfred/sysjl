@@ -87,6 +87,5 @@ describe("setProductPrice", () => {
       create: { companyId: "c1", product: "QUESO", salePrice: 10, purchaseCost: 9, setById: "admin-1" },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
   });
 });

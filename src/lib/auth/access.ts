@@ -4,14 +4,21 @@ import type { AdminPermission } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission, isAdminRole, type AccessClaims } from "@/lib/auth/permissions";
+import { OBJECT_ID } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
 export class NotAuthorizedError extends Error {}
+
+// A Server Action's catch block: a failed access check becomes the form's error
+// message; anything else is a real failure and is thrown on.
+export function authErrorState(error: unknown): ActionState {
+  if (error instanceof NotAuthorizedError) return { success: false, error: error.message };
+  throw error;
+}
 
 // The company the super admin is working in (set by the company switcher). Anyone
 // else always works in their own company, whatever this cookie says.
 export const ACTIVE_COMPANY_COOKIE = "sysjl-company";
-
-const OBJECT_ID = /^[0-9a-f]{24}$/i;
 
 // A signed-in user bound to the company they act in: their own, or for the super
 // admin the one picked in the switcher.

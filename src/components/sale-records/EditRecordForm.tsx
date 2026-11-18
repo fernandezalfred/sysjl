@@ -1,11 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import {
-  deleteDailyWorkRecord,
-  updateDailyWorkRecord,
-  type RecordActionState,
-} from "@/actions/daily-work-records";
+import { deleteDailyWorkRecord, updateDailyWorkRecord } from "@/actions/daily-work-records";
+import type { ActionState } from "@/types/actions";
 import { RecordFormFields } from "@/components/sale-records/RecordFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { DailyWorkRecordRow } from "@/types/daily-records";
@@ -14,7 +11,7 @@ import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
 import { confirmAlert, errorAlert, successToast } from "@/lib/alerts";
 
-const initialState: RecordActionState = { success: false };
+const initialState: ActionState = { success: false };
 
 function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (

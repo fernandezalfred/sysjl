@@ -3,28 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { NotAuthorizedError, requireAdminAccess } from "@/lib/auth/access";
+import { authErrorState, NotAuthorizedError, requireAdminAccess } from "@/lib/auth/access";
 import { formatBusinessDateKey, moveToBusinessDay } from "@/lib/dates";
 import { GRAIN_PRODUCTS, planRepeatLastDay, type RepeatError } from "@/lib/repeat-purchases";
 import type { Product } from "@prisma/client";
+import { firstIssue, objectIdSchema } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
-export interface ActionState {
-  success: boolean;
-  error?: string;
-}
-
-// Queso and Yogurt no longer have a purchase page (their cost is set next to the
-// sale price on /dashboard); their old purchases only refresh /dashboard.
-function panelPathForProduct(product: Product): string {
-  switch (product) {
-    case "QUESO":
-    case "YOGURT":
-      return "/dashboard";
-    case "MAIZ_PELADO":
-    case "MAIZ_CASCARA":
-    case "HABA":
-      return "/admin/grains";
-  }
+// Purchase costs feed Neto on /dashboard. Grains also have their own page; Queso and
+// Yogurt don't any more (their cost is set next to the sale price on /dashboard).
+function refreshAfterPurchaseChange(product: Product) {
+  if (GRAIN_PRODUCTS.includes(product)) revalidatePath("/admin/grains");
+  revalidatePath("/dashboard");
 }
 
 const quantityAndCost = z.object({
@@ -49,7 +39,7 @@ export async function createStockPurchase(
       unitCost: formData.get("unitCost"),
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     await prisma.stockPurchase.create({
@@ -62,23 +52,19 @@ export async function createStockPurchase(
       },
     });
 
-    revalidatePath(panelPathForProduct(parsed.data.product));
-    // Purchase costs feed Net profit on /dashboard (Sale Records) and / (Totals by User).
-    revalidatePath("/dashboard");
-    revalidatePath("/");
+    refreshAfterPurchaseChange(parsed.data.product);
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
+
+const purchaseIdSchema = objectIdSchema("Stock purchase not found.");
 
 // The purchase's Bolivia day (YYYY-MM-DD); only editing can change it, creating is
 // always today. Never a future day.
 const updateSchema = quantityAndCost.extend({
-  purchaseId: z.string().min(1),
+  purchaseId: purchaseIdSchema,
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date is required.")
@@ -99,7 +85,7 @@ export async function updateStockPurchase(
       date: formData.get("date") ?? "",
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     const existing = await prisma.stockPurchase.findUnique({ where: { id: parsed.data.purchaseId } });
@@ -116,22 +102,19 @@ export async function updateStockPurchase(
       },
     });
 
-    revalidatePath(panelPathForProduct(existing.product));
-    // Purchase costs feed Net profit on /dashboard (Sale Records) and / (Totals by User).
-    revalidatePath("/dashboard");
-    revalidatePath("/");
+    refreshAfterPurchaseChange(existing.product);
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
 export async function deleteStockPurchase(purchaseId: string): Promise<ActionState> {
   try {
     const access = await requireAdminAccess("GRAINS");
+    if (!purchaseIdSchema.safeParse(purchaseId).success) {
+      return { success: false, error: "Stock purchase not found." };
+    }
 
     const existing = await prisma.stockPurchase.findUnique({ where: { id: purchaseId } });
     if (!existing || existing.companyId !== access.companyId) {
@@ -140,16 +123,10 @@ export async function deleteStockPurchase(purchaseId: string): Promise<ActionSta
 
     await prisma.stockPurchase.delete({ where: { id: existing.id } });
 
-    revalidatePath(panelPathForProduct(existing.product));
-    // Purchase costs feed Net profit on /dashboard (Sale Records) and / (Totals by User).
-    revalidatePath("/dashboard");
-    revalidatePath("/");
+    refreshAfterPurchaseChange(existing.product);
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
@@ -202,7 +179,6 @@ export async function repeatLastDayPurchases(): Promise<RepeatActionState> {
 
     revalidatePath("/admin/grains");
     revalidatePath("/dashboard");
-    revalidatePath("/");
     return { success: true, count: plan.purchases.length };
   } catch (error) {
     if (error instanceof NotAuthorizedError) {

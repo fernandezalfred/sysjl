@@ -2,7 +2,8 @@
 
 import { useActionState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { renameCompany, setActiveCompany, setCompanyActive, type ActionState } from "@/actions/companies";
+import { renameCompany, setActiveCompany, setCompanyActive } from "@/actions/companies";
+import type { ActionState } from "@/types/actions";
 import { confirmAlert, errorAlert, successToast } from "@/lib/alerts";
 import { localizeError } from "@/lib/i18n/errors";
 import { formatCurrency } from "@/lib/money/pricing";

@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/auth/password";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { toAccessClaims } from "@/lib/auth/permissions";
 import { loadAccessClaims } from "@/lib/auth/claims";
 
@@ -10,6 +10,14 @@ const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+let unknownUserHashPromise: Promise<string> | null = null;
+
+// A bcrypt hash with the app's cost that matches no password anyone can type.
+function unknownUserHash(): Promise<string> {
+  unknownUserHashPromise ??= hashPassword(crypto.randomUUID());
+  return unknownUserHashPromise;
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -26,11 +34,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const { email, password } = parsed.data;
         const user = await prisma.user.findUnique({ where: { email }, include: { company: { select: { isActive: true } } } });
+        // The password is always checked (against a stand-in hash for an unknown
+        // email), so the response time doesn't reveal which emails have an account.
+        const isValid = await verifyPassword(password, user?.passwordHash ?? (await unknownUserHash()));
         const claims = user ? toAccessClaims(user) : null;
-        if (!user || !claims) return null;
-
-        const isValid = await verifyPassword(password, user.passwordHash);
-        if (!isValid) return null;
+        if (!user || !claims || !isValid) return null;
 
         return { id: user.id, name: user.name, email: user.email, ...claims };
       },

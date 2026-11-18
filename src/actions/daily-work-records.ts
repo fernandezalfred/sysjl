@@ -3,13 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { NotAuthorizedError, requireAdminAccess, requireCompanyAccess, type Access } from "@/lib/auth/access";
+import { authErrorState, requireAdminAccess, requireCompanyAccess, type Access } from "@/lib/auth/access";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
-
-export interface RecordActionState {
-  success: boolean;
-  error?: string;
-}
+import { DATE_KEY, firstIssue, OBJECT_ID, objectIdSchema } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
 const baseQuantities = z.object({
   quesoTaken: z.coerce.number().int().min(0, "Cheese taken must be 0 or more."),
@@ -36,19 +33,33 @@ function readQuantities(formData: FormData) {
   };
 }
 
+type Quantities = z.infer<typeof baseQuantities>;
+
+// What was left of a product can't be more than what was taken.
+function withLeftNotOverTaken<T extends z.ZodType<Quantities>>(schema: T): T {
+  return schema
+    .refine((v) => v.quesoRemaining <= v.quesoTaken, {
+      message: "Cheese left cannot exceed Cheese taken.",
+      path: ["quesoRemaining"],
+    })
+    .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
+      message: "Yogurt left cannot exceed Yogurt taken.",
+      path: ["yogurtRemaining"],
+    });
+}
+
+const recordIdSchema = objectIdSchema("Record not found.");
+
 // Date is only ever accepted on create (stamped client-side via the JS Date API, not
 // typed by the user). Edits never carry a date, so the record's original date is
 // never touched by updateDailyWorkRecord.
-const createSchema = baseQuantities
-  .extend({ date: z.string().min(1, "Date is required.") })
-  .refine((v) => v.quesoRemaining <= v.quesoTaken, {
-    message: "Cheese left cannot exceed Cheese taken.",
-    path: ["quesoRemaining"],
-  })
-  .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
-    message: "Yogurt left cannot exceed Yogurt taken.",
-    path: ["yogurtRemaining"],
-  });
+const createSchema = withLeftNotOverTaken(baseQuantities.extend({ date: DATE_KEY }));
+const updateSchema = withLeftNotOverTaken(baseQuantities.extend({ recordId: recordIdSchema }));
+
+// Sale records show on /dashboard (charts, table and the day's pay).
+function refreshSaleRecords() {
+  revalidatePath("/dashboard");
+}
 
 function parseRecordDate(raw: string): Date {
   return new Date(`${raw}T00:00:00.000Z`);
@@ -66,6 +77,9 @@ async function resolveTargetUserId(access: Access, formData: FormData): Promise<
   if (typeof raw !== "string" || raw.length === 0) {
     return { error: "Select a user." };
   }
+  if (!OBJECT_ID.test(raw)) {
+    return { error: "User not found." };
+  }
 
   const target = await prisma.user.findUnique({ where: { id: raw } });
   if (!target || !target.isActive || target.companyId !== access.companyId) {
@@ -82,9 +96,9 @@ function canChangeRecord(access: Access, record: { userId: string; companyId: st
 }
 
 export async function createDailyWorkRecord(
-  _prevState: RecordActionState,
+  _prevState: ActionState,
   formData: FormData,
-): Promise<RecordActionState> {
+): Promise<ActionState> {
   try {
     const access = await requireCompanyAccess();
 
@@ -93,7 +107,7 @@ export async function createDailyWorkRecord(
       ...readQuantities(formData),
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     const targetUser = await resolveTargetUserId(access, formData);
@@ -133,32 +147,17 @@ export async function createDailyWorkRecord(
       },
     });
 
-    revalidatePath("/");
-    revalidatePath("/dashboard");
+    refreshSaleRecords();
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
-const updateSchema = baseQuantities
-  .extend({ recordId: z.string().min(1) })
-  .refine((v) => v.quesoRemaining <= v.quesoTaken, {
-    message: "Cheese left cannot exceed Cheese taken.",
-    path: ["quesoRemaining"],
-  })
-  .refine((v) => v.yogurtRemaining <= v.yogurtTaken, {
-    message: "Yogurt left cannot exceed Yogurt taken.",
-    path: ["yogurtRemaining"],
-  });
-
 export async function updateDailyWorkRecord(
-  _prevState: RecordActionState,
+  _prevState: ActionState,
   formData: FormData,
-): Promise<RecordActionState> {
+): Promise<ActionState> {
   try {
     const access = await requireCompanyAccess();
 
@@ -167,7 +166,7 @@ export async function updateDailyWorkRecord(
       ...readQuantities(formData),
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: parsed.data.recordId } });
@@ -189,20 +188,19 @@ export async function updateDailyWorkRecord(
       },
     });
 
-    revalidatePath("/");
-    revalidatePath("/dashboard");
+    refreshSaleRecords();
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
-export async function deleteDailyWorkRecord(recordId: string): Promise<RecordActionState> {
+export async function deleteDailyWorkRecord(recordId: string): Promise<ActionState> {
   try {
     const access = await requireCompanyAccess();
+    if (!recordIdSchema.safeParse(recordId).success) {
+      return { success: false, error: "Record not found." };
+    }
 
     const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: recordId } });
     if (!existing || !canChangeRecord(access, existing)) {
@@ -211,47 +209,39 @@ export async function deleteDailyWorkRecord(recordId: string): Promise<RecordAct
 
     await prisma.dailyWorkRecord.delete({ where: { id: existing.id } });
 
-    revalidatePath("/");
-    revalidatePath("/dashboard");
+    refreshSaleRecords();
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
-const payPaidSchema = z.object({ recordId: z.string().min(1), paid: z.boolean() });
-
 // Admin only: marks a day's seller pay as paid (or undoes it). Display only — no
 // amount changes, the Pago is just shown struck through and leaves the pending total.
-export async function setRecordPayPaid(recordId: string, paid: boolean): Promise<RecordActionState> {
+export async function setRecordPayPaid(recordId: string, paid: boolean): Promise<ActionState> {
   try {
     const access = await requireAdminAccess();
 
-    const parsed = payPaidSchema.safeParse({ recordId, paid });
-    if (!parsed.success) {
+    if (typeof paid !== "boolean") {
       return { success: false, error: "Invalid input." };
     }
+    if (!recordIdSchema.safeParse(recordId).success) {
+      return { success: false, error: "Record not found." };
+    }
 
-    const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: parsed.data.recordId } });
+    const existing = await prisma.dailyWorkRecord.findUnique({ where: { id: recordId } });
     if (!existing || existing.companyId !== access.companyId) {
       return { success: false, error: "Record not found." };
     }
 
     await prisma.dailyWorkRecord.update({
       where: { id: existing.id },
-      data: { payPaidAt: parsed.data.paid ? new Date() : null },
+      data: { payPaidAt: paid ? new Date() : null },
     });
 
-    revalidatePath("/");
-    revalidatePath("/dashboard");
+    refreshSaleRecords();
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }

@@ -423,6 +423,8 @@ const en = {
   "error.passwordSameAsCurrent": "The new password must be different from the current one.",
   "error.passwordsDontMatch": "The new passwords don't match.",
   "error.recordExists": "You already have a record for this date.",
+  "error.passwordTooLong": "Password must be at most 72 characters.",
+  "error.nameTooLong": "Name is too long.",
 } as const;
 
 export type DictionaryKey = keyof typeof en;
@@ -842,6 +844,8 @@ const es: Record<DictionaryKey, string> = {
   "error.passwordSameAsCurrent": "La nueva contraseña debe ser distinta de la actual.",
   "error.passwordsDontMatch": "Las nuevas contraseñas no coinciden.",
   "error.recordExists": "Ya hay un registro de este usuario para esta fecha.",
+  "error.passwordTooLong": "La contraseña debe tener como máximo 72 caracteres.",
+  "error.nameTooLong": "El nombre es demasiado largo.",
 };
 
 export const dictionaries: Record<Locale, Record<DictionaryKey, string>> = { en, es };

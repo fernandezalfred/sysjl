@@ -16,8 +16,8 @@ interface SalesChartsSectionProps {
   locale: Locale;
 }
 
-// Sales charts shown to everyone, guests included (public landing page and
-// /dashboard): sales revenue only, no cost or profit data. The per-period and
+// Sales charts on /dashboard (a seller's own records only, every seller's for
+// admins): sales revenue only, no cost or profit data. The per-period and
 // per-product charts show the day picked in the records list below (the latest
 // work day until one is picked).
 export function SalesChartsSection({ dailyRecords, locale }: SalesChartsSectionProps) {

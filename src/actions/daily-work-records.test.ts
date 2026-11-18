@@ -33,8 +33,8 @@ import {
   updateDailyWorkRecord,
 } from "@/actions/daily-work-records";
 
-const SESSION = { user: { id: "user-1", role: "VEHICLE_USER", companyId: "c1", permissions: [] } };
-const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN", companyId: "c1", permissions: ["FINANCE", "USERS", "GRAINS", "PRICES"] } };
+const SESSION = { user: { id: "aa0000000000000000000001", role: "VEHICLE_USER", companyId: "c1", permissions: [] } };
+const ADMIN_SESSION = { user: { id: "ad0000000000000000000001", role: "ADMIN", companyId: "c1", permissions: ["FINANCE", "USERS", "GRAINS", "PRICES"] } };
 
 function formData(fields: Record<string, string>) {
   const fd = new FormData();
@@ -68,6 +68,20 @@ describe("createDailyWorkRecord", () => {
     const result = await createDailyWorkRecord({ success: false }, formData(VALID_FIELDS));
     expect(result).toEqual({ success: false, error: "Sign-in required." });
     expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
+  });
+
+  it.each(["", "2026-02-30", "garbage"])("rejects the date %j without touching the database", async (date) => {
+    authMock.mockResolvedValue(SESSION);
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, date }));
+    expect(result).toEqual({ success: false, error: "Date is required." });
+    expect(prismaMock.dailyWorkRecord.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects a malformed user id from an admin without querying it", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, userId: "x" }));
+    expect(result).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
 
   it("rejects remaining greater than taken", async () => {
@@ -108,7 +122,7 @@ describe("createDailyWorkRecord", () => {
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith({
       data: {
-        userId: "user-1",
+        userId: "aa0000000000000000000001",
         companyId: "c1",
         date: new Date("2026-10-27T00:00:00.000Z"),
         quesoTaken: 80,
@@ -124,7 +138,7 @@ describe("createDailyWorkRecord", () => {
         yogurtPurchaseCost: 0,
       },
     });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("rejects negative Milk liters", async () => {
@@ -197,7 +211,7 @@ describe("createDailyWorkRecord", () => {
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ userId: "user-1" }) }),
+      expect.objectContaining({ data: expect.objectContaining({ userId: "aa0000000000000000000001" }) }),
     );
     expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
   });
@@ -222,10 +236,10 @@ describe("createDailyWorkRecord", () => {
 
   it("rejects an admin selecting a deactivated user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c1", id: "user-3", role: "VEHICLE_USER", isActive: false });
+    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c1", id: "aa0000000000000000000003", role: "VEHICLE_USER", isActive: false });
     const result = await createDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, userId: "user-3" }),
+      formData({ ...VALID_FIELDS, userId: "aa0000000000000000000003" }),
     );
     expect(result).toEqual({ success: false, error: "User not found." });
     expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
@@ -233,36 +247,36 @@ describe("createDailyWorkRecord", () => {
 
   it("creates the record for an admin-selected active admin", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c1", id: "admin-2", role: "ADMIN", isActive: true });
+    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c1", id: "ad0000000000000000000002", role: "ADMIN", isActive: true });
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
     const result = await createDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, userId: "admin-2" }),
+      formData({ ...VALID_FIELDS, userId: "ad0000000000000000000002" }),
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ userId: "admin-2" }) }),
+      expect.objectContaining({ data: expect.objectContaining({ userId: "ad0000000000000000000002" }) }),
     );
   });
 
   it("creates the record for the admin-selected vehicle user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c1", id: "user-2", role: "VEHICLE_USER", isActive: true });
+    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c1", id: "aa0000000000000000000002", role: "VEHICLE_USER", isActive: true });
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
     const result = await createDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, userId: "user-2" }),
+      formData({ ...VALID_FIELDS, userId: "aa0000000000000000000002" }),
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ userId: "user-2", companyId: "c1" }) }),
+      expect.objectContaining({ data: expect.objectContaining({ userId: "aa0000000000000000000002", companyId: "c1" }) }),
     );
   });
 
   it("rejects an admin selecting a seller of another company", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c2", id: "user-9", role: "VEHICLE_USER", isActive: true });
-    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, userId: "user-9" }));
+    prismaMock.user.findUnique.mockResolvedValue({ companyId: "c2", id: "aa0000000000000000000009", role: "VEHICLE_USER", isActive: true });
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, userId: "aa0000000000000000000009" }));
     expect(result).toEqual({ success: false, error: "User not found." });
     expect(prismaMock.dailyWorkRecord.create).not.toHaveBeenCalled();
   });
@@ -277,7 +291,7 @@ describe("updateDailyWorkRecord", () => {
     authMock.mockResolvedValue(null);
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001" }),
     );
     expect(result).toEqual({ success: false, error: "Sign-in required." });
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
@@ -285,13 +299,13 @@ describe("updateDailyWorkRecord", () => {
 
   it("rejects a record that does not belong to the signed-in user", async () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
-      companyId: "c1", id: "r1",
+      companyId: "c1", id: "dd0000000000000000000001",
       userId: "someone-else",
       date: new Date("2026-10-27T00:00:00.000Z"),
     });
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001" }),
     );
     expect(result).toEqual({ success: false, error: "Record not found." });
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
@@ -299,17 +313,17 @@ describe("updateDailyWorkRecord", () => {
 
   it("updates the record's quantities, keeping its original date", async () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
-      companyId: "c1", id: "r1",
-      userId: "user-1",
+      companyId: "c1", id: "dd0000000000000000000001",
+      userId: "aa0000000000000000000001",
       date: new Date("2026-10-27T00:00:00.000Z"),
     });
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001" }),
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
-      where: { id: "r1" },
+      where: { id: "dd0000000000000000000001" },
       data: {
         quesoTaken: 80,
         quesoRemaining: 12,
@@ -324,13 +338,13 @@ describe("updateDailyWorkRecord", () => {
 
   it("ignores a client-supplied date on update entirely", async () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
-      companyId: "c1", id: "r1",
-      userId: "user-1",
+      companyId: "c1", id: "dd0000000000000000000001",
+      userId: "aa0000000000000000000001",
       date: new Date("2026-10-27T00:00:00.000Z"),
     });
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1", date: "2099-01-01" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001", date: "2099-01-01" }),
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith(
@@ -340,13 +354,13 @@ describe("updateDailyWorkRecord", () => {
 
   it("rejects remaining greater than taken on update", async () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
-      companyId: "c1", id: "r1",
-      userId: "user-1",
+      companyId: "c1", id: "dd0000000000000000000001",
+      userId: "aa0000000000000000000001",
       date: new Date("2026-10-27T00:00:00.000Z"),
     });
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1", yogurtRemaining: "999" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001", yogurtRemaining: "999" }),
     );
     expect(result.success).toBe(false);
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
@@ -355,27 +369,27 @@ describe("updateDailyWorkRecord", () => {
   it("lets an admin update a record owned by another user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
-      companyId: "c1", id: "r1",
+      companyId: "c1", id: "dd0000000000000000000001",
       userId: "someone-else",
       date: new Date("2026-10-27T00:00:00.000Z"),
     });
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "r1" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001" }),
     );
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "r1" } }),
+      expect.objectContaining({ where: { id: "dd0000000000000000000001" } }),
     );
   });
 
   it("treats another company's record as not found, for its own admin too", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c2", id: "r1", userId: "someone-else" });
-    const result = await updateDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, recordId: "r1" }));
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c2", id: "dd0000000000000000000001", userId: "someone-else" });
+    const result = await updateDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001" }));
     expect(result).toEqual({ success: false, error: "Record not found." });
-    expect(await deleteDailyWorkRecord("r1")).toEqual({ success: false, error: "Record not found." });
-    expect(await setRecordPayPaid("r1", true)).toEqual({ success: false, error: "Record not found." });
+    expect(await deleteDailyWorkRecord("dd0000000000000000000001")).toEqual({ success: false, error: "Record not found." });
+    expect(await setRecordPayPaid("dd0000000000000000000001", true)).toEqual({ success: false, error: "Record not found." });
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
     expect(prismaMock.dailyWorkRecord.delete).not.toHaveBeenCalled();
   });
@@ -384,15 +398,15 @@ describe("updateDailyWorkRecord", () => {
 describe("deleteDailyWorkRecord", () => {
   it("rejects an unauthenticated session", async () => {
     authMock.mockResolvedValue(null);
-    const result = await deleteDailyWorkRecord("r1");
+    const result = await deleteDailyWorkRecord("dd0000000000000000000001");
     expect(result).toEqual({ success: false, error: "Sign-in required." });
     expect(prismaMock.dailyWorkRecord.delete).not.toHaveBeenCalled();
   });
 
   it("rejects deleting a record that does not belong to the signed-in user", async () => {
     authMock.mockResolvedValue(SESSION);
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "r1", userId: "someone-else" });
-    const result = await deleteDailyWorkRecord("r1");
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "dd0000000000000000000001", userId: "someone-else" });
+    const result = await deleteDailyWorkRecord("dd0000000000000000000001");
     expect(result).toEqual({ success: false, error: "Record not found." });
     expect(prismaMock.dailyWorkRecord.delete).not.toHaveBeenCalled();
   });
@@ -402,31 +416,32 @@ describe("deleteDailyWorkRecord", () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
     const result = await deleteDailyWorkRecord("missing");
     expect(result).toEqual({ success: false, error: "Record not found." });
+    expect(prismaMock.dailyWorkRecord.findUnique).not.toHaveBeenCalled();
     expect(prismaMock.dailyWorkRecord.delete).not.toHaveBeenCalled();
   });
 
   it("deletes the record and revalidates when it belongs to the signed-in user", async () => {
     authMock.mockResolvedValue(SESSION);
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "r1", userId: "user-1" });
-    const result = await deleteDailyWorkRecord("r1");
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "dd0000000000000000000001", userId: "aa0000000000000000000001" });
+    const result = await deleteDailyWorkRecord("dd0000000000000000000001");
     expect(result).toEqual({ success: true });
-    expect(prismaMock.dailyWorkRecord.delete).toHaveBeenCalledWith({ where: { id: "r1" } });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(prismaMock.dailyWorkRecord.delete).toHaveBeenCalledWith({ where: { id: "dd0000000000000000000001" } });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("lets an admin delete a record owned by another user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "r1", userId: "someone-else" });
-    const result = await deleteDailyWorkRecord("r1");
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "dd0000000000000000000001", userId: "someone-else" });
+    const result = await deleteDailyWorkRecord("dd0000000000000000000001");
     expect(result).toEqual({ success: true });
-    expect(prismaMock.dailyWorkRecord.delete).toHaveBeenCalledWith({ where: { id: "r1" } });
+    expect(prismaMock.dailyWorkRecord.delete).toHaveBeenCalledWith({ where: { id: "dd0000000000000000000001" } });
   });
 });
 
 describe("setRecordPayPaid", () => {
   it("rejects a non-admin session without touching the database", async () => {
     authMock.mockResolvedValue(SESSION);
-    const result = await setRecordPayPaid("wr1", true);
+    const result = await setRecordPayPaid("ee0000000000000000000001", true);
     expect(result).toEqual({ success: false, error: "Admin access required." });
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
   });
@@ -441,11 +456,11 @@ describe("setRecordPayPaid", () => {
 
   it("marks the pay as paid with the current time", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "wr1" });
-    const result = await setRecordPayPaid("wr1", true);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "ee0000000000000000000001" });
+    const result = await setRecordPayPaid("ee0000000000000000000001", true);
     expect(result).toEqual({ success: true });
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
-      where: { id: "wr1" },
+      where: { id: "ee0000000000000000000001" },
       data: { payPaidAt: expect.any(Date) },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
@@ -453,10 +468,10 @@ describe("setRecordPayPaid", () => {
 
   it("undoes the paid mark", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "wr1" });
-    await setRecordPayPaid("wr1", false);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ companyId: "c1", id: "ee0000000000000000000001" });
+    await setRecordPayPaid("ee0000000000000000000001", false);
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
-      where: { id: "wr1" },
+      where: { id: "ee0000000000000000000001" },
       data: { payPaidAt: null },
     });
   });

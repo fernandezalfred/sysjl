@@ -1,11 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import {
-  deleteStockPurchase,
-  updateStockPurchase,
-  type ActionState,
-} from "@/actions/stock-purchases";
+import { deleteStockPurchase, updateStockPurchase } from "@/actions/stock-purchases";
+import type { ActionState } from "@/types/actions";
 import { StockPurchaseFormFields } from "@/components/admin/stock-purchases/StockPurchaseFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { StockPurchaseRow } from "@/types/admin";

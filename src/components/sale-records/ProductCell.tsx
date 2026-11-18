@@ -8,9 +8,9 @@ interface ProductCellProps {
   t: TranslateFn;
 }
 
-// The Queso / Yogurt cell in Sale Records and Totals by User: units sold with their
-// revenue, then units taken · left over with the unsold value. Sale prices and
-// quantities only (no costs), so it's shown to everyone, guests included.
+// The Queso / Yogurt cell in Sale Records: units sold with their revenue, then units
+// taken · left over with the unsold value. Sale prices and quantities only (no
+// costs), so sellers see it too.
 export function ProductCell({ breakdown, t }: ProductCellProps) {
   return (
     <>

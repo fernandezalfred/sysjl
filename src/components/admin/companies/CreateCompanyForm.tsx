@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { createCompany, type ActionState } from "@/actions/companies";
+import { createCompany } from "@/actions/companies";
+import type { ActionState } from "@/types/actions";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { useSuccessToast } from "@/hooks/useSuccessToast";

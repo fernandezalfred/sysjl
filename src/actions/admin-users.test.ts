@@ -28,12 +28,12 @@ import { createUser, updateUser, setUserActive } from "@/actions/admin-users";
 
 const COMPANY = "64b000000000000000000001";
 const OTHER_COMPANY = "64b000000000000000000002";
-const ADMIN_SESSION = { user: { id: "admin-1", role: "ADMIN", companyId: COMPANY, permissions: ["USERS"] } };
-const ADMIN_WITHOUT_USERS = { user: { id: "admin-2", role: "ADMIN", companyId: COMPANY, permissions: ["FINANCE"] } };
+const ADMIN_SESSION = { user: { id: "ad0000000000000000000001", role: "ADMIN", companyId: COMPANY, permissions: ["USERS"] } };
+const ADMIN_WITHOUT_USERS = { user: { id: "ad0000000000000000000002", role: "ADMIN", companyId: COMPANY, permissions: ["FINANCE"] } };
 const SUPER_SESSION = { user: { id: "super-1", role: "SUPER_ADMIN", companyId: null, permissions: [] } };
-const NON_ADMIN_SESSION = { user: { id: "user-1", role: "VEHICLE_USER", companyId: COMPANY, permissions: [] } };
+const NON_ADMIN_SESSION = { user: { id: "aa0000000000000000000001", role: "VEHICLE_USER", companyId: COMPANY, permissions: [] } };
 
-const seller = (overrides = {}) => ({ id: "u1", role: "VEHICLE_USER", companyId: COMPANY, ...overrides });
+const seller = (overrides = {}) => ({ id: "bb0000000000000000000001", role: "VEHICLE_USER", companyId: COMPANY, ...overrides });
 
 function formData(fields: Record<string, string | string[]>) {
   const fd = new FormData();
@@ -44,7 +44,7 @@ function formData(fields: Record<string, string | string[]>) {
 }
 
 const NEW_SELLER = { name: "A", email: "new@b.com", password: "longenough", role: "VEHICLE_USER" };
-const EDIT_SELLER = { userId: "u1", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "" };
+const EDIT_SELLER = { userId: "bb0000000000000000000001", name: "A", email: "a@b.com", role: "VEHICLE_USER", newPassword: "" };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -147,7 +147,7 @@ describe("updateUser", () => {
     expect(result).toEqual({ success: true });
     expect(hashPasswordMock).not.toHaveBeenCalled();
     expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: "u1" },
+      where: { id: "bb0000000000000000000001" },
       data: { name: "A", email: "a@b.com", role: "VEHICLE_USER", permissions: [] },
     });
   });
@@ -156,7 +156,7 @@ describe("updateUser", () => {
     await updateUser({ success: false }, formData({ ...EDIT_SELLER, newPassword: "longenough" }));
     expect(hashPasswordMock).toHaveBeenCalledWith("longenough");
     expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: "u1" },
+      where: { id: "bb0000000000000000000001" },
       data: { name: "A", email: "a@b.com", role: "VEHICLE_USER", permissions: [], passwordHash: "hashed:longenough" },
     });
   });
@@ -199,22 +199,30 @@ describe("updateUser", () => {
 describe("setUserActive", () => {
   it("rejects a non-admin session", async () => {
     authMock.mockResolvedValue(NON_ADMIN_SESSION);
-    expect(await setUserActive("u1", false)).toEqual({ success: false, error: "Admin access required." });
+    expect(await setUserActive("bb0000000000000000000001", false)).toEqual({ success: false, error: "Admin access required." });
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
   it("updates isActive and revalidates for an admin of the user's company", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.user.findUnique.mockResolvedValue(seller());
-    expect(await setUserActive("u1", false)).toEqual({ success: true });
-    expect(prismaMock.user.update).toHaveBeenCalledWith({ where: { id: "u1" }, data: { isActive: false } });
+    expect(await setUserActive("bb0000000000000000000001", false)).toEqual({ success: true });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({ where: { id: "bb0000000000000000000001" }, data: { isActive: false } });
     expect(revalidatePathMock).toHaveBeenCalledWith("/admin/users");
   });
 
   it("refuses another company's user", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.user.findUnique.mockResolvedValue(seller({ companyId: OTHER_COMPANY }));
+    expect(await setUserActive("bb0000000000000000000001", false)).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses a malformed id or a non-boolean state without querying the database", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
     expect(await setUserActive("u1", false)).toEqual({ success: false, error: "User not found." });
+    expect(await setUserActive("bb0000000000000000000001", "yes" as unknown as boolean)).toEqual({ success: false, error: "Invalid input." });
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 });

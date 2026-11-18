@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePageAccess } from "@/lib/auth/access";
 import { hasPermission } from "@/lib/auth/permissions";
-import { getDailyRecordsData, recordsVisibleTo, withoutPurchaseCosts } from "@/lib/daily-records";
+import { getDailyRecordsData, recordsVisibleTo, toSellerView } from "@/lib/daily-records";
 import { getNetProfitInputs } from "@/lib/money/net-profit";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
 import { latestWorkDay } from "@/lib/sales-charts";
@@ -43,9 +43,9 @@ async function DashboardContent() {
   // A seller only sees their own records (charts and table). Filtered here, after the
   // day's winner/loser was worked out against every seller, so others' rows never
   // reach the browser.
-  // The purchase costs snapshotted on each record are cost data: admins only.
+  // Purchase costs and the winner's / loser's margins are admin only (toSellerView).
   const visibleRecords = recordsVisibleTo(data.dailyRecords, access.userId, isAdmin);
-  const dailyRecords = isAdmin ? visibleRecords : withoutPurchaseCosts(visibleRecords);
+  const dailyRecords = isAdmin ? visibleRecords : toSellerView(visibleRecords);
   // Earned (profit) is cost/financial data per project-overview.md §3 — admin-only,
   // so the cost lookup and its use below are both gated on isAdmin.
   const [prices, netProfitInputs] = await Promise.all([

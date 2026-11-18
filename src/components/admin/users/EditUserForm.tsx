@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { updateUser, type ActionState } from "@/actions/admin-users";
+import { updateUser } from "@/actions/admin-users";
+import type { ActionState } from "@/types/actions";
 import { EditUserFields } from "@/components/admin/users/EditUserFields";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { AdminUserRow } from "@/types/admin";

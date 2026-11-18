@@ -74,8 +74,8 @@ dialog:modal {
   }
 }
 
-/* Amount size: --fluid-num inside a .fluid-text block, 14px elsewhere (e.g. the
-   Totals by User table on /). Used by every Bs amount in the records lists. */
+/* Amount size: --fluid-num inside a .fluid-text block, 14px elsewhere. Used by
+   every Bs amount in the records lists. */
 .text-amount {
   font-size: var(--fluid-num, 0.875rem);
 }
@@ -148,10 +148,10 @@ dialog:modal {
   background-clip: padding-box;
 }
 
-/* A thin vertical scrollbar for the sidebar nav, matching .styled-scroll: a black thumb
-   on a light gray track (a mid gray in dark mode, so the black thumb still stands out),
-   dark gray on hover. */
-.sidebar-scroll {
+/* A thin vertical scrollbar for the sidebar nav and the record modals, matching
+   .styled-scroll: a black thumb on a light gray track (a mid gray in dark mode, so the
+   black thumb still stands out), dark gray on hover. */
+.vertical-scroll {
   --scroll-track: var(--color-neutral-200);
   --scroll-thumb: var(--color-black);
   --scroll-thumb-hover: var(--color-neutral-700);
@@ -161,29 +161,29 @@ dialog:modal {
 }
 
 @media (prefers-color-scheme: dark) {
-  .sidebar-scroll {
+  .vertical-scroll {
     --scroll-track: var(--color-neutral-500);
     --scroll-thumb-hover: var(--color-neutral-800);
   }
 }
 
-.sidebar-scroll::-webkit-scrollbar {
+.vertical-scroll::-webkit-scrollbar {
   width: 8px;
 }
 
-.sidebar-scroll::-webkit-scrollbar-track {
+.vertical-scroll::-webkit-scrollbar-track {
   background: var(--scroll-track);
   border-radius: 9999px;
 }
 
-.sidebar-scroll::-webkit-scrollbar-thumb {
+.vertical-scroll::-webkit-scrollbar-thumb {
   background: var(--scroll-thumb);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
-.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+.vertical-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--scroll-thumb-hover);
   background-clip: padding-box;
 }

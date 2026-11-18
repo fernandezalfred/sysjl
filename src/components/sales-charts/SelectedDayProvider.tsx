@@ -19,7 +19,7 @@ interface SelectedDayProviderProps {
   children: ReactNode;
 }
 
-// Shares the day picked in Sale Records / Totals by User with the Sales by User charts.
+// Shares the day picked in Sale Records with the Sales by User charts.
 export function SelectedDayProvider({ defaultDay, children }: SelectedDayProviderProps) {
   // null = follow defaultDay, so a refresh that adds a newer day moves the charts to it.
   const [picked, setPicked] = useState<string | null>(null);

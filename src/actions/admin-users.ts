@@ -5,13 +5,10 @@ import { z } from "zod";
 import type { AdminPermission, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
-import { NotAuthorizedError, requireAdminAccess, type Access } from "@/lib/auth/access";
+import { authErrorState, requireAdminAccess, type Access } from "@/lib/auth/access";
 import { ADMIN_PERMISSIONS } from "@/lib/auth/permissions";
-
-export interface ActionState {
-  success: boolean;
-  error?: string;
-}
+import { EMAIL, firstIssue, NEW_PASSWORD, OBJECT_ID, PERSON_NAME, objectIdSchema } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
 // SUPER_ADMIN is never assignable: there's exactly one, set up by
 // prisma/migrate-to-companies.ts.
@@ -20,9 +17,9 @@ const roleSchema = z.enum(["ADMIN", "VEHICLE_USER"]);
 const ONLY_SUPER_ADMIN = "Only the super admin can manage admins.";
 
 const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required."),
-  email: z.string().email("Enter a valid email address."),
-  password: z.string().min(8, "Password must be at least 8 characters."),
+  name: PERSON_NAME,
+  email: EMAIL,
+  password: NEW_PASSWORD,
   role: roleSchema,
 });
 
@@ -37,6 +34,7 @@ function readPermissions(formData: FormData, role: Role, access: Access): AdminP
 // A company admin manages the sellers of their company; admins (and their
 // permissions) are the super admin's. Another company's user reads as not found.
 async function findManageableUser(access: Access, userId: string) {
+  if (!OBJECT_ID.test(userId)) return { error: "User not found." } as const;
   const target = await prisma.user.findUnique({ where: { id: userId } });
   if (!target || target.companyId !== access.companyId || target.role === "SUPER_ADMIN") {
     return { error: "User not found." } as const;
@@ -56,7 +54,7 @@ export async function createUser(_prevState: ActionState, formData: FormData): P
       role: formData.get("role"),
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
     if (parsed.data.role === "ADMIN" && !access.isSuperAdmin) {
       return { success: false, error: ONLY_SUPER_ADMIN };
@@ -82,19 +80,16 @@ export async function createUser(_prevState: ActionState, formData: FormData): P
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
 const updateUserSchema = z.object({
-  userId: z.string().min(1),
-  name: z.string().min(1, "Name is required."),
-  email: z.string().email("Enter a valid email address."),
+  userId: objectIdSchema("User not found."),
+  name: PERSON_NAME,
+  email: EMAIL,
   role: roleSchema,
-  newPassword: z.union([z.string().min(8, "Password must be at least 8 characters."), z.literal("")]),
+  newPassword: z.union([NEW_PASSWORD, z.literal("")]),
 });
 
 export async function updateUser(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -109,7 +104,7 @@ export async function updateUser(_prevState: ActionState, formData: FormData): P
       newPassword: formData.get("newPassword") ?? "",
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     const { userId, name, email, role, newPassword } = parsed.data;
@@ -137,16 +132,16 @@ export async function updateUser(_prevState: ActionState, formData: FormData): P
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }
 
 export async function setUserActive(userId: string, isActive: boolean): Promise<ActionState> {
   try {
     const access = await requireAdminAccess("USERS");
+    if (typeof userId !== "string" || typeof isActive !== "boolean") {
+      return { success: false, error: "Invalid input." };
+    }
     const found = await findManageableUser(access, userId);
     if ("error" in found) return { success: false, error: found.error };
 
@@ -154,9 +149,6 @@ export async function setUserActive(userId: string, isActive: boolean): Promise<
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }

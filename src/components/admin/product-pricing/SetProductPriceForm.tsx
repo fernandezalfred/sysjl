@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { setProductPrice, type ActionState } from "@/actions/product-prices";
+import { setProductPrice } from "@/actions/product-prices";
+import type { ActionState } from "@/types/actions";
 import { formatCurrency, PRODUCT_LABEL_KEYS } from "@/lib/money/pricing";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import type { PricedProduct } from "@prisma/client";

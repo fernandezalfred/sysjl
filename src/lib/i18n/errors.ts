@@ -32,6 +32,8 @@ const ERROR_KEYS: Record<string, DictionaryKey> = {
   "Name is required.": "error.nameRequired",
   "Password is required.": "error.passwordRequired",
   "Password must be at least 8 characters.": "error.passwordTooShort",
+  "Password must be at most 72 characters.": "error.passwordTooLong",
+  "Name is too long.": "error.nameTooLong",
   "Purchase cost must be 0 or more.": "error.purchaseCostMin",
   "Sale price must be 0 or more.": "error.salePriceMin",
   "Unit cost must be 0 or more.": "error.unitCostMin",

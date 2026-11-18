@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { changeOwnPassword, type ChangePasswordState } from "@/actions/account";
+import { changeOwnPassword } from "@/actions/account";
+import type { ActionState } from "@/types/actions";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
 
-const initialState: ChangePasswordState = { success: false };
+const initialState: ActionState = { success: false };
 
 const INPUT_CLASS = "rounded-md border border-foreground/20 bg-background px-3 py-2 text-base";
 

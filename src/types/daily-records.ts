@@ -43,14 +43,17 @@ export interface DailyRecordRow {
   milkMoteRevenue: number;
   totalRevenue: number;
   isDailyWinner: boolean;
+  // Below the day's winner (needs 2+ records that day): the Leche y Mote cell in red.
+  isDailyLoser: boolean;
+  // Gap to the runner-up / to the winner (admin only — null for sellers, see
+  // toSellerView, so other sellers' totals can't be worked out from them).
   winnerMargin: number | null;
   lossMargin: number | null;
-  // Milk the seller took that day and its purchase price per liter (cost data:
-  // zeroed before reaching guests, see withoutMilkCost).
+  // Milk the seller took that day and its purchase price per liter.
   milkLiters: number;
   milkUnitCost: number;
   // Queso / Yogurt purchase cost snapshotted on the record (admin only — stripped
-  // for sellers, see withoutPurchaseCosts); null/missing → the current cost.
+  // for sellers, see toSellerView); null/missing → the current cost.
   purchaseCosts?: Partial<Record<ProductCode, number | null>>;
 }
 

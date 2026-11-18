@@ -3,25 +3,22 @@
 import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn, signOut } from "@/auth";
+import { firstIssue } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
   password: z.string().min(1, "Password is required."),
 });
 
-export interface LoginState {
-  success: boolean;
-  error?: string;
-}
-
-export async function login(_prevState: LoginState, formData: FormData): Promise<LoginState> {
+export async function login(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return { success: false, error: firstIssue(parsed.error) };
   }
 
   try {

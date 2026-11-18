@@ -4,12 +4,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { PricedProduct } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { NotAuthorizedError, requireAdminAccess } from "@/lib/auth/access";
-
-export interface ActionState {
-  success: boolean;
-  error?: string;
-}
+import { authErrorState, requireAdminAccess } from "@/lib/auth/access";
+import { firstIssue } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
 const setPriceSchema = z.object({
   product: z.enum(PricedProduct),
@@ -29,7 +26,7 @@ export async function setProductPrice(_prevState: ActionState, formData: FormDat
       purchaseCost: formData.get("purchaseCost") ?? undefined,
     });
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+      return { success: false, error: firstIssue(parsed.error) };
     }
 
     await prisma.productPrice.upsert({
@@ -49,12 +46,8 @@ export async function setProductPrice(_prevState: ActionState, formData: FormDat
     });
 
     revalidatePath("/dashboard");
-    revalidatePath("/");
     return { success: true };
   } catch (error) {
-    if (error instanceof NotAuthorizedError) {
-      return { success: false, error: error.message };
-    }
-    throw error;
+    return authErrorState(error);
   }
 }

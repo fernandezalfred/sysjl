@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { login, type LoginState } from "@/actions/auth";
+import { login } from "@/actions/auth";
+import type { ActionState } from "@/types/actions";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 
-const initialState: LoginState = { success: false };
+const initialState: ActionState = { success: false };
 
 function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
   return (

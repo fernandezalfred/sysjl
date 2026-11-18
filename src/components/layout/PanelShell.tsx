@@ -273,7 +273,7 @@ function SidebarContent({
         </div>
       ) : null}
 
-      <div className="sidebar-scroll -mr-2 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
+      <div className="vertical-scroll -mr-2 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         {groups.map((group) => (
           <NavGroupBlock key={group.label} group={group} pathname={pathname} onNavigate={onNavigate} />
         ))}

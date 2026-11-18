@@ -61,3 +61,10 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 ### Shared UI behavior
 - **Popups** (SweetAlert2) via `src/lib/alerts.ts`: `confirmAlert` before deletes and state changes, `successToast` after saves (`useSuccessToast`), `errorAlert` when a button action fails; form validation errors stay inline
 - Dates: `src/lib/dates.ts` (`formatShortDate` with weekday, Bolivia business day)
+- The sale record modal and the sidebar use the black `.vertical-scroll` scrollbar (`src/app/globals.css`)
+
+### Security and validation
+- `src/lib/validation.ts`: shared Zod rules (ObjectId before every lookup by id, `DATE_KEY`, `NEW_PASSWORD` 8–72 bytes, `PERSON_NAME`, `EMAIL`, `firstIssue`)
+- Server Actions return `ActionState` (`src/types/actions.ts`) and end with `catch (error) { return authErrorState(error); }`
+- Sellers get their rows through `toSellerView` (no purchase costs or winner/loser margins); CSV cells that look like formulas are prefixed with `'`
+- Security headers and `poweredByHeader: false` in `next.config.ts`; cookies `secure` in production

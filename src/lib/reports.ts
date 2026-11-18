@@ -97,8 +97,14 @@ export function buildFinanceReport(
   return [summary, byPeriod, bySeller];
 }
 
+// Text a spreadsheet would run as a formula (=, +, -, @, tab, CR first). A negative
+// amount like "-12%" is still a value, not a formula.
+const FORMULA_START = /^(?:[=+@\t\r]|-(?![\d.]))/;
+
 function csvCell(cell: ReportCell): string {
-  const text = String(cell);
+  // A leading apostrophe makes the spreadsheet show text typed by users (e.g. a
+  // seller named "=HYPERLINK(…)") as text instead of running it.
+  const text = typeof cell === "string" && FORMULA_START.test(cell) ? `'${cell}` : String(cell);
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

@@ -21,12 +21,12 @@ interface UserCellProps {
   t: TranslateFn;
 }
 
-// The User cell in Sale Records and Totals by User. With net profit (admins): a
+// The User cell in Sale Records. With net profit (admins): a
 // subtraction written like on paper — Neto, "−" Pago, a line, and on the last row
 // the seller's name on the left and the result in bold purple on the right (label kept as
 // tooltip / screen-reader text). Without it: the name, then just the "Pago" line.
 // Callers use it for every signed-in viewer on every row (admins get the subtraction,
-// sellers the name and, on their own rows, the Pago); guests see only the name.
+// sellers the name and, on their own rows, the Pago).
 export function UserCell({ name, totalSold, netProfit, showPay, payPaid, payToggle, t }: UserCellProps) {
   const pay = sellerPay(totalSold);
   if (netProfit === null) {

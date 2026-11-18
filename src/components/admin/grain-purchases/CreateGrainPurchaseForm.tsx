@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { createStockPurchase, type ActionState } from "@/actions/stock-purchases";
+import { createStockPurchase } from "@/actions/stock-purchases";
+import type { ActionState } from "@/types/actions";
 import { StockPurchaseFormFields } from "@/components/admin/stock-purchases/StockPurchaseFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { GrainProduct } from "@/types/admin";

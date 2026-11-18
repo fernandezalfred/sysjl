@@ -4,15 +4,20 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { ACTIVE_COMPANY_COOKIE, NotAuthorizedError, requireSuperAdmin } from "@/lib/auth/access";
+import { ACTIVE_COMPANY_COOKIE, authErrorState, requireSuperAdmin } from "@/lib/auth/access";
+import { firstIssue, objectIdSchema } from "@/lib/validation";
+import type { ActionState } from "@/types/actions";
 
-export interface ActionState {
-  success: boolean;
-  error?: string;
-}
+const nameSchema = z.string().trim().min(1, "Company name is required.").max(100, "Name is too long.");
+const companyIdSchema = objectIdSchema("Company not found.");
 
-const nameSchema = z.string().trim().min(1, "Company name is required.");
-const companyIdSchema = z.string().regex(/^[0-9a-f]{24}$/i, "Company not found.");
+// The switcher's choice: readable by the server only, sent over HTTPS only in production.
+const COMPANY_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+} as const;
 
 async function nameTaken(name: string, exceptId?: string): Promise<boolean> {
   const existing = await prisma.company.findFirst({
@@ -27,25 +32,20 @@ function refreshPanel() {
   revalidatePath("/", "layout");
 }
 
-function failure(error: unknown): ActionState {
-  if (error instanceof NotAuthorizedError) return { success: false, error: error.message };
-  throw error;
-}
-
 // Super admin: a new company, opened right away in the switcher.
 export async function createCompany(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireSuperAdmin();
     const parsed = nameSchema.safeParse(formData.get("name") ?? "");
-    if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    if (!parsed.success) return { success: false, error: firstIssue(parsed.error) };
     if (await nameTaken(parsed.data)) return { success: false, error: "A company with this name already exists." };
 
     const company = await prisma.company.create({ data: { name: parsed.data } });
-    (await cookies()).set(ACTIVE_COMPANY_COOKIE, company.id, { httpOnly: true, sameSite: "lax", path: "/" });
+    (await cookies()).set(ACTIVE_COMPANY_COOKIE, company.id, COMPANY_COOKIE_OPTIONS);
     refreshPanel();
     return { success: true };
   } catch (error) {
-    return failure(error);
+    return authErrorState(error);
   }
 }
 
@@ -55,7 +55,7 @@ export async function renameCompany(_prevState: ActionState, formData: FormData)
     const id = companyIdSchema.safeParse(formData.get("companyId") ?? "");
     const name = nameSchema.safeParse(formData.get("name") ?? "");
     if (!id.success) return { success: false, error: "Company not found." };
-    if (!name.success) return { success: false, error: name.error.issues[0]?.message ?? "Invalid input." };
+    if (!name.success) return { success: false, error: firstIssue(name.error) };
     if (!(await prisma.company.findUnique({ where: { id: id.data }, select: { id: true } }))) {
       return { success: false, error: "Company not found." };
     }
@@ -65,7 +65,7 @@ export async function renameCompany(_prevState: ActionState, formData: FormData)
     refreshPanel();
     return { success: true };
   } catch (error) {
-    return failure(error);
+    return authErrorState(error);
   }
 }
 
@@ -75,6 +75,7 @@ export async function setCompanyActive(companyId: string, isActive: boolean): Pr
   try {
     await requireSuperAdmin();
     const id = companyIdSchema.safeParse(companyId);
+    if (typeof isActive !== "boolean") return { success: false, error: "Invalid input." };
     if (!id.success || !(await prisma.company.findUnique({ where: { id: id.data }, select: { id: true } }))) {
       return { success: false, error: "Company not found." };
     }
@@ -82,7 +83,7 @@ export async function setCompanyActive(companyId: string, isActive: boolean): Pr
     refreshPanel();
     return { success: true };
   } catch (error) {
-    return failure(error);
+    return authErrorState(error);
   }
 }
 
@@ -94,10 +95,10 @@ export async function setActiveCompany(companyId: string): Promise<ActionState> 
     if (!id.success || !(await prisma.company.findUnique({ where: { id: id.data }, select: { id: true } }))) {
       return { success: false, error: "Company not found." };
     }
-    (await cookies()).set(ACTIVE_COMPANY_COOKIE, id.data, { httpOnly: true, sameSite: "lax", path: "/" });
+    (await cookies()).set(ACTIVE_COMPANY_COOKIE, id.data, COMPANY_COOKIE_OPTIONS);
     refreshPanel();
     return { success: true };
   } catch (error) {
-    return failure(error);
+    return authErrorState(error);
   }
 }

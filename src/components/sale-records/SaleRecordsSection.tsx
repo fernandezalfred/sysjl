@@ -227,7 +227,7 @@ export function SaleRecordsSection({
                     <td className="px-4 py-2">
                       <ProductCell breakdown={row.yogurt} t={t} />
                     </td>
-                    <td className={`px-4 py-2 ${loserBackgroundClass(row.lossMargin)}`}>
+                    <td className={`px-4 py-2 ${loserBackgroundClass(row.isDailyLoser)}`}>
                       <div className="text-amount whitespace-nowrap font-semibold">{formatCurrency(row.milkMoteRevenue)}</div>
                       {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
                     </td>
@@ -301,7 +301,7 @@ export function SaleRecordsSection({
                       </div>
                       {/* A loser's red background bleeds 8px past the column (-mx-2 px-2), like
                           the winner's green below, so the amounts stay aligned. */}
-                      <div className={row.lossMargin === null ? "" : `-mx-2 px-2 py-1 ${loserBackgroundClass(row.lossMargin)}`}>
+                      <div className={row.isDailyLoser ? `-mx-2 px-2 py-1 ${loserBackgroundClass(true)}` : ""}>
                         <div className="flex items-baseline justify-between gap-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{t("table.milkMote")}</p>
                           <div className="text-amount whitespace-nowrap font-semibold tabular-nums">
@@ -336,7 +336,7 @@ export function SaleRecordsSection({
       <dialog
         ref={dialogRef}
         {...backdropClose}
-        className="w-[calc(100%-1.5rem)] max-h-[90dvh] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground sm:p-6"
+        className="vertical-scroll w-[calc(100%-1.5rem)] max-h-[90dvh] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground sm:p-6"
       >
         <h3 className="mb-4 text-base font-semibold">
           {mode.type === "create" ? t("records.newRecord") : t("records.editRecord")}

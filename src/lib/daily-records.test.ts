@@ -10,8 +10,7 @@ import {
   buildDailyRecords,
   getDailyRecordsData,
   recordsVisibleTo,
-  withoutMilkCost,
-  withoutPurchaseCosts,
+  toSellerView,
 } from "@/lib/daily-records";
 import type { SaleRecord } from "@/types/daily-records";
 
@@ -272,6 +271,7 @@ describe("recordsVisibleTo", () => {
     const visible = recordsVisibleTo(rows, "u2", false);
     expect(visible.map((r) => r.userId)).toEqual(["u2"]);
     expect(visible[0].isDailyWinner).toBe(false);
+    expect(visible[0].isDailyLoser).toBe(true);
     expect(visible[0].lossMargin).toBe(50);
   });
 
@@ -288,10 +288,6 @@ describe("Milk on the record", () => {
     expect(carla.milkUnitCost).toBe(7);
   });
 
-  it("withoutMilkCost zeroes the Milk liters and price, keeping everything else", () => {
-    const [row] = buildDailyRecords([record({ milkLiters: 30, milkUnitCost: 7 })]);
-    expect(withoutMilkCost([row])).toEqual([{ ...row, milkLiters: 0, milkUnitCost: 0 }]);
-  });
 });
 
 describe("Purchase cost on the record", () => {
@@ -306,10 +302,22 @@ describe("Purchase cost on the record", () => {
     expect(costsByUser).toEqual({ u1: { QUESO: 6.5, YOGURT: 24 }, u2: { QUESO: null, YOGURT: null } });
   });
 
-  it("withoutPurchaseCosts drops the purchase costs, keeping everything else", () => {
-    const [row] = buildDailyRecords([record({ purchaseCost: 6 })]);
-    const [stripped] = withoutPurchaseCosts([row]);
-    expect("purchaseCosts" in stripped).toBe(false);
-    expect({ ...stripped, purchaseCosts: row.purchaseCosts }).toEqual(row);
+  it("toSellerView drops the purchase costs and margins, keeping whether they won or lost", () => {
+    const rows = recordsVisibleTo(
+      buildDailyRecords([
+        record({ id: "a", userId: "u1", purchaseCost: 6, totalSold: 200 }),
+        record({ id: "b", userId: "u2", purchaseCost: 6, totalSold: 100 }),
+      ]),
+      "u2",
+      false,
+    );
+    expect(rows[0].lossMargin).not.toBeNull();
+    const [view] = toSellerView(rows);
+    expect("purchaseCosts" in view).toBe(false);
+    expect(view.winnerMargin).toBeNull();
+    expect(view.lossMargin).toBeNull();
+    expect(view.isDailyLoser).toBe(true);
+    const { purchaseCosts, winnerMargin, lossMargin } = rows[0];
+    expect({ ...view, purchaseCosts, winnerMargin, lossMargin }).toEqual(rows[0]);
   });
 });

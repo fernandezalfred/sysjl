@@ -12,5 +12,6 @@ export async function setLocale(formData: FormData): Promise<void> {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
 }

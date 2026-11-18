@@ -73,6 +73,14 @@ describe("buildFinanceReport since the beginning", () => {
 });
 
 describe("toCsv", () => {
+  it("writes text a spreadsheet would run as a formula as plain text, leaving negative amounts alone", () => {
+    const csv = toCsv([
+      { title: "T", header: ["a"], rows: [["=HYPERLINK(\"x\")"], ["+1"], ["@SUM(A1)"], ["-cmd"], ["-12%"], [-5], ["Ana"]] },
+    ]);
+    const lines = csv.slice(1).split("\r\n");
+    expect(lines.slice(2, 9)).toEqual(["\"'=HYPERLINK(\"\"x\"\")\"", "'+1", "'@SUM(A1)", "'-cmd", "-12%", "-5", "Ana"]);
+  });
+
   it("writes each table with its title, quoting cells that need it, behind a BOM", () => {
     const csv = toCsv([{ title: "Ventas", header: ["Vendedor", "Total"], rows: [['Raul "R", Jr', 1200]] }]);
 

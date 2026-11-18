@@ -10,7 +10,7 @@ const EMPTY_BREAKDOWN: ProductBreakdown = { taken: 0, remaining: 0, sold: 0, rev
 
 type PartialDailyRecordRow = Omit<
   DailyRecordRow,
-  "milkMoteRevenue" | "totalRevenue" | "isDailyWinner" | "winnerMargin" | "lossMargin"
+  "milkMoteRevenue" | "totalRevenue" | "isDailyWinner" | "isDailyLoser" | "winnerMargin" | "lossMargin"
 >;
 
 export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
@@ -101,12 +101,15 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
     const max = maxRevenueByDate.get(row.date)!;
     const runnerUp = runnerUpRevenueByDate.get(row.date);
     const isDailyWinner = hasCompetitor && row.totalRevenue === max;
+    // A loser is anyone below the day's winner.
+    const isDailyLoser = hasCompetitor && !isDailyWinner;
     return {
       ...row,
       isDailyWinner,
+      isDailyLoser,
       winnerMargin: runnerUp === undefined ? null : max - runnerUp,
-      // A loser is anyone below the day's winner; how far behind the winner they ended.
-      lossMargin: hasCompetitor && !isDailyWinner ? max - row.totalRevenue : null,
+      // How far behind the winner a loser ended.
+      lossMargin: isDailyLoser ? max - row.totalRevenue : null,
     };
   });
 
@@ -114,27 +117,24 @@ export function buildDailyRecords(records: SaleRecord[]): DailyRecordRow[] {
   return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-// The rows (Sale Records or Totals by User) a signed-in viewer may see: admins every row,
-// a seller only their own, no user id none.
+// The Sale Records rows a signed-in viewer may see: admins every row, a seller only
+// their own, no user id none.
 export function recordsVisibleTo<T extends { userId: string }>(rows: T[], userId: string | null, isAdmin: boolean): T[] {
   if (isAdmin) return rows;
   if (!userId) return [];
   return rows.filter((row) => row.userId === userId);
 }
 
-// The Queso / Yogurt purchase costs snapshotted on each record are cost data: only
-// admins get them (a seller's Neto isn't computed in the browser).
-export function withoutPurchaseCosts(rows: DailyRecordRow[]): DailyRecordRow[] {
+// A seller's own rows as they may reach the browser: without the snapshotted Queso /
+// Yogurt purchase costs (cost data; a seller's Neto isn't computed in the browser) and
+// without the winner's and loser's margins (admin only; they'd reveal other sellers'
+// totals). Whether they won or lost the day stays.
+export function toSellerView(rows: DailyRecordRow[]): DailyRecordRow[] {
   return rows.map((row) => {
-    const stripped = { ...row };
-    delete stripped.purchaseCosts;
-    return stripped;
+    const view = { ...row, winnerMargin: null, lossMargin: null };
+    delete view.purchaseCosts;
+    return view;
   });
-}
-
-// The Milk liters and price are cost data: guests get the rows without them.
-export function withoutMilkCost(rows: DailyRecordRow[]): DailyRecordRow[] {
-  return rows.map((row) => ({ ...row, milkLiters: 0, milkUnitCost: 0 }));
 }
 
 // Every sale record of one company.
