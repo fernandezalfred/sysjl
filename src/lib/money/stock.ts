@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatBusinessDateKey } from "@/lib/dates";
 import type { Product } from "@prisma/client";
-import type { GrainProduct } from "@/types/admin";
-import { emptyGrainCosts, grainsTotalByDay, type GrainCosts } from "@/lib/money/finance";
 
 const GRAIN_PRODUCTS: Product[] = ["MAIZ_PELADO", "MAIZ_CASCARA", "HABA"];
 
@@ -19,26 +17,19 @@ export async function getLatestUnitCost(product: Product, companyId: string): Pr
   return latest?.unitCost ?? 0;
 }
 
-// Grain purchase cost (quantity × unitCost) per grain item, grouped by the business
-// calendar day (Bolivia) the purchase was made. Feeds the per-grain investment on
-// /admin/finance.
-export async function getGrainsCostByDayAndProduct(companyId: string): Promise<Record<string, GrainCosts>> {
+// Total grain purchase cost (quantity × unitCost, all three grain items) per business
+// day (Bolivia) — used to split a day's grains cost evenly across however many
+// drivers have a work record that day.
+export async function getGrainsCostByDay(companyId: string): Promise<Record<string, number>> {
   const purchases = await prisma.stockPurchase.findMany({
     where: { companyId, product: { in: GRAIN_PRODUCTS } },
-    select: { product: true, quantity: true, unitCost: true, createdAt: true },
+    select: { quantity: true, unitCost: true, createdAt: true },
   });
 
-  const result: Record<string, GrainCosts> = {};
+  const result: Record<string, number> = {};
   for (const purchase of purchases) {
     const key = formatBusinessDateKey(purchase.createdAt);
-    const day = (result[key] ??= emptyGrainCosts());
-    day[purchase.product as GrainProduct] += purchase.quantity * purchase.unitCost;
+    result[key] = (result[key] ?? 0) + purchase.quantity * purchase.unitCost;
   }
   return result;
-}
-
-// Total grain purchase cost (all three grain items) per business day — used to split
-// a day's grains cost evenly across however many drivers have a work record that day.
-export async function getGrainsCostByDay(companyId: string): Promise<Record<string, number>> {
-  return grainsTotalByDay(await getGrainsCostByDayAndProduct(companyId));
 }

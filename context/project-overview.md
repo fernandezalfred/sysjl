@@ -14,7 +14,7 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 - Prisma 6 on MongoDB (replica set required; schema changes via `prisma db push`, no migrations)
 - Auth.js v5: Credentials provider, bcrypt, JWT sessions
 - Tailwind CSS v4 (CSS-based config in `src/app/globals.css`)
-- Zod for input validation, SweetAlert2 for confirmations, success toasts and error popups, Chart.js (`react-chartjs-2`) for charts, `write-excel-file` for Excel reports, Vitest for unit tests
+- Zod for input validation, SweetAlert2 for confirmations, success toasts and error popups, Chart.js (`react-chartjs-2`) for charts, Vitest for unit tests
 - Deployed on Vercel
 
 ## 3. Roles and Access
@@ -48,7 +48,7 @@ Rules:
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin (`USERS`) | The company's users: search, create, edit, deactivate; admins and their permissions by the super admin only |
 | `/admin/companies` | Super admin  | Every company with its sellers, admins and last 30 days' sales; create, rename, deactivate, open            |
-| `/admin/finance` | Admin (`FINANCE`) | Income & expenses from every seller's records per day, week, month or since the beginning ("Desde el inicio": total investment per product incl. each grain, Ganancia neta acumulada = income − investment − pay, running totals chart and month-by-month table): income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports |
+| `/admin/finance` | Admin (`FINANCE`) | Ingresos y egresos, per day, week, month or since the beginning: each seller's Neto − Pago over the same number of days worked (their last N days, N = the fewest days any seller worked in the period), best first, to choose bonuses; boxes with the period's workers' earnings (Pago) and net profit after pay (Neto − Pago); the company's total Neto per period |
 | `/admin/grains` | Admin (`GRAINS`) | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 
 Clicking a day header in Sale Records shows that day in the charts at the top of `/dashboard`.

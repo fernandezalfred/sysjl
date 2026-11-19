@@ -46,7 +46,7 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - **Prices & Costs** (PRICES, bottom): Queso/Yogurt sale price and purchase cost. `src/components/admin/product-pricing/`, `src/actions/product-prices.ts`
 
 ### Admin pages
-- **Ingresos y egresos `/admin/finance`** (FINANCE) — per day/week/month or "Desde el inicio" (total investment per product, Ganancia neta acumulada, running totals): income by product, costs, Neto, pay, result, per seller; charts; CSV / Excel / print-PDF reports. `src/lib/money/finance.ts`, `src/lib/reports.ts`, `src/components/finance/`
+- **Ingresos y egresos `/admin/finance`** (FINANCE) — Día / Semana / Mes / Desde el inicio: sellers compared over the same number of days worked (each one's last N days, N = fewest days anyone worked in the period; Neto − Pago, best first) for bonuses; two boxes with the period's workers' earnings (Pago) and net profit after pay (Neto − Pago); the company's total Neto per period (area line). `src/lib/money/seller-comparison.ts`, `src/components/finance/`
 - **Gestionar usuarios `/admin/users`** (USERS) — the company's users: search, pages of 20, create, edit, deactivate/reactivate (with confirmation); only the super admin creates/edits admins and ticks their permissions (`RoleFields`). `src/components/admin/users/`, `src/actions/admin-users.ts`, `src/lib/user-search.ts`
 - **Granos `/admin/grains`** (GRAINS) — grain purchases per day (Maíz pelado, Maíz con cáscara, Haba), "repeat last day"; a new purchase is always today, editing one can change its date (not to a future day); every other day shaded. `src/components/admin/grain-purchases/`, `src/actions/stock-purchases.ts`, `src/lib/repeat-purchases.ts`
 

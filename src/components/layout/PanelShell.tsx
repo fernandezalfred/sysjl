@@ -14,6 +14,7 @@ import type { SellerPending } from "@/lib/money/seller-pay";
 import { hasPermission, isAdminRole } from "@/lib/auth/permissions";
 import type { AdminPermission, Role } from "@prisma/client";
 import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translations";
+import { useHeightCssVar } from "@/hooks/useHeightCssVar";
 
 interface NavItem {
   href: string;
@@ -136,6 +137,7 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const pathname = usePathname();
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const phoneBarRef = useHeightCssVar<HTMLDivElement>("--phone-bar-height");
 
   const groups = navGroups(access, t);
   const breadcrumbs = getBreadcrumbs(pathname, t);
@@ -160,8 +162,8 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
 
   return (
     <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:gap-8">
-      {/* Phone / tablet bar. */}
-      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-3 print:hidden border-b border-foreground/10 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:-mx-6 sm:px-6 lg:hidden">
+      {/* Phone / tablet bar; its height is kept in --phone-bar-height. */}
+      <div ref={phoneBarRef} className="sticky top-0 z-20 -mx-4 flex flex-col gap-3 print:hidden border-b border-foreground/10 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:-mx-6 sm:px-6 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -214,9 +216,10 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
         </div>
       </nav>
 
-      {/* --sticky-offset: height of the pinned header bar below (lg+), so pinned table
-          headers inside the page sit just under it instead of behind it. */}
-      <div className="flex min-w-0 flex-1 flex-col gap-8 lg:[--sticky-offset:5rem]">
+      {/* --sticky-offset: height of the pinned bar (the phone bar, or the header below on
+          lg+), so pinned table headers and toolbars inside the page sit just under it
+          instead of behind it. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-8 [--sticky-offset:var(--phone-bar-height,0px)] lg:[--sticky-offset:5rem]">
         <header className="sticky top-0 z-20 hidden h-20 print:!hidden items-center justify-between gap-6 border-b border-foreground/10 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:flex">
           <div className="min-w-0">
             {payTotals ? null : <Breadcrumbs items={breadcrumbs} label={t("sidebar.breadcrumbLabel")} />}
