@@ -32,17 +32,21 @@ function axisTitle(text: string | undefined) {
   return text ? { display: true, text, color: CHART_COLORS.muted, font: { size: 11, weight: 600 as const }, padding: 4 } : undefined;
 }
 
+// Phones: smaller tick labels, fewer of them, and no axis titles, so the plot keeps
+// most of the narrow width.
+const NARROW_FONT = { size: 11 };
+
 // The amount axis: Bs labels, a few dashed grid lines, no axis line, optional title.
-export function amountAxis(mode: Mode, title?: string) {
+export function amountAxis(mode: Mode, title?: string, narrow = false) {
   return {
     beginAtZero: true,
-    title: axisTitle(title),
+    title: axisTitle(narrow ? undefined : title),
     grace: "8%" as const,
     ticks: {
       color: CHART_COLORS.muted,
-      font: FONT,
-      padding: 8,
-      maxTicksLimit: 6,
+      font: narrow ? NARROW_FONT : FONT,
+      padding: narrow ? 4 : 8,
+      maxTicksLimit: narrow ? 5 : 6,
       callback: (value: number | string) => formatCurrency(Number(value)),
     },
     grid: { color: CHART_COLORS.grid[mode], drawTicks: false },
@@ -51,10 +55,16 @@ export function amountAxis(mode: Mode, title?: string) {
 }
 
 // The category axis (days, periods): labels and an optional title.
-export function categoryAxis(title?: string) {
+export function categoryAxis(title?: string, narrow = false) {
   return {
-    title: axisTitle(title),
-    ticks: { color: CHART_COLORS.muted, font: FONT, padding: 8, maxRotation: 0, autoSkipPadding: 12 },
+    title: axisTitle(narrow ? undefined : title),
+    ticks: {
+      color: CHART_COLORS.muted,
+      font: narrow ? NARROW_FONT : FONT,
+      padding: narrow ? 4 : 8,
+      maxRotation: 0,
+      autoSkipPadding: narrow ? 8 : 12,
+    },
     grid: { display: false },
     border: { display: false },
   };

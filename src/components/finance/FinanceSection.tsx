@@ -69,13 +69,13 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
   const scope = t(`finance.scope.${view}`);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Pinned under the panel's top bar; slides away while scrolling down the page and
           comes back on scrolling up. */}
       <div
         className={`sticky top-[calc(var(--sticky-offset,0px)+0.5rem)] z-10 transition-[translate,opacity] duration-300 ease-out ${
           toolbarHidden ? "pointer-events-none -translate-y-[calc(100%+var(--sticky-offset,0px)+1rem)] opacity-0" : ""
-        } flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-background/90 p-3 shadow-md backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:items-center sm:justify-between sm:p-4`}
+        } flex flex-col gap-2 rounded-2xl border border-foreground/10 bg-background/90 p-2 shadow-md backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:items-center sm:justify-between sm:p-4`}
       >
         <div role="group" aria-label={t("finance.view")} className="grid grid-cols-4 gap-1 rounded-xl bg-foreground/[0.06] p-1 sm:inline-flex">
           {VIEWS.map((v) => (
@@ -87,25 +87,32 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
                 setView(v);
                 setPickedPeriod(null);
               }}
-              className={`rounded-lg px-2 py-2 text-sm font-medium transition-colors sm:px-4 ${
+              className={`min-h-10 rounded-lg px-1 text-sm font-medium whitespace-nowrap transition-colors sm:px-4 ${
                 view === v
                   ? "bg-background text-foreground shadow-sm ring-1 ring-foreground/10"
                   : "text-foreground/65 hover:text-foreground"
               }`}
             >
-              {v === "all" ? t("finance.sinceStart") : t(`trend.${v}`)}
+              {v === "all" ? (
+                <>
+                  <span className="sm:hidden">{t("finance.sinceStartShort")}</span>
+                  <span className="hidden sm:inline">{t("finance.sinceStart")}</span>
+                </>
+              ) : (
+                t(`trend.${v}`)
+              )}
             </button>
           ))}
         </div>
         {sinceStart ? (
-          <p className="text-sm text-foreground/70">{t("finance.sinceStartHint")}</p>
+          <p className="px-1 text-xs text-foreground/70 sm:px-0 sm:text-sm">{t("finance.sinceStartHint")}</p>
         ) : (
-          <label className="flex items-center gap-2 text-sm font-medium text-foreground/70">
+          <label className="flex items-center gap-2 pl-1 text-sm font-medium text-foreground/70 sm:pl-0">
             {t("finance.period")}
             <select
               value={selected}
               onChange={(event) => setPickedPeriod(event.target.value)}
-              className="min-w-0 flex-1 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-base text-foreground shadow-sm sm:flex-none sm:text-sm"
+              className="min-h-10 min-w-0 flex-1 rounded-lg border border-foreground/15 bg-background px-3 py-1.5 text-base text-foreground shadow-sm sm:flex-none sm:text-sm"
             >
               {[...periods].reverse().map((p) => (
                 <option key={p.period} value={p.period}>
@@ -125,7 +132,7 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
         </p>
       ) : (
         <>
-          <div className="flex items-start gap-3 rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
+          <div className="flex items-start gap-3 rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-3 sm:p-4">
             <span className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 px-2 text-sm font-semibold tabular-nums text-violet-700 dark:text-violet-300">
               {comparison.days}
             </span>
@@ -134,7 +141,7 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
               <p className="text-sm text-foreground/70">{t(comparison.days === 1 ? "finance.comparisonHintOne" : "finance.comparisonHint", { days: comparison.days, scope })}</p>
             </div>
           </div>
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
             <SellerComparisonBarChart comparison={comparison} sellerOrder={sellerOrder} scope={scope} t={t} />
             <SellerComparisonChart
               comparison={comparison}

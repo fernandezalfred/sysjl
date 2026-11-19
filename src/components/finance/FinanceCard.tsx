@@ -11,11 +11,11 @@ interface FinanceCardProps {
 // The card every chart on Ingresos y egresos sits in: title, optional subtitle, content.
 export function FinanceCard({ title, subtitle, aside, children }: FinanceCardProps) {
   return (
-    <section className="flex min-w-0 flex-col gap-4 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-4 shadow-sm sm:p-5">
+    <section className="flex min-w-0 flex-col gap-4 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-3 shadow-sm sm:p-5">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-          {subtitle ? <p className="mt-0.5 text-sm text-foreground/65">{subtitle}</p> : null}
+          <h2 className="text-sm font-semibold tracking-tight sm:text-base">{title}</h2>
+          {subtitle ? <p className="mt-0.5 text-xs text-foreground/65 sm:text-sm">{subtitle}</p> : null}
         </div>
         {aside}
       </header>

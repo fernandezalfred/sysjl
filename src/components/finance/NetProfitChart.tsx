@@ -17,6 +17,7 @@ import type { PeriodNetProfit } from "@/lib/money/seller-comparison";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import type { Granularity } from "@/lib/date-buckets";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useIsNarrowScreen } from "@/hooks/useIsNarrowScreen";
 import { CHART_COLORS } from "@/components/sales-charts/chart-theme";
 import { chartMinWidthClass } from "@/components/finance/chart-width";
 import { FinanceCard } from "@/components/finance/FinanceCard";
@@ -36,6 +37,7 @@ interface NetProfitChartProps {
 // newest period is in view and older ones scroll in from the left.
 export function NetProfitChart({ periods, label, granularity, t }: NetProfitChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
+  const narrow = useIsNarrowScreen();
   const scrollRef = useRef<HTMLDivElement>(null);
   const title = t("finance.netTrendTitle", { per: t(`finance.per.${granularity}`) });
 
@@ -57,8 +59,8 @@ export function NetProfitChart({ periods, label, granularity, t }: NetProfitChar
       },
     },
     scales: {
-      x: categoryAxis(t(`trend.${granularity}`)),
-      y: amountAxis(mode, t("finance.axis.net")),
+      x: categoryAxis(t(`trend.${granularity}`), narrow),
+      y: amountAxis(mode, t("finance.axis.net"), narrow),
     },
   };
 

@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/money/pricing";
 import type { EqualDaysComparison } from "@/lib/money/seller-comparison";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useIsNarrowScreen } from "@/hooks/useIsNarrowScreen";
 import { CHART_COLORS, chartHeightClass, chartScrollFrameClass, userColor } from "@/components/sales-charts/chart-theme";
 import { horizontalBarLabels } from "@/components/sales-charts/chart-labels";
 import { comparisonChartHeightClass } from "@/components/finance/chart-width";
@@ -29,6 +30,7 @@ interface SellerComparisonBarChartProps {
 // seller has their own color. The caller shows the comparison hint and empty state.
 export function SellerComparisonBarChart({ comparison, sellerOrder, scope, t }: SellerComparisonBarChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
+  const narrow = useIsNarrowScreen();
   const { days, sellers } = comparison;
   const title = t("finance.comparisonTitle");
 
@@ -47,7 +49,7 @@ export function SellerComparisonBarChart({ comparison, sellerOrder, scope, t }: 
       },
     },
     scales: {
-      x: { ...amountAxis(mode, t("finance.axis.result")), grace: "15%" },
+      x: { ...amountAxis(mode, t("finance.axis.result"), narrow), grace: "15%" },
       y: {
         // Seller names are written inside the bars.
         ticks: { display: false },

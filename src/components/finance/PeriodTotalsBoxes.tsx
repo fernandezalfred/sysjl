@@ -88,22 +88,25 @@ interface TotalCardProps {
 function TotalCard({ tone, icon, label, amount, hint, periodLabel, children }: TotalCardProps) {
   const styles = TONES[tone];
   return (
-    <section className={`flex flex-col gap-4 rounded-2xl border border-foreground/10 bg-gradient-to-br ${styles.card} to-transparent p-4 shadow-sm sm:p-5`}>
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+    <section className={`flex flex-col gap-4 rounded-2xl border border-foreground/10 bg-gradient-to-br ${styles.card} to-transparent p-3 shadow-sm sm:p-5`}>
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex min-w-0 items-center gap-3">
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${styles.icon}`}>
             <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d={icon} />
             </svg>
           </span>
-          <h2 className="text-sm font-semibold text-foreground/80">{label}</h2>
+          <h2 className="min-w-0 text-sm font-semibold text-foreground/80">{label}</h2>
         </div>
-        <span className="shrink-0 rounded-full border border-foreground/10 bg-background px-2.5 py-0.5 text-xs font-medium text-foreground/70">
-          {periodLabel}
-        </span>
+        {/* Phones: on its own line, under the title; wider screens: at the right. */}
+        <div className="basis-full pl-13 sm:basis-auto sm:pl-0">
+          <span className="inline-block rounded-full border border-foreground/10 bg-background px-2.5 py-0.5 text-xs font-medium text-foreground/70">
+            {periodLabel}
+          </span>
+        </div>
       </header>
       <div>
-        <p className={`text-amount text-3xl font-semibold tracking-tight tabular-nums ${tone === "net" ? signClass(amount) : ""}`}>
+        <p className={`text-amount text-2xl font-semibold sm:text-3xl tracking-tight tabular-nums ${tone === "net" ? signClass(amount) : ""}`}>
           {formatCurrency(amount)}
         </p>
         <p className="mt-1 text-xs text-foreground/60">{hint}</p>
@@ -135,7 +138,7 @@ function SellerList({ sellers, amount, colorOf, signed = false, scope, t }: Sell
         {sellers.map((s, index) => {
           const value = amount(s);
           return (
-            <li key={s.userId} className="flex items-center gap-3 rounded-lg px-1 py-2 transition-colors hover:bg-foreground/[0.04]">
+            <li key={s.userId} className="flex items-center gap-2.5 rounded-lg px-0.5 py-2 sm:gap-3 sm:px-1 transition-colors hover:bg-foreground/[0.04]">
               <span className="w-4 text-right text-xs font-medium tabular-nums text-foreground/45">{index + 1}</span>
               <InitialsAvatar name={s.userName} color={colorOf(s.userId)} />
               <div className="flex min-w-0 flex-1 flex-col gap-1">

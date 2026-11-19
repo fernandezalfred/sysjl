@@ -15,6 +15,7 @@ import { formatCurrency } from "@/lib/money/pricing";
 import type { EqualDaysComparison, EqualDaysSeller } from "@/lib/money/seller-comparison";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useIsNarrowScreen } from "@/hooks/useIsNarrowScreen";
 import { CHART_COLORS, userColor } from "@/components/sales-charts/chart-theme";
 import { chartMinWidthClass, comparisonChartHeightClass } from "@/components/finance/chart-width";
 import { calculatedDaysText, DaysPerSellerBadge, FinanceCard } from "@/components/finance/FinanceCard";
@@ -48,6 +49,7 @@ function runningTotals(seller: EqualDaysSeller): number[] {
 // the tooltip).
 export function SellerComparisonChart({ comparison, sellerOrder, dayLabel, scope, t }: SellerComparisonChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
+  const narrow = useIsNarrowScreen();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { days, sellers } = comparison;
   const title = t("finance.comparisonLineTitle");
@@ -80,8 +82,8 @@ export function SellerComparisonChart({ comparison, sellerOrder, dayLabel, scope
       },
     },
     scales: {
-      x: categoryAxis(t("finance.axis.comparedDays")),
-      y: amountAxis(mode, t("finance.axis.runningResult")),
+      x: categoryAxis(t("finance.axis.comparedDays"), narrow),
+      y: amountAxis(mode, t("finance.axis.runningResult"), narrow),
     },
   };
 
