@@ -131,7 +131,7 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
             </span>
             <div>
               <p className="text-sm font-semibold">{t("finance.bonusTitle")}</p>
-              <p className="text-sm text-foreground/70">{t("finance.comparisonHint", { days: comparison.days, scope })}</p>
+              <p className="text-sm text-foreground/70">{t(comparison.days === 1 ? "finance.comparisonHintOne" : "finance.comparisonHint", { days: comparison.days, scope })}</p>
             </div>
           </div>
           <div className="grid gap-6 xl:grid-cols-2">

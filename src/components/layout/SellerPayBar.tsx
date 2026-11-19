@@ -51,7 +51,7 @@ function PayCard({
       </span>
       <span className="flex flex-wrap items-baseline justify-between gap-x-2 whitespace-nowrap">
         <strong className={`text-sm tabular-nums sm:text-base ${colors.amount}`}>{formatCurrency(total.amount)}</strong>
-        <span className="text-[11px] text-foreground/55">{t("pay.days", { days: total.days })}</span>
+        <span className="text-[11px] text-foreground/55">{total.days === 1 ? t("pay.dayOne") : t("pay.days", { days: total.days })}</span>
       </span>
     </div>
   );

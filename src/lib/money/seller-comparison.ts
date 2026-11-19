@@ -127,3 +127,14 @@ export function buildPeriodTotals(
   return totals;
 }
 
+
+// Neto − Pago of every record on or after `since` (YYYY-MM-DD): the company's net
+// profit after the workers' pay over a recent stretch (Companies page).
+export function netAfterPaySince(
+  rows: DailyRecordRow[],
+  unitCosts: UnitCosts,
+  deductions: GrainsDeductions,
+  since: string,
+): number {
+  return rows.reduce((sum, r) => (r.date >= since ? sum + recordResult(r, unitCosts, deductions) : sum), 0);
+}

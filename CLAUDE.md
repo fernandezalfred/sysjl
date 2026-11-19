@@ -28,7 +28,7 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - Roles: `SUPER_ADMIN` (exactly one, no company, every company), `ADMIN` (one company, modules in `permissions`: FINANCE, USERS, GRAINS, PRICES; Sale Records always), `VEHICLE_USER` (seller)
 - Claims in the JWT, re-read from the DB on every session check (`src/auth.ts`, `src/lib/auth/claims.ts`, pure rules in `src/lib/auth/permissions.ts`)
 - `src/lib/auth/access.ts`: `getAccess` (the company to act in: own company, or the super admin's switcher cookie), `requireCompanyAccess`, `requireAdminAccess(permission?)`, `requireSuperAdmin`, `requirePageAccess(permission?)`. Every query and action filters by `access.companyId`; another company's data reads as "not found"
-- **Empresas `/admin/companies`** (super admin): companies with sellers, admins, last 30 days' sales; create, rename, deactivate, open. `src/actions/companies.ts`, `src/components/admin/companies/`, `src/lib/company-summaries.ts`
+- **Empresas `/admin/companies`** (super admin): companies with sellers, admins, last 30 days' records and net profit after pay (Neto − Pago); create, rename, deactivate, open. `src/actions/companies.ts`, `src/components/admin/companies/`, `src/lib/company-summaries.ts`
 - Company switcher in the sidebar (super admin). `CompanySwitcher`
 - Existing data: `prisma/migrate-to-companies.ts` (planned by `src/lib/company-migration.ts`)
 

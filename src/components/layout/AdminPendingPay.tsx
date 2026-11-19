@@ -85,7 +85,7 @@ export function AdminPendingPay({ sellers, t }: AdminPendingPayProps) {
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">{seller.userName}</span>
                     <span className="block text-xs text-foreground/55">
-                      {seller.amount > 0 ? t("pay.days", { days: seller.days }) : t("adminPay.upToDate")}
+                      {seller.amount > 0 ? (seller.days === 1 ? t("pay.dayOne") : t("pay.days", { days: seller.days })) : t("adminPay.upToDate")}
                     </span>
                   </span>
                   <strong

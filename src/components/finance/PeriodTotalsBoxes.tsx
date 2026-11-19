@@ -36,7 +36,10 @@ export function PeriodTotalsBoxes({ totals, sellerOrder, periodLabel, scope, t }
         icon="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2.2 2.8 5 3.5 5 1.6 5 3.5-2.2 3-5 3-5-1.1-5-3"
         label={t("finance.workersPay")}
         amount={totals.pay}
-        hint={t("finance.workersPayHint", { scope, records: totals.records })}
+        hint={t("finance.workersPayHint", {
+          scope,
+          records: totals.records === 1 ? t("finance.recordOne") : t("finance.recordsCount", { count: totals.records }),
+        })}
         periodLabel={periodLabel}
       >
         <SellerList sellers={totals.bySeller} amount={(s) => s.pay} colorOf={colorOf} scope={scope} t={t} />

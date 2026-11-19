@@ -6,8 +6,9 @@ export interface CompanySummary {
   isActive: boolean;
   sellers: number;
   admins: number;
-  // Total venta of every record in the last 30 days, and how many records.
-  recentSales: number;
+  // Neto − Pago of every record in the last 30 days (net profit after the workers'
+  // pay), and how many records.
+  recentNetProfit: number;
   recentRecords: number;
 }
 
@@ -17,29 +18,29 @@ interface UserCount {
   _count: { _all: number };
 }
 
-interface SalesSum {
+interface RecordCount {
   companyId: string | null;
-  _sum: { totalSold: number | null };
   _count: { _all: number };
 }
 
 // One summary per company (in the given order) from grouped counts of its users by
-// role and of its recent sales.
+// role and of its recent records, and each company's recent net profit after pay.
 export function buildCompanySummaries(
   companies: { id: string; name: string; isActive: boolean }[],
   userCounts: UserCount[],
-  sales: SalesSum[],
+  recentRecords: RecordCount[],
+  recentNetProfit: Record<string, number>,
 ): CompanySummary[] {
   return companies.map((company) => {
     const countOf = (role: Role) =>
       userCounts.find((c) => c.companyId === company.id && c.role === role)?._count._all ?? 0;
-    const sale = sales.find((s) => s.companyId === company.id);
+    const records = recentRecords.find((r) => r.companyId === company.id);
     return {
       ...company,
       sellers: countOf("VEHICLE_USER"),
       admins: countOf("ADMIN"),
-      recentSales: sale?._sum.totalSold ?? 0,
-      recentRecords: sale?._count._all ?? 0,
+      recentNetProfit: recentNetProfit[company.id] ?? 0,
+      recentRecords: records?._count._all ?? 0,
     };
   });
 }

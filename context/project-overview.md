@@ -47,7 +47,7 @@ Rules:
 | `/dashboard`    | Signed in       | Sales by User charts (day, week, month), Sale Records table with create / edit / delete, Prices & Costs (admin) at the bottom                                     |
 | `/account`      | Signed in       | Change own password                                                                                         |
 | `/admin/users`  | Admin (`USERS`) | The company's users: search, create, edit, deactivate; admins and their permissions by the super admin only |
-| `/admin/companies` | Super admin  | Every company with its sellers, admins and last 30 days' sales; create, rename, deactivate, open            |
+| `/admin/companies` | Super admin  | Every company with its sellers, admins, and last 30 days' records and net profit after pay (Neto − Pago); create, rename, deactivate, open            |
 | `/admin/finance` | Admin (`FINANCE`) | Ingresos y egresos, per day, week, month or since the beginning: each seller's Neto − Pago over the same number of days worked (their last N days, N = the fewest days any seller worked in the period), best first, to choose bonuses; boxes with the period's workers' earnings (Pago) and net profit after pay (Neto − Pago); the company's total Neto per period |
 | `/admin/grains` | Admin (`GRAINS`) | Grain purchases (Maíz pelado, Maíz con cáscara, Haba)                                                       |
 

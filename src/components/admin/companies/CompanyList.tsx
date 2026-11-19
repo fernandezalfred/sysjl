@@ -95,7 +95,7 @@ function CompanyCard({ company, isOpen, t }: { company: CompanySummary; isOpen: 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label={t("companies.sellers")} value={String(company.sellers)} />
         <Stat label={t("companies.admins")} value={String(company.admins)} />
-        <Stat label={t("companies.recentSales")} value={formatCurrency(company.recentSales)} />
+        <Stat label={t("companies.recentNetProfit")} value={formatCurrency(company.recentNetProfit)} />
         <Stat label={t("companies.recentRecords")} value={String(company.recentRecords)} />
       </div>
 

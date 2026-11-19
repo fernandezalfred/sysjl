@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildDailyRecords } from "@/lib/daily-records";
-import { buildEqualDaysComparison, buildNetProfitByPeriod, buildPeriodTotals } from "@/lib/money/seller-comparison";
+import { buildEqualDaysComparison, buildNetProfitByPeriod, buildPeriodTotals, netAfterPaySince } from "@/lib/money/seller-comparison";
 import { buildNetProfitAfterPayByDate, recordAdjustedRevenue } from "@/lib/money/revenue";
 import type { SaleRecord } from "@/types/daily-records";
 
@@ -134,3 +134,13 @@ describe("buildPeriodTotals", () => {
   });
 });
 
+
+describe("netAfterPaySince", () => {
+  it("adds up Neto − Pago of the records on or after the given day", () => {
+    const rows = buildDailyRecords([sale("u1", "2026-10-20", 1000), sale("u1", "2026-10-21", 3200), sale("u2", "2026-10-22", 2000)]);
+    const deductions = { grainsShareByDate: { "2026-10-21": 100 } };
+
+    expect(netAfterPaySince(rows, unitCosts, deductions, "2026-10-21")).toBe(3200 - 100 - 240 + (2000 - 150));
+    expect(netAfterPaySince(rows, unitCosts, deductions, "2026-11-01")).toBe(0);
+  });
+});
