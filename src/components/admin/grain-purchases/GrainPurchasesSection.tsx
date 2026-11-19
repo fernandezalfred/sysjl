@@ -108,7 +108,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
           <button
             type="button"
             onClick={openCreate}
-            className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background"
+            className="min-h-10 rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background sm:min-h-0 sm:px-3"
           >
             {t("stock.newPurchase")}
           </button>
@@ -204,7 +204,7 @@ export function GrainPurchasesSection({ purchases, locale }: GrainPurchasesSecti
       <dialog
         ref={dialogRef}
         {...backdropClose}
-        className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-lg border border-foreground/10 bg-background p-6 text-foreground"
+        className="w-[calc(100%-1.5rem)] max-h-[90dvh] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground sm:p-6"
       >
         <h3 className="mb-4 text-sm font-medium">
           {mode.type === "create" ? t("stock.newPurchase") : `${t("stock.editPurchase")} — ${itemLabel(mode.purchase, t)}`}

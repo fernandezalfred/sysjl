@@ -167,7 +167,7 @@ export function SaleRecordsSection({
           <button
             type="button"
             onClick={openCreate}
-            className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background"
+            className="min-h-10 rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background sm:min-h-0 sm:px-3"
           >
             {t("saleRecords.newRecord")}
           </button>

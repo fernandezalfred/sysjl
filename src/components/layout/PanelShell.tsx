@@ -162,7 +162,8 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
 
   return (
     <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:gap-8">
-      {/* Phone / tablet bar; its height is kept in --phone-bar-height. */}
+      {/* Phone / tablet bar: only this compact row stays pinned (its height is kept in
+          --phone-bar-height); the pay cards below it scroll with the page. */}
       <div ref={phoneBarRef} className="sticky top-0 z-20 -mx-4 flex flex-col gap-3 print:hidden border-b border-foreground/10 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:-mx-6 sm:px-6 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -183,9 +184,13 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
           </div>
           <Avatar initials={user.initials} name={user.name} />
         </div>
-        {payTotals ? <SellerPayBar totals={payTotals} t={t} /> : null}
-        {adminPending ? <AdminPendingPay sellers={adminPending} t={t} /> : null}
       </div>
+      {payTotals || adminPending ? (
+        <div className="-mt-3 print:hidden lg:hidden">
+          {payTotals ? <SellerPayBar totals={payTotals} t={t} /> : null}
+          {adminPending ? <AdminPendingPay sellers={adminPending} t={t} /> : null}
+        </div>
+      ) : null}
 
       {isNavOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -373,7 +378,7 @@ function PanelNavLink({
       href={item.href}
       onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
-      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+      className={`group relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors lg:min-h-0 ${
         isActive
           ? "bg-sky-600/10 font-medium text-sky-700 dark:bg-sky-400/10 dark:text-sky-300"
           : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"

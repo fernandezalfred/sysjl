@@ -29,7 +29,7 @@ export function SalesChartsSection({ dailyRecords, locale }: SalesChartsSectionP
   );
 
   return (
-    <section id={SALES_CHARTS_SECTION_ID} aria-label={t("salesCharts.heading")} className="flex scroll-mt-20 flex-col gap-4">
+    <section id={SALES_CHARTS_SECTION_ID} aria-label={t("salesCharts.heading")} className="flex scroll-mt-[calc(var(--sticky-offset,0px)+1rem)] flex-col gap-4">
 
       {userSalesByPeriod && lastDayProductSales ? (
         <>

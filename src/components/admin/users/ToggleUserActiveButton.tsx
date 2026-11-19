@@ -39,7 +39,7 @@ export function ToggleUserActiveButton({ user, locale }: ToggleUserActiveButtonP
       type="button"
       onClick={handleClick}
       disabled={pending}
-      className="self-start text-sm text-foreground/70 underline hover:text-foreground disabled:opacity-60"
+      className="self-start py-1 text-sm text-foreground/70 underline hover:text-foreground disabled:opacity-60"
     >
       {user.isActive ? t("adminUsers.deactivate") : t("adminUsers.reactivate")}
     </button>

@@ -43,7 +43,7 @@ export function PayPaidToggle({ row, t }: PayPaidToggleProps) {
       disabled={pending}
       title={row.payPaid ? t("pay.markUnpaid") : t("pay.markPaid")}
       aria-label={row.payPaid ? `${t("pay.paid")}: ${t("pay.markUnpaid")}` : t("pay.markPaid")}
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap shadow-sm ring-offset-1 ring-offset-background transition hover:ring-2 disabled:opacity-60 ${
+      className={`inline-flex min-h-7 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold sm:min-h-0 sm:px-2 sm:text-[11px] whitespace-nowrap shadow-sm ring-offset-1 ring-offset-background transition hover:ring-2 disabled:opacity-60 ${
         row.payPaid
           ? "bg-emerald-600 text-white hover:ring-emerald-500/50"
           : "bg-sky-600 text-white hover:bg-sky-700 hover:ring-sky-500/50"

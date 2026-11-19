@@ -119,7 +119,7 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
             type="button"
             aria-pressed={granularity === g}
             onClick={() => setGranularity(g)}
-            className={`rounded-md px-3 py-1 text-sm ${
+            className={`min-h-9 rounded-md px-3 py-1 text-sm sm:min-h-0 ${
               granularity === g ? "bg-foreground/10 font-medium text-foreground" : "text-foreground/70"
             }`}
           >
@@ -139,7 +139,7 @@ export function UserTrendChart({ trends, locale }: UserTrendChartProps) {
                   type="button"
                   aria-pressed={on}
                   onClick={() => toggle(s.userId)}
-                  className={`flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-foreground/5 ${
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-foreground/5 sm:px-1.5 sm:py-0.5 ${
                     on ? "text-foreground/80" : "text-foreground/40 line-through"
                   }`}
                 >

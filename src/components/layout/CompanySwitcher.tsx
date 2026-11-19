@@ -41,7 +41,7 @@ export function CompanySwitcher({ companies, activeCompanyId, t }: CompanySwitch
         value={activeCompanyId ?? ""}
         disabled={pending}
         onChange={(event) => handleChange(event.target.value)}
-        className="w-full cursor-pointer truncate rounded-md border border-foreground/15 bg-background px-2 py-1.5 text-sm font-medium disabled:opacity-60"
+        className="w-full cursor-pointer truncate rounded-md border border-foreground/15 bg-background px-2 py-1.5 text-base font-medium disabled:opacity-60 lg:text-sm"
       >
         {companies.map((company) => (
           <option key={company.id} value={company.id}>

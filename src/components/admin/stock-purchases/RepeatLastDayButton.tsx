@@ -28,7 +28,7 @@ export function RepeatLastDayButton({ t }: RepeatLastDayButtonProps) {
       type="button"
       onClick={handleClick}
       disabled={pending}
-      className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm font-medium disabled:opacity-60"
+      className="min-h-10 rounded-md border border-foreground/20 px-3 py-1.5 text-sm font-medium disabled:opacity-60 sm:min-h-0"
     >
       {pending ? t("repeat.copying") : t("repeat.button")}
     </button>

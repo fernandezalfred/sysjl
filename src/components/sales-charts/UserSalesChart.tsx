@@ -86,7 +86,7 @@ export function UserSalesChart({ periods, locale }: UserSalesChartProps) {
               type="button"
               aria-pressed={granularity === g}
               onClick={() => setGranularity(g)}
-              className={`rounded-md px-3 py-1 text-sm ${
+              className={`min-h-9 rounded-md px-3 py-1 text-sm sm:min-h-0 ${
                 granularity === g ? "bg-foreground/10 font-medium text-foreground" : "text-foreground/70"
               }`}
             >

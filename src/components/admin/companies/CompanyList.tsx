@@ -86,7 +86,7 @@ function CompanyCard({ company, isOpen, t }: { company: CompanySummary; isOpen: 
           type="button"
           onClick={open}
           disabled={pending}
-          className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-60"
+          className="min-h-10 rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background disabled:opacity-60 sm:min-h-0 sm:px-3"
         >
           {t("companies.open")}
         </button>
@@ -100,7 +100,7 @@ function CompanyCard({ company, isOpen, t }: { company: CompanySummary; isOpen: 
       </div>
 
       <details>
-        <summary className="cursor-pointer text-sm text-foreground/70">{t("companies.edit")}</summary>
+        <summary className="cursor-pointer py-1 text-sm text-foreground/70">{t("companies.edit")}</summary>
         <form onSubmit={handleRename} className="mt-3 flex flex-col gap-3">
           <input type="hidden" name="companyId" value={company.id} />
           <div className="flex flex-col gap-1">
