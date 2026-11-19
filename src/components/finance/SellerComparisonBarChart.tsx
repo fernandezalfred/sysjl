@@ -18,6 +18,8 @@ interface SellerComparisonBarChartProps {
   comparison: EqualDaysComparison;
   // Every seller's id in a fixed order: each one keeps the same color in every period.
   sellerOrder: string[];
+  // "en esta semana": where the compared days come from.
+  scope: string;
   t: TranslateFn;
 }
 
@@ -25,7 +27,7 @@ interface SellerComparisonBarChartProps {
 // (N = the fewest days anyone worked in the period), so sellers who worked more days
 // don't win a bonus just for that. Name and amount are written on each bar; each
 // seller has their own color. The caller shows the comparison hint and empty state.
-export function SellerComparisonBarChart({ comparison, sellerOrder, t }: SellerComparisonBarChartProps) {
+export function SellerComparisonBarChart({ comparison, sellerOrder, scope, t }: SellerComparisonBarChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
   const { days, sellers } = comparison;
   const title = t("finance.comparisonTitle");
@@ -45,7 +47,7 @@ export function SellerComparisonBarChart({ comparison, sellerOrder, t }: SellerC
       },
     },
     scales: {
-      x: { ...amountAxis(mode), grace: "15%" },
+      x: { ...amountAxis(mode, t("finance.axis.result")), grace: "15%" },
       y: {
         // Seller names are written inside the bars.
         ticks: { display: false },
@@ -56,7 +58,7 @@ export function SellerComparisonBarChart({ comparison, sellerOrder, t }: SellerC
   };
 
   return (
-    <FinanceCard title={title} subtitle={t("finance.comparisonBarSubtitle")} aside={<DaysPerSellerBadge days={days} t={t} />}>
+    <FinanceCard title={title} subtitle={t("finance.comparisonBarSubtitle", { scope })} aside={<DaysPerSellerBadge days={days} t={t} />}>
       <div className={`mt-auto ${chartScrollFrameClass(sellers.length)}`}>
         <div className={sellers.length > 24 ? chartHeightClass(sellers.length) : comparisonChartHeightClass(sellers.length)}>
           <Bar

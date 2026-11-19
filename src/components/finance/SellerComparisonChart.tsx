@@ -28,6 +28,8 @@ interface SellerComparisonChartProps {
   sellerOrder: string[];
   // "12 nov" for a YYYY-MM-DD date.
   dayLabel: (date: string) => string;
+  // "en esta semana": where the compared days come from.
+  scope: string;
   t: TranslateFn;
 }
 
@@ -44,7 +46,7 @@ function runningTotals(seller: EqualDaysSeller): number[] {
 // so it ends at the seller's total; a steeper line is a better day. Each seller has
 // their own color, the same as their bar next to it (names are on the bars and in
 // the tooltip).
-export function SellerComparisonChart({ comparison, sellerOrder, dayLabel, t }: SellerComparisonChartProps) {
+export function SellerComparisonChart({ comparison, sellerOrder, dayLabel, scope, t }: SellerComparisonChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
   const scrollRef = useRef<HTMLDivElement>(null);
   const { days, sellers } = comparison;
@@ -78,15 +80,15 @@ export function SellerComparisonChart({ comparison, sellerOrder, dayLabel, t }: 
       },
     },
     scales: {
-      x: categoryAxis(),
-      y: amountAxis(mode),
+      x: categoryAxis(t("finance.axis.comparedDays")),
+      y: amountAxis(mode, t("finance.axis.runningResult")),
     },
   };
 
   return (
     <FinanceCard
       title={title}
-      subtitle={t("finance.comparisonLineSubtitle")}
+      subtitle={t("finance.comparisonLineSubtitle", { scope })}
       aside={<DaysPerSellerBadge days={days} t={t} />}
     >
       <div ref={scrollRef} className="styled-scroll mt-auto overflow-x-auto overscroll-x-contain">

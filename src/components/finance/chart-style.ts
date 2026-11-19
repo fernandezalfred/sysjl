@@ -27,10 +27,16 @@ export function financeTooltip(mode: Mode): Partial<TooltipOptions<"bar" | "line
   };
 }
 
-// The amount axis: Bs labels, a few dashed grid lines, no axis line.
-export function amountAxis(mode: Mode, beginAtZero = true) {
+// An axis title: what the axis measures, in small muted text.
+function axisTitle(text: string | undefined) {
+  return text ? { display: true, text, color: CHART_COLORS.muted, font: { size: 11, weight: 600 as const }, padding: 4 } : undefined;
+}
+
+// The amount axis: Bs labels, a few dashed grid lines, no axis line, optional title.
+export function amountAxis(mode: Mode, title?: string) {
   return {
-    beginAtZero,
+    beginAtZero: true,
+    title: axisTitle(title),
     grace: "8%" as const,
     ticks: {
       color: CHART_COLORS.muted,
@@ -44,9 +50,10 @@ export function amountAxis(mode: Mode, beginAtZero = true) {
   };
 }
 
-// The category axis (days, periods): labels only.
-export function categoryAxis() {
+// The category axis (days, periods): labels and an optional title.
+export function categoryAxis(title?: string) {
   return {
+    title: axisTitle(title),
     ticks: { color: CHART_COLORS.muted, font: FONT, padding: 8, maxRotation: 0, autoSkipPadding: 12 },
     grid: { display: false },
     border: { display: false },

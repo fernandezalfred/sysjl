@@ -15,6 +15,7 @@ import { Line } from "react-chartjs-2";
 import { formatCurrency } from "@/lib/money/pricing";
 import type { PeriodNetProfit } from "@/lib/money/seller-comparison";
 import type { TranslateFn } from "@/lib/i18n/translations";
+import type { Granularity } from "@/lib/date-buckets";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
 import { CHART_COLORS } from "@/components/sales-charts/chart-theme";
 import { chartMinWidthClass } from "@/components/finance/chart-width";
@@ -26,15 +27,17 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, 
 interface NetProfitChartProps {
   periods: PeriodNetProfit[];
   label: (period: string) => string;
+  // What one point is: a day, a week or a month.
+  granularity: Granularity;
   t: TranslateFn;
 }
 
 // The company's total Neto as an area line, one point per day, week or month; the
 // newest period is in view and older ones scroll in from the left.
-export function NetProfitChart({ periods, label, t }: NetProfitChartProps) {
+export function NetProfitChart({ periods, label, granularity, t }: NetProfitChartProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
   const scrollRef = useRef<HTMLDivElement>(null);
-  const title = t("finance.netTrendTitle");
+  const title = t("finance.netTrendTitle", { per: t(`finance.per.${granularity}`) });
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -54,13 +57,13 @@ export function NetProfitChart({ periods, label, t }: NetProfitChartProps) {
       },
     },
     scales: {
-      x: categoryAxis(),
-      y: amountAxis(mode),
+      x: categoryAxis(t(`trend.${granularity}`)),
+      y: amountAxis(mode, t("finance.axis.net")),
     },
   };
 
   return (
-    <FinanceCard title={title} subtitle={t("finance.netTrendSubtitle")}>
+    <FinanceCard title={title} subtitle={t("finance.netTrendSubtitle", { unit: t(`finance.unit.${granularity}`) })}>
       <div ref={scrollRef} className="styled-scroll overflow-x-auto overscroll-x-contain -mx-1 pb-2">
         <div className={`h-64 ${chartMinWidthClass(periods.length)}`}>
           <Line

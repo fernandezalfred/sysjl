@@ -65,6 +65,8 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
   if (!selected) return <p className="text-sm text-foreground/70">{t("trend.noData")}</p>;
 
   const periodText = sinceStart ? t("finance.sinceStart") : label(selected);
+  // "en este día" / "en esta semana" / "en este mes" / "desde el inicio".
+  const scope = t(`finance.scope.${view}`);
 
   return (
     <div className="flex flex-col gap-6">
@@ -115,11 +117,11 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
         )}
       </div>
 
-      <PeriodTotalsBoxes totals={totals} sellerOrder={sellerOrder} periodLabel={periodText} t={t} />
+      <PeriodTotalsBoxes totals={totals} sellerOrder={sellerOrder} periodLabel={periodText} scope={scope} t={t} />
 
       {comparison.sellers.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-foreground/15 p-6 text-center text-sm text-foreground/65">
-          {t("finance.noRecords")}
+          {t("finance.noRecords", { scope })}
         </p>
       ) : (
         <>
@@ -129,21 +131,22 @@ export function FinanceSection({ dailyRecords, unitCosts, deductions, locale }: 
             </span>
             <div>
               <p className="text-sm font-semibold">{t("finance.bonusTitle")}</p>
-              <p className="text-sm text-foreground/70">{t("finance.comparisonHint", { days: comparison.days })}</p>
+              <p className="text-sm text-foreground/70">{t("finance.comparisonHint", { days: comparison.days, scope })}</p>
             </div>
           </div>
           <div className="grid gap-6 xl:grid-cols-2">
-            <SellerComparisonBarChart comparison={comparison} sellerOrder={sellerOrder} t={t} />
+            <SellerComparisonBarChart comparison={comparison} sellerOrder={sellerOrder} scope={scope} t={t} />
             <SellerComparisonChart
               comparison={comparison}
               sellerOrder={sellerOrder}
               dayLabel={(date) => formatDayLabel(date, locale)}
+              scope={scope}
               t={t}
             />
           </div>
         </>
       )}
-      <NetProfitChart periods={periods} label={label} t={t} />
+      <NetProfitChart periods={periods} label={label} granularity={granularity} t={t} />
     </div>
   );
 }

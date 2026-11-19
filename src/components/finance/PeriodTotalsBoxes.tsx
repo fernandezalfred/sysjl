@@ -16,13 +16,15 @@ interface PeriodTotalsBoxesProps {
   sellerOrder: string[];
   // "12 nov", "Semana del 9 nov", "noviembre de 2026" or "Desde el inicio".
   periodLabel: string;
+  // "en esta semana": the view the totals cover.
+  scope: string;
   t: TranslateFn;
 }
 
 // The chosen period's two totals over every seller's records: what the workers earned
 // (their Pago, paid or not) and the company's net profit after it (Neto − Pago), each
 // with what every worker accounts for, largest first, and a bar of their share.
-export function PeriodTotalsBoxes({ totals, sellerOrder, periodLabel, t }: PeriodTotalsBoxesProps) {
+export function PeriodTotalsBoxes({ totals, sellerOrder, periodLabel, scope, t }: PeriodTotalsBoxesProps) {
   const mode = useIsDarkMode() ? "dark" : "light";
   const colorOf = (userId: string) => userColor(Math.max(0, sellerOrder.indexOf(userId)), mode);
   const byResult = [...totals.bySeller].sort((a, b) => b.result - a.result || a.userName.localeCompare(b.userName));
@@ -34,20 +36,20 @@ export function PeriodTotalsBoxes({ totals, sellerOrder, periodLabel, t }: Perio
         icon="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2.2 2.8 5 3.5 5 1.6 5 3.5-2.2 3-5 3-5-1.1-5-3"
         label={t("finance.workersPay")}
         amount={totals.pay}
-        hint={t("finance.workersPayHint", { records: totals.records })}
+        hint={t("finance.workersPayHint", { scope, records: totals.records })}
         periodLabel={periodLabel}
       >
-        <SellerList sellers={totals.bySeller} amount={(s) => s.pay} colorOf={colorOf} t={t} />
+        <SellerList sellers={totals.bySeller} amount={(s) => s.pay} colorOf={colorOf} scope={scope} t={t} />
       </TotalCard>
       <TotalCard
         tone="net"
         icon="M3 17l6-6 4 4 8-8M15 7h6v6"
         label={t("finance.netAfterPay")}
         amount={totals.result}
-        hint={t("finance.netAfterPayHint")}
+        hint={t("finance.netAfterPayHint", { scope })}
         periodLabel={periodLabel}
       >
-        <SellerList sellers={byResult} amount={(s) => s.result} colorOf={colorOf} signed t={t} />
+        <SellerList sellers={byResult} amount={(s) => s.result} colorOf={colorOf} scope={scope} signed t={t} />
       </TotalCard>
     </div>
   );
@@ -114,17 +116,18 @@ interface SellerListProps {
   colorOf: (userId: string) => string;
   // Amounts can be negative: colored green / red.
   signed?: boolean;
+  scope: string;
   t: TranslateFn;
 }
 
 // Each worker: rank, color avatar with initials, name and days, amount, and a bar of
 // their part of the largest amount in the list.
-function SellerList({ sellers, amount, colorOf, signed = false, t }: SellerListProps) {
+function SellerList({ sellers, amount, colorOf, signed = false, scope, t }: SellerListProps) {
   if (sellers.length === 0) return null;
   const largest = Math.max(1, ...sellers.map((s) => Math.abs(amount(s))));
   return (
     <div className="flex flex-col gap-1 border-t border-foreground/10 pt-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">{t("finance.perWorker")}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">{t("finance.perWorker", { scope })}</p>
       <ol className="flex flex-col">
         {sellers.map((s, index) => {
           const value = amount(s);
