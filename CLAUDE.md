@@ -41,7 +41,7 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - Header: title and "● Actualizado · day, date · time" in Bolivia time
 - **Sales charts** (top): sales per user by Día/Semana/Mes (grows and scrolls with many sellers), by product for the selected day, sold + unsold over time (generated colors past 8 sellers; legend toggles lines, top 8 shown first, `topTrendSeries`). `src/components/sales-charts/`, `src/lib/sales-charts.ts`
 - **Sale Records**: grouped by day (day header shows weekday, e.g. "Nov 12, 26 jueves", and the day's Neto − Pago for admins); every other day shaded; clicking a day header shows that day in the charts. Create / edit / delete in `<dialog>` modals. Pagination never splits a day (`src/lib/pagination.ts`). `src/components/sale-records/`, `src/actions/daily-work-records.ts`
-  - Per row: Queso/Yogurt taken/left/sold, Leche y Mote (loser in red, admins see "Diferencia"), Total venta (daily winner in green), seller pay (Pago) pill — admin toggles Pagar / ✓ Pagado; Neto − Pago under the name for admins
+  - Per row: Queso/Yogurt taken/left/sold, Leche y Mote (loser in red, admins see the gap to the winner as a negative amount, e.g. "-Bs 120"), Total venta (daily winner in green), seller pay (Pago) pill — admin toggles Pagar / ✓ Pagado; Neto − Pago under the name for admins
   - Sellers see and edit only their own records
 - **Prices & Costs** (PRICES, bottom): Queso/Yogurt sale price and purchase cost. `src/components/admin/product-pricing/`, `src/actions/product-prices.ts`
 

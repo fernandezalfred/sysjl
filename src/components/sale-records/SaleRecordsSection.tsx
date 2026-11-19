@@ -229,7 +229,7 @@ export function SaleRecordsSection({
                     </td>
                     <td className={`px-4 py-2 ${loserBackgroundClass(row.isDailyLoser)}`}>
                       <div className="text-amount whitespace-nowrap font-semibold">{formatCurrency(row.milkMoteRevenue)}</div>
-                      {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
+                      {isAdmin ? <LossMargin lossMargin={row.lossMargin} /> : null}
                     </td>
                     <td
                       className={
@@ -308,7 +308,7 @@ export function SaleRecordsSection({
                             {formatCurrency(row.milkMoteRevenue)}
                           </div>
                         </div>
-                        {isAdmin ? <LossMargin lossMargin={row.lossMargin} t={t} /> : null}
+                        {isAdmin ? <LossMargin lossMargin={row.lossMargin} /> : null}
                         </div>
                     </div>
                     {/* The winner's green background bleeds 8px past the column (-mx-2 px-2)
