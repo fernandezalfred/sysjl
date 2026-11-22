@@ -34,6 +34,8 @@ export const proxy = auth((req) => {
   }
 });
 
+// The PWA files (manifest, service worker, icons, offline page) are public: the
+// browser fetches them without a session, and a redirect to /login would break them.
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|icons/|apple-icon).*)"],
 };

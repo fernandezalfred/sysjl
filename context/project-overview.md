@@ -15,6 +15,7 @@ The UI is in Spanish by default, with English as an option (cookie-backed langua
 - Auth.js v5: Credentials provider, bcrypt, JWT sessions
 - Tailwind CSS v4 (CSS-based config in `src/app/globals.css`)
 - Zod for input validation, SweetAlert2 for confirmations, success toasts and error popups, Chart.js (`react-chartjs-2`) for charts, Vitest for unit tests
+- Installable as a PWA (manifest + a small service worker: build files and icons cached, pages and data always from the network, offline page)
 - Deployed on Vercel
 
 ## 3. Roles and Access
