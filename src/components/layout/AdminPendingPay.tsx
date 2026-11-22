@@ -120,14 +120,32 @@ export function AdminPendingPay({ sellers, t }: AdminPendingPayProps) {
           ) : (
             <ul className="max-h-[60vh] divide-y divide-foreground/10 overflow-y-auto">
               {sellers.map((seller) => (
-                <li key={seller.userId} className="flex flex-col gap-1.5 px-3 py-2.5 sm:gap-2 sm:px-4 sm:py-3">
+                <li key={seller.userId} className="px-3 py-2.5 sm:px-4 sm:py-3">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-medium sm:text-sm">{seller.userName}</span>
-                      <span className="block text-[11px] text-foreground/55 sm:text-xs">
-                        {seller.amount > 0 ? daysLabel(seller.days) : t("adminPay.upToDate")}
-                      </span>
-                    </span>
+                      {/* Second line: the days owed; once up to date, the undo of their last
+                          payment in place of "Al día" (so the row stays two lines). */}
+                      {seller.amount === 0 && seller.lastPayment ? (
+                        <button
+                          type="button"
+                          onClick={() => handleUndo(seller)}
+                          disabled={paying}
+                          className="-mx-1 flex max-w-full items-center gap-1 rounded px-1 py-1 text-left text-[11px] font-medium text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-60 sm:py-0.5 sm:text-xs"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-3 w-3 flex-shrink-0">
+                            <path d="M3 7v6h6M3 13a9 9 0 103-6.7L3 9" />
+                          </svg>
+                          <span className="truncate">
+                            {t("adminPay.undoLastPayment", { amount: formatCurrency(seller.lastPayment.amount), days: daysLabel(seller.lastPayment.days) })}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="block text-[11px] text-foreground/55 sm:text-xs">
+                          {seller.amount > 0 ? daysLabel(seller.days) : t("adminPay.upToDate")}
+                        </span>
+                      )}
+                    </div>
                     {seller.amount > 0 ? (
                       <>
                         <button
@@ -153,19 +171,6 @@ export function AdminPendingPay({ sellers, t }: AdminPendingPayProps) {
                       {seller.amount > 0 ? formatCurrency(seller.amount) : "✓"}
                     </strong>
                   </div>
-                  {seller.amount === 0 && seller.lastPayment ? (
-                    <button
-                      type="button"
-                      onClick={() => handleUndo(seller)}
-                      disabled={paying}
-                      className="inline-flex min-h-10 items-center gap-1.5 self-start text-left text-[11px] font-medium sm:text-xs text-foreground/60 underline-offset-2 transition hover:text-foreground hover:underline disabled:opacity-60 sm:min-h-0"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0">
-                        <path d="M3 7v6h6M3 13a9 9 0 103-6.7L3 9" />
-                      </svg>
-                      {t("adminPay.undoLastPayment", { amount: formatCurrency(seller.lastPayment.amount), days: daysLabel(seller.lastPayment.days) })}
-                    </button>
-                  ) : null}
                 </li>
               ))}
             </ul>
