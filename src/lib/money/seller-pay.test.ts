@@ -109,9 +109,25 @@ describe("pendingPayBySeller", () => {
     ];
 
     expect(pendingPayBySeller(records)).toEqual([
-      { userId: "u2", userName: "Daniel", amount: 170 + 150, days: 2 },
-      { userId: "u1", userName: "Raul", amount: 150, days: 1 },
-      { userId: "u3", userName: "Fabia", amount: 0, days: 0 },
+      { userId: "u2", userName: "Daniel", amount: 170 + 150, days: 2, lastPayment: null },
+      { userId: "u1", userName: "Raul", amount: 150, days: 1, lastPayment: null },
+      { userId: "u3", userName: "Fabia", amount: 0, days: 0, lastPayment: null },
+    ]);
+  });
+
+  it("gives each seller's most recent payment: every day sharing the newest payPaidAt", () => {
+    const older = new Date("2026-11-01T12:00:00Z");
+    const newer = new Date("2026-11-20T12:00:00Z");
+    const records = [
+      { userId: "u1", userName: "Raul", totalSold: 3000, payPaid: true, payPaidAt: older },
+      { userId: "u1", userName: "Raul", totalSold: 2000, payPaid: true, payPaidAt: newer },
+      { userId: "u1", userName: "Raul", totalSold: 2700, payPaid: true, payPaidAt: newer },
+      { userId: "u1", userName: "Raul", totalSold: 3000, payPaid: true, payPaidAt: null },
+      { userId: "u1", userName: "Raul", totalSold: 2000, payPaid: false },
+    ];
+
+    expect(pendingPayBySeller(records)).toEqual([
+      { userId: "u1", userName: "Raul", amount: 150, days: 1, lastPayment: { amount: 150 + 170, days: 2 } },
     ]);
   });
 });

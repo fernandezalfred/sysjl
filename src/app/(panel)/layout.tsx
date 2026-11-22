@@ -76,7 +76,7 @@ async function getPendingPayBySeller(companyId: string): Promise<SellerPending[]
     select: { userId: true, totalSold: true, payPaidAt: true, user: { select: { name: true } } },
   });
   return pendingPayBySeller(
-    rows.map((r) => ({ userId: r.userId, userName: r.user.name, totalSold: r.totalSold, payPaid: Boolean(r.payPaidAt) })),
+    rows.map((r) => ({ userId: r.userId, userName: r.user.name, totalSold: r.totalSold, payPaid: Boolean(r.payPaidAt), payPaidAt: r.payPaidAt })),
   );
 }
 

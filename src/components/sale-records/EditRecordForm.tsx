@@ -9,6 +9,8 @@ import type { DailyWorkRecordRow } from "@/types/daily-records";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
+import { useErrorAlert } from "@/hooks/useErrorAlert";
+import { useInvalidFormAlert } from "@/hooks/useInvalidFormAlert";
 import { confirmAlert, errorAlert, successToast } from "@/lib/alerts";
 
 const initialState: ActionState = { success: false };
@@ -18,7 +20,7 @@ function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background disabled:opacity-60"
+      className="min-h-11 rounded-lg bg-foreground px-4 py-2.5 text-sm font-semibold text-background disabled:opacity-60 sm:min-h-0"
     >
       {pending ? t("records.saving") : t("records.save")}
     </button>
@@ -36,6 +38,8 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
   const [state, formAction, pending] = useActionState(updateDailyWorkRecord, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
   useSuccessToast(state, t("toast.recordUpdated"));
+  useErrorAlert(state, t);
+  const handleInvalid = useInvalidFormAlert(t);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -57,7 +61,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} onInvalid={handleInvalid} className="flex flex-col gap-3">
       <input type="hidden" name="recordId" value={record.id} />
       {/* Disabled: a record's seller can't be changed on edit, and a disabled field is never submitted. */}
       <div className="flex flex-col gap-1">
@@ -80,7 +84,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
         </p>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col-reverse gap-2 sticky bottom-0 z-10 -mx-4 -mb-4 border-t border-foreground/10 bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:p-0 sm:pt-1 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={handleDelete}
@@ -94,7 +98,7 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:border-transparent"
+            className="min-h-11 rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:min-h-0 sm:border-transparent"
           >
             {t("records.cancel")}
           </button>

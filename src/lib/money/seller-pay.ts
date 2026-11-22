@@ -69,21 +69,42 @@ export function paidSellerPay(
 export interface SellerPending extends PayTotal {
   userId: string;
   userName: string;
+  // The seller's most recent payment (a "Pagar todo" or a single day), which can be undone.
+  lastPayment: PayTotal | null;
+}
+
+interface PendingInput {
+  userId: string;
+  userName: string;
+  totalSold: number;
+  payPaid: boolean;
+  payPaidAt?: Date | null;
 }
 
 // Every seller with records and what each is still owed (unpaid Pago), most owed first;
 // sellers with nothing pending stay in the list with 0, last.
-export function pendingPayBySeller(
-  records: { userId: string; userName: string; totalSold: number; payPaid: boolean }[],
-): SellerPending[] {
+export function pendingPayBySeller(records: PendingInput[]): SellerPending[] {
   const bySeller = new Map<string, SellerPending>();
+  const lastPaidTime = new Map<string, number>();
   for (const r of records) {
-    const entry = bySeller.get(r.userId) ?? { userId: r.userId, userName: r.userName, amount: 0, days: 0 };
+    const entry = bySeller.get(r.userId) ?? { userId: r.userId, userName: r.userName, amount: 0, days: 0, lastPayment: null };
+    bySeller.set(r.userId, entry);
     if (!r.payPaid) {
       entry.amount += sellerPay(r.totalSold);
       entry.days += 1;
+      continue;
     }
-    bySeller.set(r.userId, entry);
+    if (!r.payPaidAt) continue;
+    // Days paid together share one payPaidAt: only the newest one counts.
+    const time = r.payPaidAt.getTime();
+    const last = lastPaidTime.get(r.userId) ?? 0;
+    if (time < last) continue;
+    if (time > last || !entry.lastPayment) {
+      lastPaidTime.set(r.userId, time);
+      entry.lastPayment = { amount: 0, days: 0 };
+    }
+    entry.lastPayment.amount += sellerPay(r.totalSold);
+    entry.lastPayment.days += 1;
   }
   return [...bySeller.values()].sort((a, b) => b.amount - a.amount || a.userName.localeCompare(b.userName));
 }

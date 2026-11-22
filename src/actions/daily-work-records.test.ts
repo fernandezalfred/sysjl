@@ -5,9 +5,12 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
   prismaMock: {
     dailyWorkRecord: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      count: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      updateMany: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
@@ -29,7 +32,9 @@ vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 import {
   createDailyWorkRecord,
   deleteDailyWorkRecord,
+  payAllPendingForSeller,
   setRecordPayPaid,
+  undoLastPayment,
   updateDailyWorkRecord,
 } from "@/actions/daily-work-records";
 
@@ -472,6 +477,84 @@ describe("setRecordPayPaid", () => {
     await setRecordPayPaid("ee0000000000000000000001", false);
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
       where: { id: "ee0000000000000000000001" },
+      data: { payPaidAt: null },
+    });
+  });
+});
+
+describe("payAllPendingForSeller", () => {
+  const SELLER_ID = "aa0000000000000000000001";
+
+  it("rejects a seller", async () => {
+    authMock.mockResolvedValue(SESSION);
+    expect(await payAllPendingForSeller(SELLER_ID)).toEqual({ success: false, error: "Admin access required." });
+    expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects an id that isn't an ObjectId without touching the database", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    expect(await payAllPendingForSeller("nope")).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("marks only that seller's unpaid days of the admin's company as paid", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.updateMany.mockResolvedValue({ count: 3 });
+    expect(await payAllPendingForSeller(SELLER_ID)).toEqual({ success: true });
+    const call = prismaMock.dailyWorkRecord.updateMany.mock.calls[0][0];
+    expect(call.where).toEqual({
+      companyId: "c1",
+      userId: SELLER_ID,
+      OR: [{ payPaidAt: null }, { payPaidAt: { isSet: false } }],
+    });
+    // One timestamp for every day, so the whole payment can be undone together.
+    expect(call.data).toEqual({ payPaidAt: expect.any(Date) });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/", "layout");
+  });
+});
+
+describe("undoLastPayment", () => {
+  const SELLER_ID = "aa0000000000000000000001";
+
+  it("rejects a seller and an invalid id", async () => {
+    authMock.mockResolvedValue(SESSION);
+    expect(await undoLastPayment(SELLER_ID)).toEqual({ success: false, error: "Admin access required." });
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    expect(await undoLastPayment("nope")).toEqual({ success: false, error: "User not found." });
+    expect(prismaMock.dailyWorkRecord.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses while the seller still has unpaid days", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.count.mockResolvedValue(2);
+    expect(await undoLastPayment(SELLER_ID)).toEqual({ success: false, error: "Pay what's owed first." });
+    expect(prismaMock.dailyWorkRecord.count).toHaveBeenCalledWith({
+      where: { companyId: "c1", userId: SELLER_ID, OR: [{ payPaidAt: null }, { payPaidAt: { isSet: false } }] },
+    });
+    expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("says there's nothing to undo when the seller has no paid day in the company", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.count.mockResolvedValue(0);
+    prismaMock.dailyWorkRecord.findFirst.mockResolvedValue(null);
+    expect(await undoLastPayment(SELLER_ID)).toEqual({ success: false, error: "Nothing to undo." });
+    expect(prismaMock.dailyWorkRecord.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { companyId: "c1", userId: SELLER_ID, payPaidAt: { not: null } } }),
+    );
+    expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("puts only the days of the latest payment back as unpaid", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.count.mockResolvedValue(0);
+    const paidAt = new Date("2026-11-20T12:00:00Z");
+    prismaMock.dailyWorkRecord.findFirst.mockResolvedValue({ payPaidAt: paidAt });
+    expect(await undoLastPayment(SELLER_ID)).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.findFirst).toHaveBeenCalledWith(expect.objectContaining({ orderBy: { payPaidAt: "desc" } }));
+    expect(prismaMock.dailyWorkRecord.updateMany).toHaveBeenCalledWith({
+      where: { companyId: "c1", userId: SELLER_ID, payPaidAt: paidAt },
       data: { payPaidAt: null },
     });
   });

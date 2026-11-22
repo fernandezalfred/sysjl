@@ -16,10 +16,15 @@ interface RecordFormFieldsProps {
   t: TranslateFn;
 }
 
-// Usual purchase price of Milk; prefilled on a new record, the seller can change it.
+// Prefilled on a new record (the usual day); the seller can change them.
 const DEFAULT_MILK_UNIT_COST = 7;
-const inputClass =
-  "w-full min-w-0 rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base tabular-nums focus:border-foreground/50 focus:outline-none";
+const DEFAULT_MILK_LITERS = 30;
+const DEFAULT_YOGURT_TAKEN = 24;
+// A field with a value gets a soft blue fill; the focused one a clear ring; after a
+// blocked submit (data-checked, set by useInvalidFormAlert) an empty or wrong one turns red.
+export const FIELD_STATE_CLASS =
+  "transition-colors valid:border-sky-500/40 valid:bg-sky-500/[0.06] focus:border-sky-500 focus:bg-background focus:ring-2 focus:ring-sky-500/30 focus:outline-none data-checked:invalid:border-red-500 data-checked:invalid:bg-red-500/[0.06] data-checked:invalid:ring-red-500/30";
+const inputClass = `w-full min-w-0 rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base tabular-nums ${FIELD_STATE_CLASS}`;
 const labelClass = "text-xs font-medium text-foreground/70";
 
 interface NumberFieldProps {
@@ -88,12 +93,12 @@ export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
       </FieldGroup>
 
       <FieldGroup title={t("product.yogurt")} hint={units}>
-        <NumberField id="yogurt-taken" name="yogurtTaken" label="records.taken" defaultValue={defaultValues?.yogurtTaken} t={t} />
+        <NumberField id="yogurt-taken" name="yogurtTaken" label="records.taken" defaultValue={defaultValues?.yogurtTaken ?? DEFAULT_YOGURT_TAKEN} t={t} />
         <NumberField id="yogurt-remaining" name="yogurtRemaining" label="records.left" defaultValue={defaultValues?.yogurtRemaining} t={t} />
       </FieldGroup>
 
       <FieldGroup title={t("records.milk")}>
-        <NumberField id="milk-liters" name="milkLiters" label="records.milkLiters" defaultValue={defaultValues?.milkLiters} t={t} />
+        <NumberField id="milk-liters" name="milkLiters" label="records.milkLiters" defaultValue={defaultValues?.milkLiters ?? DEFAULT_MILK_LITERS} t={t} />
         <NumberField
           id="milk-unit-cost"
           name="milkUnitCost"

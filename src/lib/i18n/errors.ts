@@ -42,6 +42,8 @@ const ERROR_KEYS: Record<string, DictionaryKey> = {
   "Stock purchase not found.": "error.purchaseNotFound",
   "Select a user.": "error.selectUser",
   "User not found.": "error.userNotFound",
+  "Nothing to undo.": "error.nothingToUndo",
+  "Pay what's owed first.": "error.payOwedFirst",
   "The new password must be different from the current one.": "error.passwordSameAsCurrent",
   "The new passwords don't match.": "error.passwordsDontMatch",
   "You already have a record for this date.": "error.recordExists",

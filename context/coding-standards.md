@@ -77,7 +77,7 @@ src/
 - Shared rules live in `src/lib/validation.ts`: check every id with `objectIdSchema` (or `OBJECT_ID`) before querying, including plain arguments like `deleteX(id)`, and check boolean arguments; show `firstIssue(parsed.error)`
 - Forms use `useActionState` + `useSubmitWithoutReset` so fields keep their values when validation fails
 - Popups go through `src/lib/alerts.ts` (SweetAlert2): `confirmAlert` before deleting or changing state (never `window.confirm`), `successToast` after every save/delete (`useSuccessToast` for `useActionState` forms), `errorAlert` when a button action fails
-- Form validation errors stay inline under the fields
+- Form validation errors stay inline under the fields; the sale record forms also show them in a popup (`useInvalidFormAlert` for empty/invalid fields, `useErrorAlert` for the action's error)
 
 ## Testing
 

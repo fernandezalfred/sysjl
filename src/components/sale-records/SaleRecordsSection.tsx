@@ -22,6 +22,7 @@ import { translate, type Locale, type TranslateFn } from "@/lib/i18n/translation
 import type { DailyRecordRow, DailyWorkRecordRow } from "@/types/daily-records";
 import { useBackdropClose } from "@/hooks/useBackdropClose";
 import { useGroupedPagination } from "@/hooks/usePagination";
+import { useVisualViewportCssVars } from "@/hooks/useVisualViewportCssVars";
 import { Pagination } from "@/components/ui/Pagination";
 import { EditButton } from "@/components/ui/EditButton";
 
@@ -106,6 +107,8 @@ export function SaleRecordsSection({
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backdropClose = useBackdropClose();
+  // Keeps the record modal (and its Save button) above the phone keyboard.
+  useVisualViewportCssVars();
   const [mode, setMode] = useState<Mode>({ type: "create" });
   // Bumped on every open so the create/edit form below always gets a fresh `key` —
   // without it, reopening in the same mode twice in a row (e.g. "New record" after
@@ -336,7 +339,7 @@ export function SaleRecordsSection({
       <dialog
         ref={dialogRef}
         {...backdropClose}
-        className="vertical-scroll w-[calc(100%-1.5rem)] max-h-[90dvh] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground sm:p-6"
+        className="vertical-scroll w-[calc(100%-1.5rem)] max-h-[min(90dvh,calc(var(--vv-height,100dvh)-1.5rem))] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground max-sm:mt-[calc(var(--vv-top,0px)+0.75rem)] max-sm:mb-auto sm:p-6"
       >
         <h3 className="mb-4 text-base font-semibold">
           {mode.type === "create" ? t("records.newRecord") : t("records.editRecord")}

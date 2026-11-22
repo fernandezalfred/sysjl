@@ -245,3 +245,71 @@ export async function setRecordPayPaid(recordId: string, paid: boolean): Promise
     return authErrorState(error);
   }
 }
+
+const sellerIdSchema = objectIdSchema("User not found.");
+
+// The "Por pagar" header is on every panel page, not only /dashboard.
+function refreshPanel() {
+  revalidatePath("/", "layout");
+}
+
+// Admin only: marks every unpaid day of one seller of the company as paid at once (the
+// seller was paid everything they were owed). They all get the same payPaidAt, so
+// undoLastPayment can put them back as unpaid together.
+export async function payAllPendingForSeller(userId: string): Promise<ActionState> {
+  try {
+    const access = await requireAdminAccess();
+    if (!sellerIdSchema.safeParse(userId).success) {
+      return { success: false, error: "User not found." };
+    }
+
+    await prisma.dailyWorkRecord.updateMany({
+      // Unpaid days usually have no payPaidAt at all (unset), not null.
+      where: { companyId: access.companyId, userId, OR: [{ payPaidAt: null }, { payPaidAt: { isSet: false } }] },
+      data: { payPaidAt: new Date() },
+    });
+
+    refreshPanel();
+    return { success: true };
+  } catch (error) {
+    return authErrorState(error);
+  }
+}
+
+// Admin only: undoes the seller's most recent payment (a "Pagar todo" or a single day:
+// every day with the latest payPaidAt), so those days show as owed again. Only for a
+// seller who is up to date; while something is owed, there's nothing to restore.
+export async function undoLastPayment(userId: string): Promise<ActionState> {
+  try {
+    const access = await requireAdminAccess();
+    if (!sellerIdSchema.safeParse(userId).success) {
+      return { success: false, error: "User not found." };
+    }
+
+    const owed = await prisma.dailyWorkRecord.count({
+      where: { companyId: access.companyId, userId, OR: [{ payPaidAt: null }, { payPaidAt: { isSet: false } }] },
+    });
+    if (owed > 0) {
+      return { success: false, error: "Pay what's owed first." };
+    }
+
+    const last = await prisma.dailyWorkRecord.findFirst({
+      where: { companyId: access.companyId, userId, payPaidAt: { not: null } },
+      orderBy: { payPaidAt: "desc" },
+      select: { payPaidAt: true },
+    });
+    if (!last?.payPaidAt) {
+      return { success: false, error: "Nothing to undo." };
+    }
+
+    await prisma.dailyWorkRecord.updateMany({
+      where: { companyId: access.companyId, userId, payPaidAt: last.payPaidAt },
+      data: { payPaidAt: null },
+    });
+
+    refreshPanel();
+    return { success: true };
+  } catch (error) {
+    return authErrorState(error);
+  }
+}

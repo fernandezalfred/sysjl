@@ -49,6 +49,18 @@ export function successToast(message: string): void {
   });
 }
 
+// The user has to fix something before going on (e.g. an incomplete form); resolves
+// once they close it.
+export async function warningAlert(t: TranslateFn, title: string, text: string): Promise<void> {
+  await popup.fire({
+    icon: "warning",
+    title,
+    text,
+    confirmButtonText: t("alert.ok"),
+    customClass: { confirmButton: `${BUTTON} bg-foreground text-background hover:opacity-90` },
+  });
+}
+
 // An action failed (`message` already in the user's language).
 export function errorAlert(t: TranslateFn, message: string): void {
   void popup.fire({

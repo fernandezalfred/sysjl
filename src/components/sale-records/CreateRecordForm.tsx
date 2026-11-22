@@ -3,11 +3,13 @@
 import { useActionState, useEffect } from "react";
 import { createDailyWorkRecord } from "@/actions/daily-work-records";
 import type { ActionState } from "@/types/actions";
-import { RecordFormFields } from "@/components/sale-records/RecordFormFields";
+import { FIELD_STATE_CLASS, RecordFormFields } from "@/components/sale-records/RecordFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
+import { useErrorAlert } from "@/hooks/useErrorAlert";
+import { useInvalidFormAlert } from "@/hooks/useInvalidFormAlert";
 
 const initialState: ActionState = { success: false };
 
@@ -16,7 +18,7 @@ function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background disabled:opacity-60"
+      className="min-h-11 rounded-lg bg-foreground px-4 py-2.5 text-sm font-semibold text-background disabled:opacity-60 sm:min-h-0"
     >
       {pending ? t("records.saving") : t("records.save")}
     </button>
@@ -38,13 +40,15 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
   const [state, formAction, pending] = useActionState(createDailyWorkRecord, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
   useSuccessToast(state, t("toast.recordCreated"));
+  useErrorAlert(state, t);
+  const handleInvalid = useInvalidFormAlert(t);
 
   useEffect(() => {
     if (state.success) onSaved();
   }, [state, onSaved]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} onInvalid={handleInvalid} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <label htmlFor="record-user" className="text-xs font-medium text-foreground/70">
           {t("records.userLabel")}
@@ -55,7 +59,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
             name="userId"
             required
             defaultValue=""
-            className="rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base"
+            className={`rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base ${FIELD_STATE_CLASS}`}
           >
             <option value="" disabled>
               {t("records.selectUser")}
@@ -72,7 +76,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
           <select
             id="record-user"
             defaultValue="self"
-            className="rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base"
+            className={`rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base ${FIELD_STATE_CLASS}`}
           >
             <option value="self">{currentUserName ?? ""}</option>
           </select>
@@ -87,11 +91,11 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
         </p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:justify-end">
+      <div className="grid grid-cols-2 gap-2 sticky bottom-0 z-10 -mx-4 -mb-4 border-t border-foreground/10 bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:p-0 sm:pt-1 sm:flex sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:border-transparent"
+          className="min-h-11 rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:min-h-0 sm:border-transparent"
         >
           {t("records.cancel")}
         </button>

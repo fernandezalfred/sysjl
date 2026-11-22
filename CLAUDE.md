@@ -34,7 +34,8 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 
 ### Panel shell (`src/app/(panel)/layout.tsx`, `src/components/layout/`)
 - Sidebar (Panel, Mi cuenta; admin modules by permission: Ingresos y egresos, Gestionar usuarios, Granos; super admin: Empresas), company name or switcher, phone drawer, breadcrumbs. `PanelShell`
-- **Admin "Por pagar"** button: total owed to all sellers, dropdown per seller. `AdminPendingPay`, `pendingPayBySeller` in `src/lib/money/seller-pay.ts`
+- Below `lg`: only the compact top row (menu, greeting/breadcrumbs, avatar) stays pinned and sets `--phone-bar-height`; the seller pay cards and "Por pagar" sit under it and scroll with the page
+- **Admin "Por pagar"** button: total owed to all sellers, dropdown per seller with a red "Pagar de N días" button on the same row (marks all that seller's unpaid days as paid with one shared `payPaidAt`, `payAllPendingForSeller`) and "Deshacer último pago" once the seller is up to date (the days with the newest `payPaidAt`, `undoLastPayment`). `AdminPendingPay`, `pendingPayBySeller` in `src/lib/money/seller-pay.ts`
 - **Seller pay bar**: Cobrado / Te falta cobrar / Ganancia total, with day counts. `SellerPayBar`
 
 ### Panel `/dashboard` (one page: charts + records + prices)
@@ -42,6 +43,7 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - **Sales charts** (top): sales per user by Día/Semana/Mes (grows and scrolls with many sellers), by product for the selected day, sold + unsold over time (generated colors past 8 sellers; legend toggles lines, top 8 shown first, `topTrendSeries`). `src/components/sales-charts/`, `src/lib/sales-charts.ts`
 - **Sale Records**: grouped by day (day header shows weekday, e.g. "Nov 12, 26 jueves", and the day's Neto − Pago for admins); every other day shaded; clicking a day header shows that day in the charts. Create / edit / delete in `<dialog>` modals. Pagination never splits a day (`src/lib/pagination.ts`). `src/components/sale-records/`, `src/actions/daily-work-records.ts`
   - Per row: Queso/Yogurt taken/left/sold, Leche y Mote (loser in red, admins see the gap to the winner as a negative amount, e.g. "-Bs 120"), Total venta (daily winner in green), seller pay (Pago) pill — admin toggles Pagar / ✓ Pagado; Neto − Pago under the name for admins
+  - A new record starts with Yogurt Sacó 24, Leche 30 litros, Bs 7 per liter
   - Sellers see and edit only their own records
 - **Prices & Costs** (PRICES, bottom): Queso/Yogurt sale price and purchase cost. `src/components/admin/product-pricing/`, `src/actions/product-prices.ts`
 
@@ -59,9 +61,11 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - Seller pay tiers, paid/pending totals: `src/lib/money/seller-pay.ts`
 
 ### Shared UI behavior
-- **Popups** (SweetAlert2) via `src/lib/alerts.ts`: `confirmAlert` before deletes and state changes, `successToast` after saves (`useSuccessToast`), `errorAlert` when a button action fails; form validation errors stay inline
+- **Popups** (SweetAlert2) via `src/lib/alerts.ts`: `confirmAlert` before deletes and state changes, `successToast` after saves (`useSuccessToast`), `errorAlert` when a button action fails; form validation errors stay inline. The sale record forms also warn in a popup: `useInvalidFormAlert` (empty/invalid fields named, `warningAlert`, then marked red via `data-checked`) and `useErrorAlert` (the action's error); fields with a value get a soft blue fill (`FIELD_STATE_CLASS`)
 - Dates: `src/lib/dates.ts` (`formatShortDate` with weekday, Bolivia business day)
 - The sale record modal and the sidebar use the black `.vertical-scroll` scrollbar (`src/app/globals.css`)
+- **Phones**: 16px inputs and selects (no iOS zoom), 40px tap targets for main buttons, 44px drawer links; Sale Records and Granos switch to card views, and their modals are inset at `90dvh`; the sale record modal also fits the visible area above the keyboard (`useVisualViewportCssVars`: `--vv-height`, `--vv-top`) and pins Cancelar / Guardar registro to its bottom. Charts can't use CSS breakpoints, so `useIsNarrowScreen` (below 640px, wide on the server) drops axis titles and uses smaller, fewer ticks (`amountAxis` / `categoryAxis(…, narrow)` in `src/components/finance/chart-style.ts`). Scrolling to the charts uses `--sticky-offset` so they land below the pinned bar
+- Singular day labels ("1 día", "1 registro") use their own translation keys (`pay.dayOne`, `finance.recordOne`, `finance.comparisonHintOne`)
 
 ### Security and validation
 - `src/lib/validation.ts`: shared Zod rules (ObjectId before every lookup by id, `DATE_KEY`, `NEW_PASSWORD` 8–72 bytes, `PERSON_NAME`, `EMAIL`, `firstIssue`)
