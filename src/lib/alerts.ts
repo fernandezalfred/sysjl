@@ -61,6 +61,17 @@ export async function warningAlert(t: TranslateFn, title: string, text: string):
   });
 }
 
+// A short how-to (e.g. the iPhone install steps); resolves once closed.
+export async function infoAlert(t: TranslateFn, title: string, text: string): Promise<void> {
+  await popup.fire({
+    icon: "info",
+    title,
+    text,
+    confirmButtonText: t("alert.ok"),
+    customClass: { confirmButton: `${BUTTON} bg-foreground text-background hover:opacity-90` },
+  });
+}
+
 // An action failed (`message` already in the user's language).
 export function errorAlert(t: TranslateFn, message: string): void {
   void popup.fire({

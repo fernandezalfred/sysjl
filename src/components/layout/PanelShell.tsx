@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 import { BrandMark } from "@/components/landing/BrandMark";
@@ -288,6 +289,7 @@ function SidebarContent({
       </div>
 
       <div className="mt-4 flex flex-col gap-3 border-t border-foreground/10 pt-4">
+        <InstallAppButton t={t} />
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-medium uppercase tracking-wider text-foreground/50">{t("sidebar.language")}</span>
           <LanguageSwitcher locale={locale} />

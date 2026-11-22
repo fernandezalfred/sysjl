@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+// Loaded on every page so the install prompt is caught as soon as the browser offers it.
+import "@/lib/pwa/install-prompt";
 
 // Registers public/sw.js (installable app, offline page). Production only, so the dev
 // server never serves stale build files from the cache.
