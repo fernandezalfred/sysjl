@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 import { BrandMark } from "@/components/landing/BrandMark";
 import { SellerPayBar, type SellerPayTotals } from "@/components/layout/SellerPayBar";
@@ -293,6 +294,10 @@ function SidebarContent({
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-medium uppercase tracking-wider text-foreground/50">{t("sidebar.language")}</span>
           <LanguageSwitcher locale={locale} />
+        </div>
+        <div className="-my-1 flex items-center justify-between px-1">
+          <span className="text-xs font-medium uppercase tracking-wider text-foreground/50">{t("sidebar.theme")}</span>
+          <ThemeToggle label={t("theme.toggle")} />
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-background p-2.5">
           <Avatar initials={user.initials} name={user.name} />

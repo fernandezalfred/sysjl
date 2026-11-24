@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Dark mode: the user's choice (data-theme on <html>, set by ThemeToggle) or, with
+   none saved, the OS setting. Every dark rule below follows the same two cases. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -43,11 +56,26 @@
   }
 }
 
+/* Native controls (date picker, scrollbars) in the mode on screen. */
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
@@ -152,10 +180,15 @@ dialog:modal {
 }
 
 @media (prefers-color-scheme: dark) {
-  .styled-scroll {
+  :root:not([data-theme="light"]) .styled-scroll {
     --scroll-track: var(--color-neutral-500);
     --scroll-thumb-hover: var(--color-neutral-800);
   }
+}
+
+:root[data-theme="dark"] .styled-scroll {
+  --scroll-track: var(--color-neutral-500);
+  --scroll-thumb-hover: var(--color-neutral-800);
 }
 
 .styled-scroll::-webkit-scrollbar {
@@ -192,10 +225,15 @@ dialog:modal {
 }
 
 @media (prefers-color-scheme: dark) {
-  .vertical-scroll {
+  :root:not([data-theme="light"]) .vertical-scroll {
     --scroll-track: var(--color-neutral-500);
     --scroll-thumb-hover: var(--color-neutral-800);
   }
+}
+
+:root[data-theme="dark"] .vertical-scroll {
+  --scroll-track: var(--color-neutral-500);
+  --scroll-thumb-hover: var(--color-neutral-800);
 }
 
 .vertical-scroll::-webkit-scrollbar {

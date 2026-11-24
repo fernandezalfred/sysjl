@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { getT } from "@/lib/i18n/server";
 import { DEFAULT_LOCALE, defaultT } from "@/lib/i18n/translations";
 
@@ -23,7 +24,10 @@ async function LoginContent() {
     <>
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold tracking-tight">{t("login.title")}</h1>
-        <LanguageSwitcher locale={locale} />
+        <div className="flex items-center">
+          <LanguageSwitcher locale={locale} />
+          <ThemeToggle label={t("theme.toggle")} />
+        </div>
       </div>
       <LoginForm locale={locale} />
     </>
@@ -35,7 +39,10 @@ function LoginContentSkeleton() {
     <>
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold tracking-tight">{defaultT("login.title")}</h1>
-        <LanguageSwitcher locale={DEFAULT_LOCALE} />
+        <div className="flex items-center">
+          <LanguageSwitcher locale={DEFAULT_LOCALE} />
+          <ThemeToggle label={defaultT("theme.toggle")} />
+        </div>
       </div>
       <LoginForm locale={DEFAULT_LOCALE} />
     </>

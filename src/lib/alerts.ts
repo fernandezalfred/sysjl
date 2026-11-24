@@ -1,16 +1,22 @@
-import Swal from "sweetalert2";
+import Swal, { type SweetAlertOptions } from "sweetalert2";
 import type { TranslateFn } from "@/lib/i18n/translations";
+import { currentTheme } from "@/lib/theme";
 
 // SweetAlert2 popups used across the app: confirmations, success toasts and action
 // errors. Client-only (called from event handlers and effects). They follow the OS
-// color scheme like the rest of the app, and render on the browser's top layer so
+// light / dark mode on screen like the rest of the app, and render on the browser's top layer so
 // they show above an open <dialog> modal. A modal <dialog> makes everything outside
 // it inert, so a popup that needs a click is placed inside the open dialog (if any).
 
 const BUTTON = "mx-1 rounded-md px-4 py-2 text-sm font-medium";
 const CANCEL_BUTTON = `${BUTTON} border border-foreground/20 hover:bg-foreground/10`;
 
-const popup = Swal.mixin({ theme: "auto", topLayer: true, buttonsStyling: false, reverseButtons: true });
+const mixin = Swal.mixin({ topLayer: true, buttonsStyling: false, reverseButtons: true });
+
+// Each popup in the mode on screen now (it can change after the page loads).
+const popup = {
+  fire: (options: SweetAlertOptions) => mixin.fire({ theme: currentTheme(), ...options }),
+};
 
 // Where a clickable popup goes: inside the open modal <dialog>, or the page.
 function clickableTarget(): HTMLElement {

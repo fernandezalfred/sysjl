@@ -251,6 +251,8 @@ const en = {
   "landing.cta.title": "Take control of your distributor",
   "landing.cta.text": "Already have an account? Sign in and record today's sales.",
   "sidebar.language": "Language",
+  "sidebar.theme": "Theme",
+  "theme.toggle": "Switch light / dark mode",
   "sidebar.greeting": "Hi, {name}",
 
   "header.account": "My account",
@@ -683,6 +685,8 @@ const es: Record<DictionaryKey, string> = {
   "landing.cta.title": "Toma el control de tu distribuidora",
   "landing.cta.text": "¿Ya tienes cuenta? Inicia sesión y registra las ventas de hoy.",
   "sidebar.language": "Idioma",
+  "sidebar.theme": "Tema",
+  "theme.toggle": "Cambiar modo claro / oscuro",
   "sidebar.greeting": "Hola, {name}",
 
   "header.account": "Mi cuenta",

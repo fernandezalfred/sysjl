@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BrandMark } from "@/components/landing/BrandMark";
 import type { Locale, TranslateFn } from "@/lib/i18n/translations";
 
@@ -34,6 +35,7 @@ export function LandingNav({ isSignedIn, locale, t }: LandingNavProps) {
         </nav>
         <div className="flex items-center gap-1 sm:gap-3">
           <LanguageSwitcher locale={locale} />
+          <ThemeToggle label={t("theme.toggle")} />
           <Link
             href={isSignedIn ? "/dashboard" : "/login"}
             className="rounded-lg bg-foreground px-3.5 py-2 text-sm font-medium text-background shadow-sm transition hover:opacity-90"
