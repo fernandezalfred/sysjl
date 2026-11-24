@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatShortDate, todayDateString } from "@/lib/dates";
 import type { DictionaryKey, TranslateFn } from "@/lib/i18n/translations";
+import type { NewRecordDefaults } from "@/lib/editable-record";
 
 interface RecordFormFieldsProps {
   defaultValues?: {
@@ -13,10 +14,13 @@ interface RecordFormFieldsProps {
     milkLiters: number;
     milkUnitCost: number;
   };
+  // New record only: the seller's previous record's values and whose they are (the
+  // four fields remount with them when the admin picks another seller).
+  previous?: { userId: string; values: NewRecordDefaults | null };
   t: TranslateFn;
 }
 
-// Prefilled on a new record (the usual day); the seller can change them.
+// Prefilled on a seller's first record (no previous one to copy); they can change them.
 const DEFAULT_MILK_UNIT_COST = 7;
 const DEFAULT_MILK_LITERS = 30;
 const DEFAULT_YOGURT_TAKEN = 24;
@@ -105,30 +109,33 @@ function FieldGroup({ title, hint, children }: { title: string; hint?: string; c
   );
 }
 
-export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
+export function RecordFormFields({ defaultValues, previous, t }: RecordFormFieldsProps) {
   const units = t("records.units");
+  const last = previous?.values;
+  const whose = previous?.userId ?? "";
 
   return (
     <div className="flex flex-col gap-3">
       {defaultValues ? <DateField value={defaultValues.date} t={t} /> : <TodayDate t={t} />}
 
       <FieldGroup title={t("product.queso")} hint={units}>
-        <NumberField id="queso-taken" name="quesoTaken" label="records.taken" defaultValue={defaultValues?.quesoTaken} t={t} />
+        <NumberField key={`queso-${whose}`} id="queso-taken" name="quesoTaken" label="records.taken" defaultValue={defaultValues?.quesoTaken ?? last?.quesoTaken} t={t} />
         <NumberField id="queso-remaining" name="quesoRemaining" label="records.left" defaultValue={defaultValues?.quesoRemaining} t={t} />
       </FieldGroup>
 
       <FieldGroup title={t("product.yogurt")} hint={units}>
-        <NumberField id="yogurt-taken" name="yogurtTaken" label="records.taken" defaultValue={defaultValues?.yogurtTaken ?? DEFAULT_YOGURT_TAKEN} t={t} />
+        <NumberField key={`yogurt-${whose}`} id="yogurt-taken" name="yogurtTaken" label="records.taken" defaultValue={defaultValues?.yogurtTaken ?? last?.yogurtTaken ?? DEFAULT_YOGURT_TAKEN} t={t} />
         <NumberField id="yogurt-remaining" name="yogurtRemaining" label="records.left" defaultValue={defaultValues?.yogurtRemaining} t={t} />
       </FieldGroup>
 
       <FieldGroup title={t("records.milk")}>
-        <NumberField id="milk-liters" name="milkLiters" label="records.milkLiters" defaultValue={defaultValues?.milkLiters ?? DEFAULT_MILK_LITERS} t={t} />
+        <NumberField key={`liters-${whose}`} id="milk-liters" name="milkLiters" label="records.milkLiters" defaultValue={defaultValues?.milkLiters ?? last?.milkLiters ?? DEFAULT_MILK_LITERS} t={t} />
         <NumberField
+          key={`unit-cost-${whose}`}
           id="milk-unit-cost"
           name="milkUnitCost"
           label="records.milkUnitCost"
-          defaultValue={defaultValues?.milkUnitCost ?? DEFAULT_MILK_UNIT_COST}
+          defaultValue={defaultValues?.milkUnitCost ?? last?.milkUnitCost ?? DEFAULT_MILK_UNIT_COST}
           decimal
           t={t}
         />

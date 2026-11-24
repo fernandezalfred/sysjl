@@ -7,7 +7,7 @@ import { LabeledAmount } from "@/components/sale-records/LabeledAmount";
 import { ProductCell } from "@/components/sale-records/ProductCell";
 import { formatCurrency } from "@/lib/money/pricing";
 import { DayHeaderButton } from "@/components/sale-records/DayHeaderButton";
-import { toEditableRecord } from "@/lib/editable-record";
+import { newRecordDefaultsByUser, toEditableRecord } from "@/lib/editable-record";
 import { UserCell } from "@/components/sale-records/UserCell";
 import { PayPaidToggle } from "@/components/sale-records/PayPaidToggle";
 import {
@@ -362,6 +362,8 @@ export function SaleRecordsSection({
             isAdmin={isAdmin}
             activeUsers={activeUsers}
             currentUserName={currentUserName}
+            currentUserId={currentUserId}
+            lastValuesByUser={newRecordDefaultsByUser(dailyRecords)}
             t={t}
           />
         ) : (

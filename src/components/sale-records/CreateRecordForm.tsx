@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { createDailyWorkRecord } from "@/actions/daily-work-records";
 import type { ActionState } from "@/types/actions";
 import { FIELD_STATE_CLASS, RecordFormFields } from "@/components/sale-records/RecordFormFields";
 import type { TranslateFn } from "@/lib/i18n/translations";
+import type { NewRecordDefaults } from "@/lib/editable-record";
 import { useSubmitWithoutReset } from "@/hooks/useSubmitWithoutReset";
 import { localizeError } from "@/lib/i18n/errors";
 import { useSuccessToast } from "@/hooks/useSuccessToast";
@@ -33,10 +34,25 @@ interface CreateRecordFormProps {
   // Shown, locked, in the User field for a vehicle user — their record is always
   // their own (the server takes the user from the session, never from the form).
   currentUserName: string | null;
+  currentUserId: string | null;
+  // Each seller's previous record's values, to start the new record with.
+  lastValuesByUser: Record<string, NewRecordDefaults>;
   t: TranslateFn;
 }
 
-export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, currentUserName, t }: CreateRecordFormProps) {
+export function CreateRecordForm({
+  onSaved,
+  onCancel,
+  isAdmin,
+  activeUsers,
+  currentUserName,
+  currentUserId,
+  lastValuesByUser,
+  t,
+}: CreateRecordFormProps) {
+  // The seller the record is for: the admin's pick, or the seller themselves.
+  const [pickedUserId, setPickedUserId] = useState("");
+  const userId = isAdmin ? pickedUserId : (currentUserId ?? "");
   const [state, formAction, pending] = useActionState(createDailyWorkRecord, initialState);
   const handleSubmit = useSubmitWithoutReset(formAction);
   useSuccessToast(state, t("toast.recordCreated"));
@@ -58,7 +74,8 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
             id="record-user"
             name="userId"
             required
-            defaultValue=""
+            value={pickedUserId}
+            onChange={(event) => setPickedUserId(event.target.value)}
             className={`rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-base ${FIELD_STATE_CLASS}`}
           >
             <option value="" disabled>
@@ -83,7 +100,7 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
         )}
       </div>
 
-      <RecordFormFields t={t} />
+      <RecordFormFields previous={{ userId, values: lastValuesByUser[userId] ?? null }} t={t} />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
