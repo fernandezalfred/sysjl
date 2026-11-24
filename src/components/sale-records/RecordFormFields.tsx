@@ -57,6 +57,38 @@ function NumberField({ id, name, label, defaultValue, decimal, t }: NumberFieldP
   );
 }
 
+// A new record is always stamped with today (the browser's local day), never typed.
+function TodayDate({ t }: { t: TranslateFn }) {
+  const date = todayDateString();
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2">
+      <span className={labelClass}>{t("records.date")}</span>
+      <span className="text-sm font-medium">{formatShortDate(date, t)}</span>
+      <input type="hidden" name="date" value={date} />
+    </div>
+  );
+}
+
+// Editing: the record's day can be moved to another one, never a future day.
+function DateField({ value, t }: { value: string; t: TranslateFn }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <label htmlFor="record-date" className={labelClass}>
+        {t("records.date")}
+      </label>
+      <input
+        id="record-date"
+        name="date"
+        type="date"
+        max={todayDateString()}
+        required
+        defaultValue={value}
+        className={inputClass}
+      />
+    </div>
+  );
+}
+
 // One product's pair of fields under its name, so each label stays short ("Sacó",
 // "Sobró") and fits two columns on a phone; the fieldset's legend gives screen
 // readers the product.
@@ -74,18 +106,11 @@ function FieldGroup({ title, hint, children }: { title: string; hint?: string; c
 }
 
 export function RecordFormFields({ defaultValues, t }: RecordFormFieldsProps) {
-  // Editing keeps the record's original date; a new record is always stamped with
-  // today (the browser's local day, not the user's input) — the date is never typed.
-  const date = defaultValues?.date ?? todayDateString();
   const units = t("records.units");
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2">
-        <span className={labelClass}>{t("records.date")}</span>
-        <span className="text-sm font-medium">{formatShortDate(date, t)}</span>
-        {defaultValues ? null : <input type="hidden" name="date" value={date} />}
-      </div>
+      {defaultValues ? <DateField value={defaultValues.date} t={t} /> : <TodayDate t={t} />}
 
       <FieldGroup title={t("product.queso")} hint={units}>
         <NumberField id="queso-taken" name="quesoTaken" label="records.taken" defaultValue={defaultValues?.quesoTaken} t={t} />

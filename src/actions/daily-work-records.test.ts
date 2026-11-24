@@ -316,7 +316,7 @@ describe("updateDailyWorkRecord", () => {
     expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
   });
 
-  it("updates the record's quantities, keeping its original date", async () => {
+  it("updates the record's quantities on the same date", async () => {
     prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
       companyId: "c1", id: "dd0000000000000000000001",
       userId: "aa0000000000000000000001",
@@ -330,6 +330,7 @@ describe("updateDailyWorkRecord", () => {
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith({
       where: { id: "dd0000000000000000000001" },
       data: {
+        date: new Date("2026-10-27T00:00:00.000Z"),
         quesoTaken: 80,
         quesoRemaining: 12,
         yogurtTaken: 60,
@@ -341,20 +342,53 @@ describe("updateDailyWorkRecord", () => {
     });
   });
 
-  it("ignores a client-supplied date on update entirely", async () => {
-    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({
-      companyId: "c1", id: "dd0000000000000000000001",
-      userId: "aa0000000000000000000001",
-      date: new Date("2026-10-27T00:00:00.000Z"),
-    });
+  it("moves the record to another day", async () => {
+    prismaMock.dailyWorkRecord.findUnique
+      .mockResolvedValueOnce({
+        companyId: "c1", id: "dd0000000000000000000001",
+        userId: "aa0000000000000000000001",
+        date: new Date("2026-10-27T00:00:00.000Z"),
+      })
+      .mockResolvedValueOnce(null);
     const result = await updateDailyWorkRecord(
       { success: false },
-      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001", date: "2099-01-01" }),
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001", date: "2026-10-25" }),
     );
     expect(result).toEqual({ success: true });
+    expect(prismaMock.dailyWorkRecord.findUnique).toHaveBeenLastCalledWith({
+      where: { userId_date: { userId: "aa0000000000000000000001", date: new Date("2026-10-25T00:00:00.000Z") } },
+    });
     expect(prismaMock.dailyWorkRecord.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.not.objectContaining({ date: expect.anything() }) }),
+      expect.objectContaining({ data: expect.objectContaining({ date: new Date("2026-10-25T00:00:00.000Z") }) }),
     );
+  });
+
+  it("refuses moving the record onto a day the seller already has", async () => {
+    prismaMock.dailyWorkRecord.findUnique
+      .mockResolvedValueOnce({
+        companyId: "c1", id: "dd0000000000000000000001",
+        userId: "aa0000000000000000000001",
+        date: new Date("2026-10-27T00:00:00.000Z"),
+      })
+      .mockResolvedValueOnce({ id: "dd0000000000000000000002" });
+    const result = await updateDailyWorkRecord(
+      { success: false },
+      formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001", date: "2026-10-25" }),
+    );
+    expect(result).toEqual({ success: false, error: "You already have a record for this date." });
+    expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a future date or a missing date on update", async () => {
+    for (const date of ["2099-01-01", ""]) {
+      const result = await updateDailyWorkRecord(
+        { success: false },
+        formData({ ...VALID_FIELDS, recordId: "dd0000000000000000000001", date }),
+      );
+      expect(result.success).toBe(false);
+    }
+    expect(prismaMock.dailyWorkRecord.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.dailyWorkRecord.update).not.toHaveBeenCalled();
   });
 
   it("rejects remaining greater than taken on update", async () => {

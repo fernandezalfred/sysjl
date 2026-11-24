@@ -69,6 +69,7 @@ const en = {
 
   "records.newRecord": "New record",
   "records.editRecord": "Edit record",
+  "records.close": "Close",
   "records.save": "Save record",
   "records.saving": "Saving…",
   "records.cancel": "Cancel",
@@ -500,6 +501,7 @@ const es: Record<DictionaryKey, string> = {
 
   "records.newRecord": "Nuevo registro",
   "records.editRecord": "Editar registro",
+  "records.close": "Cerrar",
   "records.save": "Guardar registro",
   "records.saving": "Guardando…",
   "records.cancel": "Cancelar",

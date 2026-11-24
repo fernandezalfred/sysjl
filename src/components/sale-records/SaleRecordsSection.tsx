@@ -341,9 +341,19 @@ export function SaleRecordsSection({
         {...backdropClose}
         className="vertical-scroll w-[calc(100%-1.5rem)] max-h-[min(90dvh,calc(var(--vv-height,100dvh)-1.5rem))] max-w-md overflow-y-auto rounded-2xl border border-foreground/10 bg-background p-4 text-foreground max-sm:mt-[calc(var(--vv-top,0px)+0.75rem)] max-sm:mb-auto sm:p-6"
       >
-        <h3 className="mb-4 text-base font-semibold">
-          {mode.type === "create" ? t("records.newRecord") : t("records.editRecord")}
-        </h3>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h3 className="text-base font-semibold">
+            {mode.type === "create" ? t("records.newRecord") : t("records.editRecord")}
+          </h3>
+          <button
+            type="button"
+            onClick={close}
+            aria-label={t("records.close")}
+            className="-mr-2 flex size-10 items-center justify-center rounded-lg text-xl leading-none text-foreground/60 hover:bg-foreground/10 hover:text-foreground"
+          >
+            ×
+          </button>
+        </div>
         {mode.type === "create" ? (
           <CreateRecordForm
             key={formKey}

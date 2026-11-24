@@ -95,7 +95,7 @@ The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/rev
 - **Company** — name, `isActive`.
 - **User** — name, email (unique across the app), bcrypt hash, role, `companyId` (null only for the super admin), `permissions` (admins), `isActive`.
 - Every **DailyWorkRecord**, **ProductPrice** and **StockPurchase** has the `companyId` of its company.
-- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices and purchase costs (`quesoPurchaseCost`, `yogurtPurchaseCost`; null on older records), `payPaidAt` (when the admin marked the pay as paid) (every day paid by one "Pagar todo" shares it, so the last payment can be undone). The date is fixed at creation and can't change on edit.
+- **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices and purchase costs (`quesoPurchaseCost`, `yogurtPurchaseCost`; null on older records), `payPaidAt` (when the admin marked the pay as paid) (every day paid by one "Pagar todo" shares it, so the last payment can be undone). A new record is dated today; editing one can move it to another day (never a future one, nor a day that seller already has a record for).
 - **ProductPrice** — one row per company and priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
 - **StockPurchase** — a grain purchase: product, quantity, unit cost, who entered it (`createdBy`). Old Queso/Yogurt purchases are still stored but no longer shown.
 

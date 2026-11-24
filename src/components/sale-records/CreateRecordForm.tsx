@@ -91,11 +91,12 @@ export function CreateRecordForm({ onSaved, onCancel, isAdmin, activeUsers, curr
         </p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 sticky bottom-0 z-10 -mx-4 -mb-4 border-t border-foreground/10 bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:p-0 sm:pt-1 sm:flex sm:justify-end">
+      <div className="grid grid-cols-2 gap-2 border-t border-foreground/10 pt-3 sm:flex sm:justify-end sm:border-0 sm:pt-1">
         <button
           type="button"
           onClick={onCancel}
-          className="min-h-11 rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:min-h-0 sm:border-transparent"
+          disabled={pending}
+          className="min-h-11 rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground disabled:opacity-60 sm:min-h-0 sm:border-transparent"
         >
           {t("records.cancel")}
         </button>

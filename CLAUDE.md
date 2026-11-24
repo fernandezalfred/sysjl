@@ -46,6 +46,7 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
   - Per row: Queso/Yogurt taken/left/sold, Leche y Mote (loser in red, admins see the gap to the winner as a negative amount, e.g. "-Bs 120"), Total venta (daily winner in green), seller pay (Pago) pill — admin toggles Pagar / ✓ Pagado; Neto − Pago under the name for admins
   - A new record starts with Yogurt Sacó 24, Leche 30 litros, Bs 7 per liter
   - Sellers see and edit only their own records
+  - A new record is dated today; editing one can change its date (not to a future day, nor to a day that seller already has)
 - **Prices & Costs** (PRICES, bottom): Queso/Yogurt sale price and purchase cost. `src/components/admin/product-pricing/`, `src/actions/product-prices.ts`
 
 ### Admin pages
@@ -62,10 +63,10 @@ A map of what exists today and where it lives. `project-overview.md` has the rul
 - Seller pay tiers, paid/pending totals: `src/lib/money/seller-pay.ts`
 
 ### Shared UI behavior
-- **Popups** (SweetAlert2) via `src/lib/alerts.ts`: `confirmAlert` before deletes and state changes, `successToast` after saves (`useSuccessToast`), `errorAlert` when a button action fails; form validation errors stay inline. The sale record forms also warn in a popup: `useInvalidFormAlert` (empty/invalid fields named, `warningAlert`, then marked red via `data-checked`) and `useErrorAlert` (the action's error); fields with a value get a soft blue fill (`FIELD_STATE_CLASS`)
+- **Popups** (SweetAlert2) via `src/lib/alerts.ts`: `confirmAlert` before deletes and state changes, `successToast` after saves (`useSuccessToast`), `errorAlert` when a button action fails; form validation errors stay inline. A popup that needs a click goes inside the open `<dialog>` (a modal makes everything outside it inert), and Esc then closes only the popup (`useBackdropClose`). The sale record forms also warn in a popup: `useInvalidFormAlert` (empty/invalid fields named, `warningAlert`, then marked red via `data-checked`) and `useErrorAlert` (the action's error); fields with a value get a soft blue fill (`FIELD_STATE_CLASS`)
 - Dates: `src/lib/dates.ts` (`formatShortDate` with weekday, Bolivia business day)
 - The sale record modal and the sidebar use the black `.vertical-scroll` scrollbar (`src/app/globals.css`)
-- **Phones**: 16px inputs and selects (no iOS zoom), 40px tap targets for main buttons, 44px drawer links; Sale Records and Granos switch to card views, and their modals are inset at `90dvh`; the sale record modal also fits the visible area above the keyboard (`useVisualViewportCssVars`: `--vv-height`, `--vv-top`) and pins Cancelar / Guardar registro to its bottom. Charts can't use CSS breakpoints, so `useIsNarrowScreen` (below 640px, wide on the server) drops axis titles and uses smaller, fewer ticks (`amountAxis` / `categoryAxis(…, narrow)` in `src/components/finance/chart-style.ts`). Scrolling to the charts uses `--sticky-offset` so they land below the pinned bar
+- **Phones**: 16px inputs and selects (no iOS zoom), 40px tap targets for main buttons, 44px drawer links; Sale Records and Granos switch to card views, and their modals are inset at `90dvh`; the sale record modal also fits the visible area above the keyboard (`useVisualViewportCssVars`: `--vv-height`, `--vv-top`), has a ✕ close button, and its Cancelar / Guardar registro buttons sit at the end of the form (not pinned). Charts can't use CSS breakpoints, so `useIsNarrowScreen` (below 640px, wide on the server) drops axis titles and uses smaller, fewer ticks (`amountAxis` / `categoryAxis(…, narrow)` in `src/components/finance/chart-style.ts`). Scrolling to the charts uses `--sticky-offset` so they land below the pinned bar
 - Singular day labels ("1 día", "1 registro") use their own translation keys (`pay.dayOne`, `finance.recordOne`, `finance.comparisonHintOne`)
 
 ### Security and validation

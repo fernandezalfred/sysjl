@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authErrorState, requireAdminAccess, requireCompanyAccess, type Access } from "@/lib/auth/access";
+import { formatBusinessDateKey } from "@/lib/dates";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
 import { DATE_KEY, firstIssue, OBJECT_ID, objectIdSchema } from "@/lib/validation";
 import type { ActionState } from "@/types/actions";
@@ -50,11 +51,15 @@ function withLeftNotOverTaken<T extends z.ZodType<Quantities>>(schema: T): T {
 
 const recordIdSchema = objectIdSchema("Record not found.");
 
-// Date is only ever accepted on create (stamped client-side via the JS Date API, not
-// typed by the user). Edits never carry a date, so the record's original date is
-// never touched by updateDailyWorkRecord.
+// A new record's date is stamped client-side with today (not typed). An edit can move
+// the record to another day, never a future one (Bolivia business day).
 const createSchema = withLeftNotOverTaken(baseQuantities.extend({ date: DATE_KEY }));
-const updateSchema = withLeftNotOverTaken(baseQuantities.extend({ recordId: recordIdSchema }));
+const updateSchema = withLeftNotOverTaken(
+  baseQuantities.extend({
+    recordId: recordIdSchema,
+    date: DATE_KEY.refine((date) => date <= formatBusinessDateKey(new Date()), "Date can't be in the future."),
+  }),
+);
 
 // Sale records show on /dashboard (charts, table and the day's pay).
 function refreshSaleRecords() {
@@ -163,6 +168,7 @@ export async function updateDailyWorkRecord(
 
     const parsed = updateSchema.safeParse({
       recordId: formData.get("recordId"),
+      date: formData.get("date") ?? "",
       ...readQuantities(formData),
     });
     if (!parsed.success) {
@@ -174,10 +180,21 @@ export async function updateDailyWorkRecord(
       return { success: false, error: "Record not found." };
     }
 
-    // The record's date is never editable: an edit always keeps the original date.
+    // One record per seller per day: moving it onto a day the seller already has is refused.
+    const date = parseRecordDate(parsed.data.date);
+    if (date.getTime() !== existing.date.getTime()) {
+      const clash = await prisma.dailyWorkRecord.findUnique({
+        where: { userId_date: { userId: existing.userId, date } },
+      });
+      if (clash) {
+        return { success: false, error: "You already have a record for this date." };
+      }
+    }
+
     await prisma.dailyWorkRecord.update({
       where: { id: existing.id },
       data: {
+        date,
         quesoTaken: parsed.data.quesoTaken,
         quesoRemaining: parsed.data.quesoRemaining,
         yogurtTaken: parsed.data.yogurtTaken,

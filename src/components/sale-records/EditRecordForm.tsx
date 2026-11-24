@@ -15,11 +15,11 @@ import { confirmAlert, errorAlert, successToast } from "@/lib/alerts";
 
 const initialState: ActionState = { success: false };
 
-function SubmitButton({ t, pending }: { t: TranslateFn; pending: boolean }) {
+function SubmitButton({ t, pending, disabled }: { t: TranslateFn; pending: boolean; disabled: boolean }) {
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className="min-h-11 rounded-lg bg-foreground px-4 py-2.5 text-sm font-semibold text-background disabled:opacity-60 sm:min-h-0"
     >
       {pending ? t("records.saving") : t("records.save")}
@@ -84,11 +84,12 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
         </p>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2 sticky bottom-0 z-10 -mx-4 -mb-4 border-t border-foreground/10 bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:p-0 sm:pt-1 sm:flex-row sm:items-center sm:justify-between">
+      {/* At the end of the form: Cancelar / Guardar first, Eliminar under them on a phone. */}
+      <div className="flex flex-col-reverse gap-2 border-t border-foreground/10 pt-3 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-1">
         <button
           type="button"
           onClick={handleDelete}
-          disabled={isDeleting}
+          disabled={isDeleting || pending}
           className="rounded-lg px-4 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-60 dark:text-red-400 dark:hover:text-red-300"
         >
           {isDeleting ? t("records.deleting") : t("records.delete")}
@@ -98,11 +99,12 @@ export function EditRecordForm({ record, onSaved, onCancel, t }: EditRecordFormP
           <button
             type="button"
             onClick={onCancel}
-            className="min-h-11 rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground sm:min-h-0 sm:border-transparent"
+            disabled={isDeleting || pending}
+            className="min-h-11 rounded-lg border border-foreground/15 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:text-foreground disabled:opacity-60 sm:min-h-0 sm:border-transparent"
           >
             {t("records.cancel")}
           </button>
-          <SubmitButton t={t} pending={pending} />
+          <SubmitButton t={t} pending={pending} disabled={isDeleting} />
         </div>
       </div>
     </form>
