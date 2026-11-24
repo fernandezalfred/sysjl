@@ -88,13 +88,11 @@ async function DashboardContent() {
             <p className="text-sm text-foreground/70">{t("adminProducts.subheading")}</p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <SetProductPriceForm
-                key={`QUESO-${prices.QUESO.updatedAt}`}
                 product="QUESO"
                 current={prices.QUESO}
                 locale={locale}
               />
               <SetProductPriceForm
-                key={`YOGURT-${prices.YOGURT.updatedAt}`}
                 product="YOGURT"
                 current={prices.YOGURT}
                 locale={locale}

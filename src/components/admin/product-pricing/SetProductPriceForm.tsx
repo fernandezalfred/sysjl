@@ -65,6 +65,9 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
             type="number"
             min="0"
             step="0.01"
+            // Keyed on the last save, so the field shows the saved value afterwards; only
+            // the fields remount, the form keeps its result for the success toast.
+            key={`sale-${current.updatedAt}`}
             defaultValue={current.salePrice}
             required
             className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
@@ -80,6 +83,7 @@ export function SetProductPriceForm({ product, current, locale }: SetProductPric
             type="number"
             min="0"
             step="0.01"
+            key={`cost-${current.updatedAt}`}
             defaultValue={current.purchaseCost}
             required
             className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-base"
