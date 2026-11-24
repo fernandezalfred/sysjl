@@ -24,17 +24,26 @@ export interface NewRecordDefaults {
   milkUnitCost: number;
 }
 
-// Each seller's most recently created record, as the starting values of their next one.
-export function newRecordDefaultsByUser(rows: DailyRecordRow[]): Record<string, NewRecordDefaults> {
-  const latest = new Map<string, DailyRecordRow>();
+function toDefaults(row: DailyRecordRow): NewRecordDefaults {
+  return { quesoTaken: row.queso.taken, yogurtTaken: row.yogurt.taken, milkLiters: row.milkLiters, milkUnitCost: row.milkUnitCost };
+}
+
+// The starting values of a new record: `byUser` from each seller's most recently
+// created record, `latest` from the most recently created record of all (shown before
+// the admin picks a seller, and for a seller without records yet). null with no records.
+export function newRecordDefaults(rows: DailyRecordRow[]): {
+  byUser: Record<string, NewRecordDefaults>;
+  latest: NewRecordDefaults | null;
+} {
+  const lastByUser = new Map<string, DailyRecordRow>();
+  let last: DailyRecordRow | null = null;
   for (const row of rows) {
-    const current = latest.get(row.userId);
-    if (!current || row.createdAt > current.createdAt) latest.set(row.userId, row);
+    const current = lastByUser.get(row.userId);
+    if (!current || row.createdAt > current.createdAt) lastByUser.set(row.userId, row);
+    if (!last || row.createdAt > last.createdAt) last = row;
   }
-  return Object.fromEntries(
-    Array.from(latest, ([userId, row]) => [
-      userId,
-      { quesoTaken: row.queso.taken, yogurtTaken: row.yogurt.taken, milkLiters: row.milkLiters, milkUnitCost: row.milkUnitCost },
-    ]),
-  );
+  return {
+    byUser: Object.fromEntries(Array.from(lastByUser, ([userId, row]) => [userId, toDefaults(row)])),
+    latest: last ? toDefaults(last) : null,
+  };
 }

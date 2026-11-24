@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 
 import { buildDailyRecords } from "@/lib/daily-records";
-import { newRecordDefaultsByUser } from "@/lib/editable-record";
+import { newRecordDefaults } from "@/lib/editable-record";
 import type { SaleRecord } from "@/types/daily-records";
 
 // One seller's day: a Queso and a Yogurt line of the same work record.
@@ -27,7 +27,7 @@ function day(userId: string, date: string, createdAt: string, values: { queso: n
   ];
 }
 
-describe("newRecordDefaultsByUser", () => {
+describe("newRecordDefaults", () => {
   it("takes each seller's most recently created record", () => {
     const rows = buildDailyRecords([
       ...day("u1", "2026-11-20", "2026-11-20T20:00:00.000Z", { queso: 100, yogurt: 24, liters: 30, unitCost: 7 }),
@@ -35,9 +35,13 @@ describe("newRecordDefaultsByUser", () => {
       ...day("u2", "2026-11-21", "2026-11-21T19:00:00.000Z", { queso: 80, yogurt: 20, liters: 25, unitCost: 6 }),
     ]);
 
-    expect(newRecordDefaultsByUser(rows)).toEqual({
-      u1: { quesoTaken: 120, yogurtTaken: 30, milkLiters: 35, milkUnitCost: 7.5 },
-      u2: { quesoTaken: 80, yogurtTaken: 20, milkLiters: 25, milkUnitCost: 6 },
+    expect(newRecordDefaults(rows)).toEqual({
+      byUser: {
+        u1: { quesoTaken: 120, yogurtTaken: 30, milkLiters: 35, milkUnitCost: 7.5 },
+        u2: { quesoTaken: 80, yogurtTaken: 20, milkLiters: 25, milkUnitCost: 6 },
+      },
+      // The last record entered of all: u1's 2026-11-21 one (20:00, after u2's 19:00).
+      latest: { quesoTaken: 120, yogurtTaken: 30, milkLiters: 35, milkUnitCost: 7.5 },
     });
   });
 
@@ -48,10 +52,11 @@ describe("newRecordDefaultsByUser", () => {
       ...day("u1", "2026-11-19", "2026-11-22T09:00:00.000Z", { queso: 90, yogurt: 24, liters: 30, unitCost: 7 }),
     ]);
 
-    expect(newRecordDefaultsByUser(rows).u1.quesoTaken).toBe(90);
+    expect(newRecordDefaults(rows).byUser.u1.quesoTaken).toBe(90);
+    expect(newRecordDefaults(rows).latest?.quesoTaken).toBe(90);
   });
 
-  it("has nothing for a seller without records", () => {
-    expect(newRecordDefaultsByUser([])).toEqual({});
+  it("has nothing without records", () => {
+    expect(newRecordDefaults([])).toEqual({ byUser: {}, latest: null });
   });
 });

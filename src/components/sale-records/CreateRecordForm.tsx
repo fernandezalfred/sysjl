@@ -35,8 +35,9 @@ interface CreateRecordFormProps {
   // their own (the server takes the user from the session, never from the form).
   currentUserName: string | null;
   currentUserId: string | null;
-  // Each seller's previous record's values, to start the new record with.
-  lastValuesByUser: Record<string, NewRecordDefaults>;
+  // The values to start the new record with: the seller's last record, or the last
+  // record of all until the admin picks a seller.
+  lastValues: { byUser: Record<string, NewRecordDefaults>; latest: NewRecordDefaults | null };
   t: TranslateFn;
 }
 
@@ -47,7 +48,7 @@ export function CreateRecordForm({
   activeUsers,
   currentUserName,
   currentUserId,
-  lastValuesByUser,
+  lastValues,
   t,
 }: CreateRecordFormProps) {
   // The seller the record is for: the admin's pick, or the seller themselves.
@@ -100,7 +101,7 @@ export function CreateRecordForm({
         )}
       </div>
 
-      <RecordFormFields previous={{ userId, values: lastValuesByUser[userId] ?? null }} t={t} />
+      <RecordFormFields previous={{ userId, values: lastValues.byUser[userId] ?? lastValues.latest }} t={t} />
 
       {state.error ? (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
