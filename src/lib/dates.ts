@@ -55,3 +55,16 @@ export function moveToBusinessDay(date: Date, dayKey: string): Date {
   const timeOfDay = date.getTime() - startOf(formatBusinessDateKey(date));
   return new Date(startOf(dayKey) + timeOfDay);
 }
+
+const MONTH_DAY_YEAR_FORMAT = new Intl.DateTimeFormat("en-US", {
+  timeZone: BUSINESS_TIME_ZONE,
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+// "Nov 24 2026": a moment's day in Bolivia time, the same on the server and in the browser.
+export function formatMonthDayYear(date: Date): string {
+  const parts = Object.fromEntries(MONTH_DAY_YEAR_FORMAT.formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.month} ${parts.day} ${parts.year}`;
+}
