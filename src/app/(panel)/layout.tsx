@@ -15,10 +15,14 @@ import type { SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { PanelShell, type PanelAccess } from "@/components/layout/PanelShell";
 import { Footer } from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { LaunchProgress } from "@/components/layout/LaunchProgress";
+import { defaultT } from "@/lib/i18n/translations";
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-[96rem] flex-1 px-4 pb-8 sm:px-6 lg:px-8 lg:pt-8">
+      {/* Outside the Suspense, so it's in the static shell and paints first. */}
+      <LaunchProgress label={defaultT("common.loading")} />
       <Suspense fallback={<PanelSkeleton />}>
         <PanelContent>{children}</PanelContent>
       </Suspense>

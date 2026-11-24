@@ -12,6 +12,37 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Only in the installed app (home screen / desktop app window). */
+@custom-variant standalone {
+  @media (display-mode: standalone) {
+    @slot;
+  }
+}
+
+/* The launch screen's progress bar (LaunchProgress): fills fast at first, then slows
+   toward 90% until the page has loaded. The timeout hides the screen if the page
+   never finishes hydrating. */
+@theme {
+  --animate-launch-progress: launch-progress 8s cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+  --animate-launch-timeout: launch-timeout 0s linear 20s forwards;
+
+  @keyframes launch-progress {
+    from {
+      width: 8%;
+    }
+    to {
+      width: 90%;
+    }
+  }
+
+  @keyframes launch-timeout {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
