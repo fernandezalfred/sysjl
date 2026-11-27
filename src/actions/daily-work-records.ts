@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { authErrorState, requireAdminAccess, requireCompanyAccess, type Access } from "@/lib/auth/access";
 import { formatBusinessDateKey } from "@/lib/dates";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
+import { repeatLastGrainDay } from "@/lib/repeat-grain-day";
 import { DATE_KEY, firstIssue, OBJECT_ID, objectIdSchema } from "@/lib/validation";
 import type { ActionState } from "@/types/actions";
 
@@ -151,6 +152,11 @@ export async function createDailyWorkRecord(
         yogurtPurchaseCost: prices.YOGURT.purchaseCost,
       },
     });
+
+    // The day's first sale brings in its grains: the last purchase day's grains are
+    // copied into today (skipped when today already has grains).
+    const grains = await repeatLastGrainDay(access.companyId, access.userId);
+    if (grains.ok) revalidatePath("/admin/grains");
 
     refreshSaleRecords();
     return { success: true };

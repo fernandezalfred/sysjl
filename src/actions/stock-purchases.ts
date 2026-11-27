@@ -5,7 +5,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authErrorState, NotAuthorizedError, requireAdminAccess } from "@/lib/auth/access";
 import { formatBusinessDateKey, moveToBusinessDay } from "@/lib/dates";
-import { GRAIN_PRODUCTS, planRepeatLastDay, type RepeatError } from "@/lib/repeat-purchases";
+import { GRAIN_PRODUCTS, type RepeatError } from "@/lib/repeat-purchases";
+import { repeatLastGrainDay } from "@/lib/repeat-grain-day";
 import type { Product } from "@prisma/client";
 import { firstIssue, objectIdSchema } from "@/lib/validation";
 import type { ActionState } from "@/types/actions";
@@ -136,10 +137,6 @@ export interface RepeatActionState {
   count?: number;
 }
 
-// No purchase day spans more than 24h, so this window before the latest purchase
-// always covers that whole day.
-const LAST_DAY_WINDOW_MS = 36 * 60 * 60 * 1000;
-
 // Copies every grain purchase from the most recent purchase day into today (same
 // item, quantity and unit cost), so the admin doesn't re-enter an unchanged day by
 // hand. Refuses if today already has purchases.
@@ -147,35 +144,8 @@ export async function repeatLastDayPurchases(): Promise<RepeatActionState> {
   try {
     const access = await requireAdminAccess("GRAINS");
 
-    const latest = await prisma.stockPurchase.findFirst({
-      where: { companyId: access.companyId, product: { in: GRAIN_PRODUCTS } },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    });
-    if (!latest) return { success: false, error: "nothingToCopy" };
-
-    const recent = await prisma.stockPurchase.findMany({
-      where: {
-        companyId: access.companyId,
-        product: { in: GRAIN_PRODUCTS },
-        createdAt: { gte: new Date(latest.createdAt.getTime() - LAST_DAY_WINDOW_MS) },
-      },
-      orderBy: { createdAt: "asc" },
-      select: { product: true, quantity: true, unitCost: true, createdAt: true },
-    });
-
-    const plan = planRepeatLastDay(recent, formatBusinessDateKey(new Date()));
+    const plan = await repeatLastGrainDay(access.companyId, access.userId);
     if (!plan.ok) return { success: false, error: plan.reason };
-
-    await prisma.stockPurchase.createMany({
-      data: plan.purchases.map((p) => ({
-        product: p.product,
-        quantity: p.quantity,
-        unitCost: p.unitCost,
-        companyId: access.companyId,
-        createdById: access.userId,
-      })),
-    });
 
     revalidatePath("/admin/grains");
     revalidatePath("/dashboard");

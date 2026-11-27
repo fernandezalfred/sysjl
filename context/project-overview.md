@@ -65,7 +65,7 @@ Clicking a day header in Sale Records shows that day in the charts at the top of
 
 The sale price and the purchase cost are snapshotted on each sale record when it's created, so a later change never rewrites past records. Records created before the purchase cost snapshot existed use the current purchase cost (if not set, the last recorded purchase cost is the fallback).
 
-"Repeat last day" on the Grains page copies the most recent day's purchases into today.
+"Repeat last day" on the Grains page copies the most recent day's purchases into today. The same copy happens automatically when the day's first sale record is created (nothing is added if today already has grain purchases).
 
 A new grain purchase is always dated today; editing one can move it to another day (never a future one), keeping its time of day.
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
@@ -20,6 +20,8 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
     },
     stockPurchase: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      createMany: vi.fn(),
     },
   },
   revalidatePathMock: vi.fn(),
@@ -591,5 +593,64 @@ describe("undoLastPayment", () => {
       where: { companyId: "c1", userId: SELLER_ID, payPaidAt: paidAt },
       data: { payPaidAt: null },
     });
+  });
+});
+
+describe("createDailyWorkRecord grain trigger", () => {
+  // 2026-11-06 10:00 in Bolivia.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-06T14:00:00Z"));
+    authMock.mockResolvedValue(SESSION);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue(null);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const GRAIN = { product: "HABA", quantity: 3, unitCost: 40 };
+
+  function mockGrains(grains: { product: string; quantity: number; unitCost: number; createdAt: Date }[]) {
+    prismaMock.stockPurchase.findFirst.mockImplementation(async (args: { where?: { product?: { in?: string[] } } }) =>
+      args.where?.product?.in ? { createdAt: grains[grains.length - 1].createdAt } : null,
+    );
+    prismaMock.stockPurchase.findMany.mockResolvedValue(grains);
+  }
+
+  it("copies the last purchase day's grains into today on the day's first sale", async () => {
+    mockGrains([{ ...GRAIN, createdAt: new Date("2026-11-05T15:00:00Z") }]);
+
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, date: "2026-11-06" }));
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.createMany).toHaveBeenCalledWith({
+      data: [{ ...GRAIN, companyId: "c1", createdById: "aa0000000000000000000001" }],
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/grains");
+  });
+
+  it("adds no grains when today already has them", async () => {
+    mockGrains([{ ...GRAIN, createdAt: new Date("2026-11-06T13:00:00Z") }]);
+
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, date: "2026-11-06" }));
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
+  });
+
+  it("adds no grains when there are none to copy", async () => {
+    const result = await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, date: "2026-11-06" }));
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
+  });
+
+  it("adds no grains when the record is refused", async () => {
+    mockGrains([{ ...GRAIN, createdAt: new Date("2026-11-05T15:00:00Z") }]);
+    prismaMock.dailyWorkRecord.findUnique.mockResolvedValue({ id: "existing" });
+
+    await createDailyWorkRecord({ success: false }, formData({ ...VALID_FIELDS, date: "2026-11-06" }));
+
+    expect(prismaMock.stockPurchase.createMany).not.toHaveBeenCalled();
   });
 });
