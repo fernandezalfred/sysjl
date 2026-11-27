@@ -66,6 +66,12 @@ function getBreadcrumbs(pathname: string, t: TranslateFn): NavItem[] {
       { href: "/account", label: t("header.account") },
     ];
   }
+  if (pathname.startsWith("/notes")) {
+    return [
+      { href: "/notes", label: t("sidebar.overview") },
+      { href: "/notes", label: t("header.notes") },
+    ];
+  }
   if (pathname.startsWith("/admin/finance")) {
     return [
       { href: "/admin/finance", label: t("sidebar.administration") },
@@ -121,7 +127,12 @@ function navGroups(access: PanelAccess, t: TranslateFn): NavGroup[] {
     {
       label: t("sidebar.overview"),
       items: [
-        ...(access.companyName ? [{ href: "/dashboard", label: t("header.dashboard"), icon: "dashboard" as const }] : []),
+        ...(access.companyName
+          ? [
+              { href: "/dashboard", label: t("header.dashboard"), icon: "dashboard" as const },
+              { href: "/notes", label: t("header.notes"), icon: "notes" as const },
+            ]
+          : []),
         { href: "/account", label: t("header.account"), icon: "account" },
       ],
     },

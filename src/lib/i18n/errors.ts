@@ -52,6 +52,12 @@ const ERROR_KEYS: Record<string, DictionaryKey> = {
   "Amount must be at least 1.": "error.amountMin",
   "Description is too long.": "error.descriptionTooLong",
   "The seller has a pending advance.": "error.pendingAdvance",
+  "Note not found.": "error.noteNotFound",
+  "Title is too long.": "error.noteTitleTooLong",
+  "Note is too long.": "error.noteTooLong",
+  "Write a title, a note or a task.": "error.noteEmpty",
+  "A task is too long.": "error.noteItemTooLong",
+  "Too many tasks.": "error.noteTooManyItems",
 };
 
 export function localizeError(t: TranslateFn, message: string): string {

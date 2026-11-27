@@ -42,6 +42,16 @@ enum PricedProduct {
   YOGURT
 }
 
+// The card color of a note on the Notas page.
+enum NoteColor {
+  DEFAULT
+  AMBER
+  SKY
+  EMERALD
+  ROSE
+  VIOLET
+}
+
 // A distribution company (branch) renting the app. Every user but the super admin,
 // and every record, price and purchase, belongs to exactly one.
 model Company {
@@ -53,6 +63,7 @@ model Company {
   productPrices  ProductPrice[]
   stockPurchases StockPurchase[]
   payAdvances    PayAdvance[]
+  notes          Note[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -75,6 +86,7 @@ model User {
   stockPurchases StockPurchase[]   @relation("StockPurchaseCreatedBy")
   payAdvances    PayAdvance[]      @relation("PayAdvanceSeller")
   advancesGiven  PayAdvance[]      @relation("PayAdvanceCreatedBy")
+  notes          Note[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -82,26 +94,26 @@ model User {
 // One record per user per working day: quantities taken from the deposit
 // and remaining at day's end for the two currently-tracked products.
 model DailyWorkRecord {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String    @db.ObjectId
-  user            User      @relation(fields: [userId], references: [id])
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String    @db.ObjectId
+  user               User      @relation(fields: [userId], references: [id])
   // The seller's company, stored on the record so every query filters by it.
-  companyId       String?   @db.ObjectId
-  company         Company?  @relation(fields: [companyId], references: [id])
-  date            DateTime
-  quesoTaken      Int
-  quesoRemaining  Int
-  yogurtTaken     Int
-  yogurtRemaining Int
+  companyId          String?   @db.ObjectId
+  company            Company?  @relation(fields: [companyId], references: [id])
+  date               DateTime
+  quesoTaken         Int
+  quesoRemaining     Int
+  yogurtTaken        Int
+  yogurtRemaining    Int
   // Day's grand-total Bs revenue across all 4 products, user-entered. Independent
   // of quesoSold/yogurtSold; not cross-checked against their sum.
   // Default only guards legacy/pre-field documents from breaking reads.
-  totalSold       Int       @default(0)
+  totalSold          Int       @default(0)
   // Sale price per unit (Bs), snapshotted from the current ProductPrice at creation
   // time and never touched again, even on edit — so a later admin price change never
   // rewrites a past record's revenue. Defaults only guard legacy/pre-field documents.
-  quesoSalePrice  Float     @default(9)
-  yogurtSalePrice Float     @default(33)
+  quesoSalePrice     Float     @default(9)
+  yogurtSalePrice    Float     @default(33)
   // Purchase cost per unit (Bs), snapshotted from ProductPrice.purchaseCost at
   // creation like the sale price, so a later cost change never rewrites this
   // record's Neto. null on records created before the snapshot existed: those use
@@ -111,12 +123,12 @@ model DailyWorkRecord {
   // Milk the seller took that day and the price per liter it was bought at, entered
   // on the record; liters x price is deducted from Net profit. Defaults keep older
   // documents readable.
-  milkLiters      Int       @default(0)
-  milkUnitCost    Float     @default(0)
+  milkLiters         Int       @default(0)
+  milkUnitCost       Float     @default(0)
   // When the admin marked this day's seller pay as paid; null = not paid yet.
-  payPaidAt       DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  payPaidAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@unique([userId, date])
   @@index([companyId, date])
@@ -165,26 +177,55 @@ model StockPurchase {
 // Money the admin handed a seller ahead of their pay (an advance), listed per seller
 // (date, amount, description). Can be taken off a payment of the seller's days.
 model PayAdvance {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  companyId   String   @db.ObjectId
-  company     Company  @relation(fields: [companyId], references: [id])
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  companyId   String    @db.ObjectId
+  company     Company   @relation(fields: [companyId], references: [id])
   // The seller who received it.
-  userId      String   @db.ObjectId
-  user        User     @relation("PayAdvanceSeller", fields: [userId], references: [id])
+  userId      String    @db.ObjectId
+  user        User      @relation("PayAdvanceSeller", fields: [userId], references: [id])
   // The day it was given (UTC midnight of the Bolivia day, like DailyWorkRecord.date).
   date        DateTime
   // Whole bolivianos.
   amount      Int
-  description String   @default("")
+  description String    @default("")
   // When it was paid off together with the seller's days ("Pagar de N días" with
   // "descontar adelanto" ticked): the same instant as those days' payPaidAt, so
   // undoing that payment brings it back. A settled advance no longer shows anywhere.
   settledAt   DateTime?
   // The admin who entered it.
-  createdById String   @db.ObjectId
-  createdBy   User     @relation("PayAdvanceCreatedBy", fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdById String    @db.ObjectId
+  createdBy   User      @relation("PayAdvanceCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([companyId, userId, date])
+}
+
+// A to-do in a note's checklist (embedded in the note).
+type NoteItem {
+  // Made by the browser when the task is added; identifies it for ticking.
+  id   String
+  text String
+  done Boolean @default(false)
+}
+
+// A private note on the Notas page: only its author sees it, in the company they
+// were acting in when they wrote it. Needs a title, text or a task.
+model Note {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  companyId String     @db.ObjectId
+  company   Company    @relation(fields: [companyId], references: [id])
+  userId    String     @db.ObjectId
+  user      User       @relation(fields: [userId], references: [id])
+  title     String     @default("")
+  content   String     @default("")
+  // The note's checklist, in order. Every task done = the note is complete.
+  items     NoteItem[]
+  color     NoteColor  @default(DEFAULT)
+  // Pinned notes are listed first.
+  pinned    Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([companyId, userId, updatedAt])
 }
