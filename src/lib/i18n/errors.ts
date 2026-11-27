@@ -47,6 +47,11 @@ const ERROR_KEYS: Record<string, DictionaryKey> = {
   "The new password must be different from the current one.": "error.passwordSameAsCurrent",
   "The new passwords don't match.": "error.passwordsDontMatch",
   "You already have a record for this date.": "error.recordExists",
+  "Advance not found.": "error.advanceNotFound",
+  "Amount must be a whole number.": "error.amountWhole",
+  "Amount must be at least 1.": "error.amountMin",
+  "Description is too long.": "error.descriptionTooLong",
+  "The seller has a pending advance.": "error.pendingAdvance",
 };
 
 export function localizeError(t: TranslateFn, message: string): string {

@@ -7,6 +7,7 @@ import { authErrorState, requireAdminAccess, requireCompanyAccess, type Access }
 import { formatBusinessDateKey } from "@/lib/dates";
 import { getCurrentProductPrices } from "@/lib/money/product-prices";
 import { repeatLastGrainDay } from "@/lib/repeat-grain-day";
+import { NOT_SETTLED } from "@/lib/pay-advance-filters";
 import { DATE_KEY, firstIssue, OBJECT_ID, objectIdSchema } from "@/lib/validation";
 import type { ActionState } from "@/types/actions";
 
@@ -278,7 +279,9 @@ function refreshPanel() {
 
 // Admin only: marks every unpaid day of one seller of the company as paid at once (the
 // seller was paid everything they were owed). They all get the same payPaidAt, so
-// undoLastPayment can put them back as unpaid together.
+// undoLastPayment can put them back as unpaid together. The seller's listed advances
+// are always taken off that payment: they're settled with the same timestamp, so
+// undoing it brings them back too.
 export async function payAllPendingForSeller(userId: string): Promise<ActionState> {
   try {
     const access = await requireAdminAccess();
@@ -286,10 +289,15 @@ export async function payAllPendingForSeller(userId: string): Promise<ActionStat
       return { success: false, error: "User not found." };
     }
 
+    const paidAt = new Date();
     await prisma.dailyWorkRecord.updateMany({
       // Unpaid days usually have no payPaidAt at all (unset), not null.
       where: { companyId: access.companyId, userId, OR: [{ payPaidAt: null }, { payPaidAt: { isSet: false } }] },
-      data: { payPaidAt: new Date() },
+      data: { payPaidAt: paidAt },
+    });
+    await prisma.payAdvance.updateMany({
+      where: { companyId: access.companyId, userId, AND: [NOT_SETTLED] },
+      data: { settledAt: paidAt },
     });
 
     refreshPanel();
@@ -301,7 +309,8 @@ export async function payAllPendingForSeller(userId: string): Promise<ActionStat
 
 // Admin only: undoes the seller's most recent payment (a "Pagar todo" or a single day:
 // every day with the latest payPaidAt), so those days show as owed again. Only for a
-// seller who is up to date; while something is owed, there's nothing to restore.
+// seller who is up to date; while something is owed, there's nothing to restore. Not
+// once the seller was given an advance that isn't paid off yet.
 export async function undoLastPayment(userId: string): Promise<ActionState> {
   try {
     const access = await requireAdminAccess();
@@ -314,6 +323,13 @@ export async function undoLastPayment(userId: string): Promise<ActionState> {
     });
     if (owed > 0) {
       return { success: false, error: "Pay what's owed first." };
+    }
+    // An advance given since then (not paid off yet) closes that payment for good.
+    const pendingAdvances = await prisma.payAdvance.count({
+      where: { companyId: access.companyId, userId, AND: [NOT_SETTLED] },
+    });
+    if (pendingAdvances > 0) {
+      return { success: false, error: "The seller has a pending advance." };
     }
 
     const last = await prisma.dailyWorkRecord.findFirst({
@@ -328,6 +344,11 @@ export async function undoLastPayment(userId: string): Promise<ActionState> {
     await prisma.dailyWorkRecord.updateMany({
       where: { companyId: access.companyId, userId, payPaidAt: last.payPaidAt },
       data: { payPaidAt: null },
+    });
+    // Advances paid off with that payment go back to the list.
+    await prisma.payAdvance.updateMany({
+      where: { companyId: access.companyId, userId, settledAt: last.payPaidAt },
+      data: { settledAt: null },
     });
 
     refreshPanel();

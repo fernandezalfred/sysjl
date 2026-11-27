@@ -32,3 +32,10 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("es-BO", {
 export function formatCurrency(amount: number): string {
   return CURRENCY_FORMAT.format(roundForDisplay(amount));
 }
+
+const AMOUNT_FORMAT = new Intl.NumberFormat("es-BO", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+// "3.556": like formatCurrency without "Bs", for tight spots where the unit is shown once.
+export function formatAmount(amount: number): string {
+  return AMOUNT_FORMAT.format(roundForDisplay(amount));
+}

@@ -23,6 +23,10 @@ const { authMock, prismaMock, revalidatePathMock } = vi.hoisted(() => ({
       findMany: vi.fn(),
       createMany: vi.fn(),
     },
+    payAdvance: {
+      updateMany: vi.fn(),
+      count: vi.fn(),
+    },
   },
   revalidatePathMock: vi.fn(),
 }));
@@ -67,6 +71,8 @@ beforeEach(() => {
   prismaMock.productPrice.findUnique.mockResolvedValue(null);
   // …and no purchase cost anywhere, so the snapshotted cost is 0.
   prismaMock.stockPurchase.findFirst.mockResolvedValue(null);
+  // No pending advances unless a test says so.
+  prismaMock.payAdvance.count.mockResolvedValue(0);
 });
 
 describe("createDailyWorkRecord", () => {
@@ -545,6 +551,11 @@ describe("payAllPendingForSeller", () => {
     });
     // One timestamp for every day, so the whole payment can be undone together.
     expect(call.data).toEqual({ payPaidAt: expect.any(Date) });
+    // The seller's listed advances are paid off with that same payment.
+    expect(prismaMock.payAdvance.updateMany).toHaveBeenCalledWith({
+      where: { companyId: "c1", userId: SELLER_ID, AND: [{ OR: [{ settledAt: null }, { settledAt: { isSet: false } }] }] },
+      data: { settledAt: call.data.payPaidAt },
+    });
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "layout");
   });
 });
@@ -571,6 +582,17 @@ describe("undoLastPayment", () => {
     expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
   });
 
+  it("refuses once the seller has a pending advance", async () => {
+    authMock.mockResolvedValue(ADMIN_SESSION);
+    prismaMock.dailyWorkRecord.count.mockResolvedValue(0);
+    prismaMock.payAdvance.count.mockResolvedValue(1);
+    expect(await undoLastPayment(SELLER_ID)).toEqual({ success: false, error: "The seller has a pending advance." });
+    expect(prismaMock.payAdvance.count).toHaveBeenCalledWith({
+      where: { companyId: "c1", userId: SELLER_ID, AND: [{ OR: [{ settledAt: null }, { settledAt: { isSet: false } }] }] },
+    });
+    expect(prismaMock.dailyWorkRecord.updateMany).not.toHaveBeenCalled();
+  });
+
   it("says there's nothing to undo when the seller has no paid day in the company", async () => {
     authMock.mockResolvedValue(ADMIN_SESSION);
     prismaMock.dailyWorkRecord.count.mockResolvedValue(0);
@@ -592,6 +614,11 @@ describe("undoLastPayment", () => {
     expect(prismaMock.dailyWorkRecord.updateMany).toHaveBeenCalledWith({
       where: { companyId: "c1", userId: SELLER_ID, payPaidAt: paidAt },
       data: { payPaidAt: null },
+    });
+    // Advances paid off with that payment go back to the list.
+    expect(prismaMock.payAdvance.updateMany).toHaveBeenCalledWith({
+      where: { companyId: "c1", userId: SELLER_ID, settledAt: paidAt },
+      data: { settledAt: null },
     });
   });
 });

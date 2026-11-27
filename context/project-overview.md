@@ -97,6 +97,7 @@ The logic lives in `src/lib/daily-records.ts` (rows, winner), `src/lib/money/rev
 - Every **DailyWorkRecord**, **ProductPrice** and **StockPurchase** has the `companyId` of its company.
 - **DailyWorkRecord** — one per user per day: Queso/Yogurt taken and left, `totalSold`, Milk liters and price per liter (`milkLiters`, `milkUnitCost`), snapshotted sale prices and purchase costs (`quesoPurchaseCost`, `yogurtPurchaseCost`; null on older records), `payPaidAt` (when the admin marked the pay as paid) (every day paid by one "Pagar todo" shares it, so the last payment can be undone). A new record is dated today; editing one can move it to another day (never a future one, nor a day that seller already has a record for).
 - **ProductPrice** — one row per company and priced product (Queso, Yogurt): current sale price and purchase cost, updated in place (no history).
+- **PayAdvance** — money an admin gave a seller ahead of their pay: seller (`userId`), day, amount (whole Bs), description, who entered it (`createdById`); added, listed and edited from the "Por pagar" dropdown; `settledAt` (paid off together with the seller's days by "Pagar de N días", which always takes the listed advances off; the same instant as those days' `payPaidAt`, so "Deshacer último pago" brings it back to the list).
 - **StockPurchase** — a grain purchase: product, quantity, unit cost, who entered it (`createdBy`). Old Queso/Yogurt purchases are still stored but no longer shown.
 
 ## 8. Not Built (from the original spec)

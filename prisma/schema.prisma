@@ -52,6 +52,7 @@ model Company {
   workRecords    DailyWorkRecord[]
   productPrices  ProductPrice[]
   stockPurchases StockPurchase[]
+  payAdvances    PayAdvance[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -72,6 +73,8 @@ model User {
   workRecords    DailyWorkRecord[]
   productPrices  ProductPrice[]
   stockPurchases StockPurchase[]   @relation("StockPurchaseCreatedBy")
+  payAdvances    PayAdvance[]      @relation("PayAdvanceSeller")
+  advancesGiven  PayAdvance[]      @relation("PayAdvanceCreatedBy")
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -157,4 +160,31 @@ model StockPurchase {
   updatedAt   DateTime @updatedAt
 
   @@index([companyId, product, createdAt])
+}
+
+// Money the admin handed a seller ahead of their pay (an advance), listed per seller
+// (date, amount, description). Can be taken off a payment of the seller's days.
+model PayAdvance {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  companyId   String   @db.ObjectId
+  company     Company  @relation(fields: [companyId], references: [id])
+  // The seller who received it.
+  userId      String   @db.ObjectId
+  user        User     @relation("PayAdvanceSeller", fields: [userId], references: [id])
+  // The day it was given (UTC midnight of the Bolivia day, like DailyWorkRecord.date).
+  date        DateTime
+  // Whole bolivianos.
+  amount      Int
+  description String   @default("")
+  // When it was paid off together with the seller's days ("Pagar de N días" with
+  // "descontar adelanto" ticked): the same instant as those days' payPaidAt, so
+  // undoing that payment brings it back. A settled advance no longer shows anywhere.
+  settledAt   DateTime?
+  // The admin who entered it.
+  createdById String   @db.ObjectId
+  createdBy   User     @relation("PayAdvanceCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId, userId, date])
 }

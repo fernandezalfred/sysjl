@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency } from "@/lib/money/pricing";
+import { formatAmount, formatCurrency } from "@/lib/money/pricing";
 
 // Intl puts a non-breaking space between "Bs" and the number; compare with plain spaces.
 const plain = (text: string) => text.replace(/\s/g, " ");
@@ -21,5 +21,12 @@ describe("formatCurrency", () => {
   it("keeps the sign of a real loss", () => {
     expect(plain(formatCurrency(-12.6))).toContain("13");
     expect(plain(formatCurrency(-12.6))).toContain("-");
+  });
+});
+
+describe("formatAmount", () => {
+  it("formats whole bolivianos without the currency", () => {
+    expect(formatAmount(3556.4)).toBe("3.556");
+    expect(formatAmount(-0.2)).toBe("0");
   });
 });

@@ -11,6 +11,7 @@ import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 import { BrandMark } from "@/components/landing/BrandMark";
 import { SellerPayBar, type SellerPayTotals } from "@/components/layout/SellerPayBar";
 import { AdminPendingPay } from "@/components/layout/AdminPendingPay";
+import type { SellerAdvances } from "@/lib/money/pay-advances";
 import { CompanySwitcher, type CompanyOption } from "@/components/layout/CompanySwitcher";
 import type { SellerPending } from "@/lib/money/seller-pay";
 import { hasPermission, isAdminRole } from "@/lib/auth/permissions";
@@ -48,6 +49,8 @@ interface PanelShellProps {
   payTotals: SellerPayTotals | null;
   // Admins: what each seller is still owed (header dropdown); null for sellers.
   adminPending: SellerPending[] | null;
+  // Admins: each seller's advances, managed from the "Por pagar" dropdown; null for sellers.
+  adminAdvances: SellerAdvances[] | null;
   children: ReactNode;
 }
 
@@ -135,7 +138,7 @@ function navGroups(access: PanelAccess, t: TranslateFn): NavGroup[] {
   return groups;
 }
 
-export function PanelShell({ access, userName, locale, payTotals, adminPending, children }: PanelShellProps) {
+export function PanelShell({ access, userName, locale, payTotals, adminPending, adminAdvances, children }: PanelShellProps) {
   const t: TranslateFn = (key, vars) => translate(locale, key, vars);
   const pathname = usePathname();
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -190,7 +193,7 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
       {payTotals || adminPending ? (
         <div className="-mt-3 print:hidden lg:hidden">
           {payTotals ? <SellerPayBar totals={payTotals} t={t} /> : null}
-          {adminPending ? <AdminPendingPay sellers={adminPending} t={t} /> : null}
+          {adminPending ? <AdminPendingPay sellers={adminPending} advances={adminAdvances ?? []} t={t} /> : null}
         </div>
       ) : null}
 
@@ -233,7 +236,7 @@ export function PanelShell({ access, userName, locale, payTotals, adminPending, 
             <p className="truncate text-xl font-semibold tracking-tight">{greeting}</p>
           </div>
           {payTotals ? <SellerPayBar totals={payTotals} t={t} /> : null}
-          {adminPending ? <AdminPendingPay sellers={adminPending} t={t} /> : null}
+          {adminPending ? <AdminPendingPay sellers={adminPending} advances={adminAdvances ?? []} t={t} /> : null}
         </header>
         {children}
       </div>
